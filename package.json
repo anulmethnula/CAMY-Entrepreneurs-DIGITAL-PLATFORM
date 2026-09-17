@@ -1,0 +1,20 @@
+{
+  "name": "camy-entrepreneurs-platform",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "web": "vite",
+    "api": "C:\\xampp\\php\\php.exe -S 127.0.0.1:8000 -t api api/index.php",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "vite": "latest"
+  }
+}

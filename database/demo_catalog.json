@@ -1,0 +1,221 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "12,000 BTU Inverter AC",
+      "category": "Home Appliances",
+      "price": 160000,
+      "image": "/products/ac-12000.png",
+      "tag": "Best seller",
+      "stock": 14,
+      "code": "CY-12INV",
+      "rating": 4.9,
+      "warranty": "5 years",
+      "description": "Fast, quiet cooling designed for comfortable Sri Lankan homes.",
+      "specs": [
+        "Super Cool technology",
+        "Low-noise operation",
+        "Free installation up to 3m",
+        "5-year compressor warranty"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "18,000 BTU Air Conditioner",
+      "category": "Home Appliances",
+      "price": 175000,
+      "image": "/products/ac-18000.png",
+      "tag": "Popular",
+      "stock": 8,
+      "code": "CY-18AC",
+      "rating": 4.8,
+      "warranty": "5 years",
+      "description": "High-volume cooling with an elegant, efficient design.",
+      "specs": [
+        "Maximum air volume",
+        "3 free services",
+        "Free installation up to 3m",
+        "Low-noise operation"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "18cm Non-stick Hopper Pan",
+      "category": "Cookware",
+      "price": 1950,
+      "image": "/products/hopper-pan.png",
+      "tag": "Fast moving",
+      "stock": 32,
+      "code": "HPL001",
+      "rating": 4.9,
+      "warranty": "1 year",
+      "description": "A durable everyday hopper pan made with pride in Sri Lanka.",
+      "specs": [
+        "Made in Sri Lanka",
+        "Stick-proof coating",
+        "Stainless-steel lid",
+        "Easy-clean surface"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "22cm Non-stick Fry Pan",
+      "category": "Cookware",
+      "price": 1750,
+      "image": "/products/frypan-22.png",
+      "tag": "",
+      "stock": 27,
+      "code": "FP022",
+      "rating": 4.7,
+      "warranty": "1 year",
+      "description": "A practical non-stick pan for reliable everyday cooking.",
+      "specs": [
+        "Durable non-stick surface",
+        "Cool-touch handle",
+        "Everyday cooking size",
+        "Easy to clean"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "24,000 BTU Air Conditioner",
+      "category": "Home Appliances",
+      "price": 200000,
+      "image": "/products/ac-24000.png",
+      "tag": "Premium",
+      "stock": 5,
+      "code": "CY-24AC",
+      "rating": 4.8,
+      "warranty": "5 years",
+      "description": "Powerful cooling for large rooms and commercial spaces.",
+      "specs": [
+        "Powerful room cooling",
+        "Low-noise operation",
+        "3 free services",
+        "1-year component warranty"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "24cm Non-stick Casserole",
+      "category": "Cookware",
+      "price": 4500,
+      "image": "/products/casserole.png",
+      "tag": "",
+      "stock": 18,
+      "code": "CRL024",
+      "rating": 4.6,
+      "warranty": "1 year",
+      "description": "Family-size casserole with a fitted glass lid.",
+      "specs": [
+        "Glass lid included",
+        "Even heat distribution",
+        "Easy-clean interior",
+        "Comfort handles"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "24cm Non-stick Fry Pan",
+      "category": "Cookware",
+      "price": 2650,
+      "image": "/products/frypan-24.png",
+      "tag": "New",
+      "stock": 21,
+      "code": "FP024",
+      "rating": 4.8,
+      "warranty": "1 year",
+      "description": "A larger non-stick pan for family meals and easy serving.",
+      "specs": [
+        "Family-size surface",
+        "Non-stick finish",
+        "Ergonomic handle",
+        "Balanced construction"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "4-Piece Non-stick Set",
+      "category": "Cookware",
+      "price": 5250,
+      "image": "/products/cookware-set.png",
+      "tag": "Value pack",
+      "stock": 25,
+      "code": "CWS401",
+      "rating": 5,
+      "warranty": "1 year",
+      "description": "A coordinated cookware starter set offering strong customer value.",
+      "specs": [
+        "18cm, 20cm & 22cm pans",
+        "Nylon spoon included",
+        "Made in Sri Lanka",
+        "Gift-ready set"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "43-inch Smart TV",
+      "category": "Electronics",
+      "price": 37000,
+      "image": "/products/smart-tv.png",
+      "tag": "Hot deal",
+      "stock": 11,
+      "code": "CY43-QLED",
+      "rating": 4.7,
+      "warranty": "2 years",
+      "description": "A slim smart television with the connections customers need.",
+      "specs": [
+        "Android 14",
+        "Frameless slim design",
+        "2 × HDMI and 2 × USB",
+        "2-year warranty"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Classic Cookware Set",
+      "category": "Cookware",
+      "price": 3950,
+      "image": "/products/classic-set.png",
+      "tag": "",
+      "stock": 19,
+      "code": "CWS-CLASSIC",
+      "rating": 4.7,
+      "warranty": "1 year",
+      "description": "A simple, reliable cookware bundle for daily use.",
+      "specs": [
+        "Everyday cookware set",
+        "Easy-clean finish",
+        "Comfort-grip handles",
+        "Durable construction"
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "id": 1,
+      "sales": 100000,
+      "credit": 10000
+    },
+    {
+      "id": 2,
+      "sales": 200000,
+      "credit": 20000
+    },
+    {
+      "id": 3,
+      "sales": 300000,
+      "credit": 30000
+    },
+    {
+      "id": 4,
+      "sales": 400000,
+      "credit": 40000
+    },
+    {
+      "id": 5,
+      "sales": 1000000,
+      "credit": 100000
+    }
+  ]
+}
