@@ -6,6 +6,8 @@ function check(bool $condition,string $label): void {if(!$condition)throw new Ru
 function blocked(callable $fn,int $code): void {try{$fn();}catch(RuntimeException $e){check($e->getCode()===$code,'Unexpected rejection: '.$e->getMessage());return;}throw new RuntimeException('Invalid action was accepted.');}
 foreach([false,true] as $supply){
     workflow_transition('Pending','Awaiting payment',$supply);
+    if(!$supply)workflow_transition('Pending','Processing',false);
+    else blocked(fn()=>workflow_transition('Pending','Processing',true),409);
     blocked(fn()=>workflow_transition('Pending','Dispatched',$supply),409);
     blocked(fn()=>workflow_transition('Awaiting payment',$supply?'Approved':'Processing',$supply),409);
     workflow_transition('Payment review',$supply?'Approved':'Processing',$supply);
@@ -24,4 +26,4 @@ blocked(fn()=>workflow_items([['productId'=>1,'qty'=>1.5]]),422);
 blocked(fn()=>workflow_bank_required([]),422);
 blocked(fn()=>workflow_owner(['role'=>'entrepreneur','member_id'=>'CE-2'],'CE-1'),403);
 blocked(fn()=>workflow_receipt(['reference'=>'test','receipt'=>'data:application/pdf;base64,'.base64_encode('fake')],'TEST'),422);
-echo "Workflow checks passed: stage gates, stock reservation/release, duplicate items, ownership, bank details and invalid receipts.\n";
+echo "Workflow checks passed: bank-transfer and COD stage gates, CAMY stock reservation/release, duplicate items, ownership, bank details and invalid receipts.\n";

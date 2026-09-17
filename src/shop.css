@@ -51,6 +51,7 @@
 .shop-search-row>select{border:1px solid var(--shop-line);border-radius:10px;background:#fff;padding:10px 14px;color:var(--shop-muted);font-size:14px;width:100%}
 .shop-directory-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .shop-directory-grid>button{display:flex;align-items:center;gap:13px;text-align:left;border:1px solid var(--shop-line);border-radius:13px;background:#fafbf8;padding:18px;color:var(--shop-ink);min-width:0;transition:border-color .15s,background .15s}
+.shop-directory-grid>div{display:flex;align-items:center;gap:13px;text-align:left;border:1px solid #6fa58a;border-radius:13px;background:#edf5ea;padding:18px;color:var(--shop-ink);min-width:0}.shop-directory-grid>div>span:nth-child(2){flex:1}.shop-directory-grid>div>span>span{display:flex;align-items:center;gap:4px;color:#819083;font-size:12px}
 .shop-directory-grid>button:hover,.shop-directory-grid>button.selected{border-color:#6fa58a;background:#edf5ea}
 .shop-directory-grid>button>span:nth-child(2){flex:1;min-width:0}
 .shop-directory-grid small{display:flex;align-items:center;gap:4px;font-size:9px;letter-spacing:.07em;color:#6b9277;font-weight:700}
