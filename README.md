@@ -42,6 +42,7 @@ The existing credit module remains available as the post-trial facility describe
 - The system tracks issued credit, settlements, and outstanding balances.
 - A below-base sale or recovery of an already-paid commission after a return can add to the entrepreneur's outstanding balance.
 - Stock-on-credit requests remain a separate optional post-trial facility; they are not required for ordinary dropshipping sales.
+- For an approved credit-stock issue, CAMY Admin sets a return deadline (1–365 days) and may edit it later. Physically returned unsold stock is restored to CAMY and reduces the entrepreneur's outstanding balance. Damaged, lost, or non-returned stock remains payable by the entrepreneur and is recorded with an inspection note.
 
 ## Roles
 

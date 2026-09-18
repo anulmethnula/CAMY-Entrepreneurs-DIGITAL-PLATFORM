@@ -26,7 +26,7 @@ function storage_read(PDO $pdo): ?array {
         $state[$key]=[];
         foreach($pdo->query("SELECT * FROM $table WHERE record_json IS NOT NULL ORDER BY created_at DESC,id")->fetchAll() as $row){
             $record=storage_decode($row['record_json']);$record['status']=$row['status'];
-            if($key==='requests'){$record['total']=(float)$row['total'];if($row['receipt_path'])$record['receiptPath']=$row['receipt_path'];}
+            if($key==='requests'){$record['total']=(float)$row['total'];$record['supplyMode']=$row['supply_mode'] ?? ($record['supplyMode'] ?? 'cash_purchase');$record['creditReturnDueAt']=$row['credit_return_due_at'] ? date(DATE_ATOM,strtotime($row['credit_return_due_at'])) : ($record['creditReturnDueAt'] ?? null);$record['creditReturnStatus']=$row['credit_return_status'] ?? ($record['creditReturnStatus'] ?? null);if($row['receipt_path'])$record['receiptPath']=$row['receipt_path'];}
             if($key==='orders'){$record['amount']=(float)$row['total'];$record['camyAmount']=(float)$row['camy_amount'];$record['commissionAmount']=(float)$row['commission_amount'];$record['paymentMethod']=$row['payment_method'];$record['paymentStatus']=$row['payment_status'];$record['commissionStatus']=$row['commission_status'];}
             if($key==='settlements')$record['amount']=(float)$row['amount'];
             $state[$key][]=$record;
@@ -52,10 +52,11 @@ function storage_write(PDO $pdo,array $state): void {
     $prices=[];foreach($state['products'] ?? [] as $product)$prices[(string)$product['id']]=$product['price'];
     $inventory=$pdo->prepare('INSERT INTO entrepreneur_shop_items(entrepreneur_member_id,product_code,quantity,sell_price,visible) VALUES(?,?,?,?,?) ON DUPLICATE KEY UPDATE quantity=VALUES(quantity),sell_price=VALUES(sell_price),visible=VALUES(visible)');
     foreach($state['inventory'] ?? [] as $item){$code=$products[(string)$item['productId']] ?? null;if(!$code)continue;$inventory->execute([$item['entrepreneurId'],$code,max(0,(int)$item['qty']),$item['price'] ?? $prices[(string)$item['productId']],($item['visible'] ?? true)?1:0]);}
-    $requestWrite=$pdo->prepare("INSERT INTO stock_supply_requests(id,entrepreneur_member_id,payment_reference,receipt_path,total,status,record_json) VALUES(?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE payment_reference=VALUES(payment_reference),receipt_path=IF(VALUES(receipt_path)='',receipt_path,VALUES(receipt_path)),total=VALUES(total),status=VALUES(status),record_json=VALUES(record_json)");
+    $requestWrite=$pdo->prepare("INSERT INTO stock_supply_requests(id,entrepreneur_member_id,payment_reference,receipt_path,total,supply_mode,credit_return_due_at,credit_return_status,status,record_json) VALUES(?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE payment_reference=VALUES(payment_reference),receipt_path=IF(VALUES(receipt_path)='',receipt_path,VALUES(receipt_path)),total=VALUES(total),supply_mode=VALUES(supply_mode),credit_return_due_at=VALUES(credit_return_due_at),credit_return_status=VALUES(credit_return_status),status=VALUES(status),record_json=VALUES(record_json)");
     $requestItem=$pdo->prepare('INSERT INTO stock_supply_request_items(request_id,product_code,quantity,purchase_price) VALUES(?,?,?,?)');
     foreach($state['requests'] ?? [] as $request){
-        $requestWrite->execute([$request['id'],$request['entrepreneurId'],$request['reference'] ?? '',$request['receiptPath'] ?? '',$request['total'],$request['status'],storage_json($request)]);
+        $due=isset($request['creditReturnDueAt'])&&$request['creditReturnDueAt']?date('Y-m-d H:i:s',strtotime($request['creditReturnDueAt'])):null;
+        $requestWrite->execute([$request['id'],$request['entrepreneurId'],$request['reference'] ?? '',$request['receiptPath'] ?? '',$request['total'],$request['supplyMode'] ?? 'cash_purchase',$due,$request['creditReturnStatus'] ?? null,$request['status'],storage_json($request)]);
         $pdo->prepare('DELETE FROM stock_supply_request_items WHERE request_id=?')->execute([$request['id']]);
         foreach($request['items'] as $item)$requestItem->execute([$request['id'],$products[(string)$item['productId']] ?? (string)$item['productId'],$item['qty'],$item['price']]);
     }
