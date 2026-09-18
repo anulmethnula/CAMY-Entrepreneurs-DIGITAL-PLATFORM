@@ -64,8 +64,20 @@ function valid_registration(array $data): array {
         'phone' => trim((string) ($data['phone'] ?? '')),
         'nic' => trim((string) ($data['nic'] ?? '')),
         'city' => trim((string) ($data['city'] ?? '')),
+        'address' => trim((string) ($data['address'] ?? '')),
+        'occupation' => trim((string) ($data['occupation'] ?? '')),
+        'online_business' => (string)($data['onlineBusiness'] ?? ''),
+        'products' => trim((string)($data['products'] ?? '')),
+        'business_duration' => trim((string)($data['businessDuration'] ?? '')),
+        'monthly_income' => trim((string)($data['monthlyIncome'] ?? '')),
+        'social_link' => trim((string)($data['socialLink'] ?? '')),
+        'followers' => trim((string)($data['followers'] ?? '')),
+        'marketing_knowledge' => trim((string)($data['marketingKnowledge'] ?? '')),
+        'reason' => trim((string)($data['reason'] ?? '')),
+        'agreement' => !empty($data['agreement']),
     ];
-    if (!$clean['full_name'] || !filter_var($clean['email'], FILTER_VALIDATE_EMAIL) || !$clean['phone'] || !$clean['nic'] || !$clean['city']) response(['message' => 'Complete all required account details.'], 422);
+    if (!$clean['full_name'] || !filter_var($clean['email'], FILTER_VALIDATE_EMAIL) || !$clean['phone'] || !$clean['nic'] || !$clean['address'] || !$clean['city'] || !$clean['occupation'] || !in_array($clean['online_business'],['Yes','No'],true) || !$clean['marketing_knowledge'] || !$clean['reason'] || !$clean['agreement']) response(['message' => 'Complete the required registration details and agreement.'], 422);
+    foreach(['full_name'=>150,'address'=>2000,'occupation'=>120,'products'=>500,'business_duration'=>80,'monthly_income'=>80,'social_link'=>500,'followers'=>80,'marketing_knowledge'=>80,'reason'=>1000] as $field=>$max)if(strlen($clean[$field])>$max)response(['message'=>'One of the registration answers is too long.'],422);
     if (strlen($clean['password']) < 8 || !preg_match('/[A-Za-z]/', $clean['password']) || !preg_match('/\d/', $clean['password'])) response(['message' => 'Password must contain at least 8 characters, including letters and numbers.'], 422);
     return $clean;
 }
@@ -82,11 +94,15 @@ function save_nic_image(string $image): string {
 function valid_password(string $password): void {
     if (strlen($password)>1024 || strlen($password) < 8 || !preg_match('/[A-Za-z]/', $password) || !preg_match('/\d/', $password)) response(['message' => 'Password must contain at least 8 characters, including letters and numbers.'], 422);
 }
+function ensure_registration_fields(PDO $pdo): void {
+    foreach(['address'=>'TEXT NULL','details_json'=>'LONGTEXT NULL'] as $field=>$definition)if(!$pdo->query("SHOW COLUMNS FROM registration_requests LIKE '$field'")->fetch())$pdo->exec("ALTER TABLE registration_requests ADD COLUMN $field $definition");
+}
 
 try {
     $method = $_SERVER['REQUEST_METHOD'];
     security_request($method);
     $pdo = database();
+    ensure_registration_fields($pdo);
     $path = '/' . trim((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
     $path = preg_replace('#^/api#', '', $path) ?: '/';
     $method = $_SERVER['REQUEST_METHOD'];
@@ -138,8 +154,9 @@ try {
         $duplicate->execute([$data['email'], $data['nic'], $data['email'], $data['nic']]);
         if ((int) $duplicate->fetchColumn() > 0) response(['message' => 'An account or pending request already exists for this email or NIC.'], 409);
         $imagePath=save_nic_image((string)$payload['nicImage']);
-        $insert = $pdo->prepare('INSERT INTO registration_requests (full_name,email,password_hash,phone,nic,city,nic_image_path) VALUES (?,?,?,?,?,?,?)');
-        $insert->execute([$data['full_name'],$data['email'],password_hash($data['password'], PASSWORD_DEFAULT),$data['phone'],$data['nic'],$data['city'],$imagePath]);
+        $details=['occupation'=>$data['occupation'],'onlineBusiness'=>$data['online_business'],'products'=>$data['products'],'businessDuration'=>$data['business_duration'],'monthlyIncome'=>$data['monthly_income'],'socialLink'=>$data['social_link'],'followers'=>$data['followers'],'marketingKnowledge'=>$data['marketing_knowledge'],'reason'=>$data['reason']];
+        $insert = $pdo->prepare('INSERT INTO registration_requests (full_name,email,password_hash,phone,nic,address,city,nic_image_path,details_json) VALUES (?,?,?,?,?,?,?,?,?)');
+        $insert->execute([$data['full_name'],$data['email'],password_hash($data['password'], PASSWORD_DEFAULT),$data['phone'],$data['nic'],$data['address'],$data['city'],$imagePath,json_encode($details,JSON_UNESCAPED_SLASHES)]);
         response(['message' => 'Registration sent. CAMY Admin must approve your account before you can sign in.'], 201);
     }
     if ($path === '/auth/logout' && $method === 'POST') {
@@ -171,7 +188,8 @@ try {
     }
     if ($path === '/admin/registrations' && $method === 'GET') {
         require_admin($pdo);
-        $rows = $pdo->query("SELECT id,full_name,email,phone,nic,city,status,created_at,nic_image_path FROM registration_requests WHERE status = 'pending' ORDER BY created_at ASC")->fetchAll();
+        $rows = $pdo->query("SELECT id,full_name,email,phone,nic,address,city,status,created_at,nic_image_path,details_json FROM registration_requests WHERE status = 'pending' ORDER BY created_at ASC")->fetchAll();
+        foreach($rows as &$row)$row['details']=json_decode((string)($row['details_json'] ?? '{}'),true) ?: [];unset($row);
         response(['registrations' => $rows]);
     }
     if (preg_match('#^/admin/registrations/(\d+)/nic$#',$path,$matches) && $method==='GET') {
@@ -199,8 +217,8 @@ try {
         $memberId = member_id($pdo);
         $userInsert = $pdo->prepare("INSERT INTO users(member_id,full_name,email,password_hash,role,status) VALUES(?,?,?,?, 'entrepreneur','active')");
         $userInsert->execute([$memberId,$request['full_name'],$request['email'],$request['password_hash']]); $userId=(int)$pdo->lastInsertId();
-        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,nic,nic_image_path,phone,city,joined_date) VALUES(?,?,?,?,?,?,CURDATE())');
-        $entrepreneurInsert->execute([$userId,$memberId,$request['nic'],$request['nic_image_path'],$request['phone'],$request['city']]);
+        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,nic,nic_image_path,phone,address,city,joined_date) VALUES(?,?,?,?,?,?,?,CURDATE())');
+        $entrepreneurInsert->execute([$userId,$memberId,$request['nic'],$request['nic_image_path'],$request['phone'],$request['address'],$request['city']]);
         $pdo->prepare("UPDATE registration_requests SET status='approved',reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$admin['id'],$id]);
         $pdo->commit(); response(['message'=>'Registration approved. The entrepreneur can now sign in.','memberId'=>$memberId]);
     }
