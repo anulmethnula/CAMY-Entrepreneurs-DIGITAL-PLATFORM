@@ -1,59 +1,89 @@
-# CAMY Entrepreneurs
+# CAMY Entrepreneurs Digital Platform
 
-React/Vite portal with a PHP/MySQL API for CAMY stock supply, entrepreneur shops and customer orders.
+React/Vite portal with a PHP/MySQL API for CAMY-managed dropshipping, private entrepreneur shops, customer orders, commission settlement, and performance-based credit.
 
-## Run locally
+## Business model
 
-Start MySQL in XAMPP, then run `npm.cmd install` and `npm.cmd run dev`. The web app runs on `http://127.0.0.1:8080`; the PHP API runs on port 8000. The customer shop directory is a separate route at `http://127.0.0.1:8080/shops`. A specific shop can be shared as `/shops?shop=CE-0201`.
+CAMY owns and stores the products. Entrepreneurs do not need a physical shop or their own stock for the normal selling flow.
 
-In PowerShell, use `npm.cmd` if `npm` is blocked by the script execution policy. Startup checks MySQL connectivity before launching the app. If MySQL starts and immediately stops, inspect `C:/xampp/mysql/data/mysql_error.log`; back up the database directory before attempting recovery. Ports 8000 and 8080 must be available; the app will not silently switch web ports, and a server failure stops its companion process.
+1. CAMY activates products with a protected CAMY base price and warehouse quantity.
+2. Every approved entrepreneur receives a private storefront link: `/shops?shop=MEMBER-ID`.
+3. The entrepreneur chooses which CAMY products to show and sets each customer selling price.
+4. A customer using that link sees only that entrepreneur's shop. The application does not expose a directory of competing entrepreneurs.
+5. The customer submits one order linked to that entrepreneur and chooses bank transfer to CAMY or cash on delivery.
+6. CAMY reserves warehouse stock, approves the order, collects or verifies the customer payment outside the system, dispatches the parcel, and manages returns.
+7. The system keeps CAMY's base amount separate from the entrepreneur margin on every item and order.
+8. Positive margin becomes payable to the entrepreneur after CAMY records the customer money as collected. Its due date is seven days later.
+9. CAMY records the external bank payout and reference. The platform does not transfer money itself.
+10. If an entrepreneur sells below CAMY's base price, the shortfall becomes an entrepreneur contribution/outstanding balance so CAMY's amount remains protected.
 
-The API creates missing tables from [database/schema.sql](database/schema.sql) when it connects. Existing installations also receive the `registration_requests.nic_image_path` column automatically. Private NIC photos, payment receipts and PHP sessions live under `private/`, outside the API document root. Do not publish or commit that directory.
+For example, if the CAMY base price is Rs. 80,000 and the entrepreneur price is Rs. 90,000, CAMY retains Rs. 80,000 and the commission is Rs. 10,000. If the entrepreneur price is Rs. 75,000, the customer pays Rs. 75,000 and the Rs. 5,000 shortfall is recorded against the entrepreneur.
 
-If the MySQL `products` table is empty, the API loads a sample catalogue for review. Paid stock requests are blocked until CAMY Admin verifies real products, prices and stock, then activates the catalogue from Admin Products or Stock Requests. Activation writes the confirmed catalogue into MySQL `products`.
+## Payment and fulfilment states
 
-## Current flow
+Bank transfer:
 
-1. An entrepreneur requests an account with contact details, NIC number, and a camera/upload NIC photo. CAMY Admin checks the private photo and approves the account.
-2. CAMY Admin saves the CAMY bank account in Stock Requests. Entrepreneurs save their own buyer payment account in My Inventory; approved customers receive these details through their private order tracking link. Real account details must be entered before requests can be approved.
-3. The entrepreneur requests stock without paying. CAMY Admin approves availability and reserves the stock. The approved request shows its fixed total and a copy of the CAMY bank details. The entrepreneur pays outside the platform and uploads a receipt. Admin verifies the money in the bank account, then dispatches stock. An incorrect receipt can be returned with a reason for resubmission.
-4. Dispatched items appear in the entrepreneur's own shop. They can set a separate customer selling price or hide a listing. They cannot edit CAMY warehouse quantities.
-5. Anyone can browse `/shops`. Customers register or sign in before sending an order request. Customer accounts are separate from entrepreneur and staff access and need no administrator approval. Delivery name, mobile number, district and address are saved and filled in for future purchases; customers can edit them through Saved details. Checkout creates a distinct request per shop linked to the signed-in customer. My orders reloads their requests on return and refreshes shop approvals and delivery stages automatically. The entrepreneur opens Customer Orders and approves or rejects the request. Approval reserves shop stock and fixes the bank account and order amount. Customers pay that shop outside the platform and upload the receipt in My orders. Each shop is paid separately. Older guest orders remain accessible through their existing private tracking links; they are not matched to new accounts by name or phone.
-6. The entrepreneur verifies customer payment before dispatch, then records delivery or return. Dispatching requires a parcel tracking number; the courier company is optional. Tracking details are saved with the order and shown to the customer in My orders. Admin status changes also open the order details for tracking entry before dispatch. Admin can review shop orders. Only Delivered orders count toward verified sales and credit tiers. Cancelling unpaid approved requests releases their reserved stock; returning customer orders restores stock once. Refunds are arranged directly with the seller outside the platform.
+`Pending -> Awaiting payment -> Payment review -> Processing -> Dispatched -> Delivered`
 
-The customer cart groups items by shop and shows each shop's subtotal. For example, buying Rs. 12,000 from Shop A and Rs. 5,500 from Shop B sends two requests. When Shop A approves, only its order becomes ready to pay and shows Shop A's bank account. Shop B may approve later or reject independently. Customers transfer each approved order's amount to that shop and upload its own receipt. A receipt or rejection on one order never advances the other order. Bank details are withheld until approval. Checkout is atomic across shops; an unavailable item prevents partial submission. The customer page uses a stable checkout reference so retrying after a lost response returns the same orders instead of creating duplicates.
+Cash on delivery:
 
-Customers open product details by tapping the image or title. The image viewer supports zoom in, zoom out, reset, dragging and touch panning, with pinch zoom on touch devices. Explore shops and My orders have separate views, and the mobile cart shortcut shows the total and number of shops.
+`Pending -> Processing -> Dispatched -> Delivered -> COD collected`
 
-Receipt buttons open a private on-page preview for images or PDFs, with an optional new-tab view. Receipt endpoints serve files inline while retaining buyer/seller access checks. The customer header and footer use the original uploaded red CAMY mark from `camylogo.png`. Customer CSS loads after shared styles; product images use normal rendering without blend or backdrop filters.
+Only CAMY Admin or Operations staff can approve payment, dispatch orders, confirm COD collection, manage returns, and record commission payouts. Entrepreneurs can see their own orders, prices, performance, payout status, and credit position but cannot confirm customer money themselves.
 
-Customer accounts include Overview, My orders, Purchase history, Saved products, My feedback and Address book. The dashboard shows actual order/payment counts, delivered purchase value and recent item thumbnails. Purchase history filters by product/order search, status, category, shop and dates, with newest/oldest/value sorting. Product browsing includes categories, price bounds and price/name sorting. Buy again adds available items at current shop prices and preserves the previous quantities for review. Up to 200 favourites and 10 additional delivery addresses are saved in MySQL; unavailable saved products remain visible and removable. Default address changes and password changes are available from the account; changing a password revokes other customer sessions.
+Customer payment is external. There is no payment gateway or bank integration. Bank-transfer customers receive only the configured CAMY bank account. COD commission does not become payable until CAMY records the courier/cash remittance reference.
 
-Only the owner of a Delivered purchase can submit or edit a 1–5 star rating and product comment. Feedback is unique per customer, shop and product. New and edited feedback goes to Pending. CAMY staff with order-management access review it under Orders → Ratings & feedback, with search/status filters, publish/hide controls and a CAMY reply. Product pages and rating summaries show Published reviews only, with a first-name verified-buyer label. Customer emails, order identifiers and unpublished feedback are excluded from the public review response. Owners can see their own feedback and replies in My feedback.
+## Credit model
 
-If no live shops have stock, `/shops` displays a clearly labelled temporary preview collection with existing sample catalogue images and realistic sample shops. Preview data is returned separately by `/marketplace/preview`; it never creates live products, inventory, sales, orders or fake reviews. Sample ordering, saving and payments are blocked. Remove preview / view live shops hides it, with the preference retained in the browser; View temporary sample collection restores it from the empty directory. Existing real catalogue, stock and customer purchases remain the source for live shopping and account history.
+The existing credit module remains available as the post-trial facility described in the project brief:
 
-Stages: Pending → Awaiting payment → Payment review → Payment verified (stored as Approved for supply / Processing for customer orders) → Dispatched. Customer orders then become Delivered or Returned. Receipt correction returns Payment review to Awaiting payment with a reason. Uploading proof does not automatically confirm payment. Receipts accept JPG, PNG, WebP or PDF files up to 5 MB and remain private.
+- Verified delivered sales determine eligibility.
+- CAMY Admin configures sales thresholds and credit limits; values are not hardcoded.
+- The system tracks issued credit, settlements, and outstanding balances.
+- A below-base sale or recovery of an already-paid commission after a return can add to the entrepreneur's outstanding balance.
+- Stock-on-credit requests remain a separate optional post-trial facility; they are not required for ordinary dropshipping sales.
+- For an approved credit-stock issue, CAMY Admin sets a return deadline (1–365 days) and may edit it later. Physically returned unsold stock is restored to CAMY and reduces the entrepreneur's outstanding balance. Damaged, lost, or non-returned stock remains payable by the entrepreneur and is recorded with an inspection note.
 
-Existing databases migrate the supply and shop-order status columns automatically. Historical supply requests with receipts already submitted move to payment review; already approved supply requests still require stock checks before dispatch. Existing customer orders keep their current fulfilment stage. Private customer tracking links are issued for new requests.
+## Roles
 
-Products, entrepreneur profiles and finances, shop inventory, supply requests, customer orders/items, settlements, credit tiers and settings are stored in relational MySQL tables. Existing snapshot records are backfilled automatically. The JSON row remains a compatibility snapshot and transaction lock; reads use the relational storage. Payment verification is a seller decision; there is no bank integration or online payment collection. Notifications are in-system only; customers should save their private tracking links. WhatsApp/SMS notifications are not implemented.
+- Super Admin: full products, entrepreneurs, rules, orders, finances, and reports access.
+- Operations Admin: customer payment review, COD collection, dispatch, returns, and commission settlement.
+- Entrepreneur: private shop prices and visibility, own orders, sales, commission, credit, and settlement account.
+- Customer: private shop purchase, external payment proof, order tracking, delivery confirmation, returns, favourites, and reviews.
 
-Run `npm.cmd run build` to check the web build. PHP files can be checked with `C:\xampp\php\php.exe -l api\index.php` and `C:\xampp\php\php.exe -l api\marketplace.php`.
+## Local setup
 
-Run `C:\xampp\php\php.exe scripts\test-workflow.php` for workflow rules and `C:\xampp\php\php.exe scripts\test-workflow-api.php` for both complete API flows. The API checks use a temporary isolated MySQL database and remove it and their test receipts afterward.
+Start MySQL in XAMPP, then run:
 
-## Accounts, security and reports
+```powershell
+npm.cmd install
+npm.cmd run dev
+```
 
-Staff access is stored in MySQL with role permissions. Creating staff or resetting their password issues a temporary password, shown once to the administrator. The recipient must replace it at first sign-in. Password changes revoke other sessions. Disabled accounts lose access immediately. Sessions expire after 30 minutes of inactivity or eight hours overall; sign-in attempts are rate limited and administrative writes are audited. Mutating requests require JSON and the application request header. Private files and database material are blocked from Vite serving.
+The web app runs at `http://127.0.0.1:8080`; the PHP API runs at `http://127.0.0.1:8000`. Ports 8000 and 8080 must be available.
 
-New installations generate bootstrap credentials in private/bootstrap-credentials.txt. Existing accounts using known demonstration passwords must change them. Configure CAMY_DB_HOST, CAMY_DB_PORT, CAMY_DB_NAME, CAMY_DB_USER and CAMY_DB_PASSWORD for deployment; CAMY_ENV=production requires a dedicated database user and nonempty password. Serve production through HTTPS.
+The API creates missing tables from `database/schema.sql` and adds the current order-economics columns to older installations. Private NIC images, receipts, sessions, and bootstrap credentials live under `private/` and must never be published.
 
-Catalogue and credit-rule changes have explicit Save buttons; background refresh preserves drafts. Database-backed profile updates, account closure and credit settlements are validated on the server. Existing training records are retained; the training loader now requires a separate database named with training, test or demo.
+Configure production with `CAMY_DB_HOST`, `CAMY_DB_PORT`, `CAMY_DB_NAME`, `CAMY_DB_USER`, and `CAMY_DB_PASSWORD`. `CAMY_ENV=production` requires a dedicated database user and a non-empty password. Use HTTPS.
 
-Downloads are genuine .xlsx workbooks with branded headings, readable column widths, frozen headers, filters, typed dates and LKR amounts, totals and order-item sheets. Identifiers remain text, and user text cannot become an Excel formula.
+## Verification
 
-Additional checks: node scripts/test-reports.mjs; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-report-format.ps1; C:/xampp/php/php.exe scripts/test-staff-auth.php; C:/xampp/php/php.exe scripts/check-database.php; node scripts/browser-smoke.mjs (requires the local development servers). Browser smoke uses fictional UI fixtures without changing live orders.
-Customer returns are available inside delivered orders in My orders / Purchase history. A request covers the complete order from that shop. The shop approves it with a return address and instructions, or declines it with a reason. The customer records the return courier and tracking number after shipping. Confirming receipt restores reserved stock once, marks the order Returned, and recalculates verified delivered sales and credit eligibility. The shop records the reference after making the refund by bank transfer outside the platform; the application never transfers money. Other shops' orders continue independently. Open returns and pending refunds prevent entrepreneur account closure. The purchase-history status filter includes Return requests.
+```powershell
+npm.cmd run build
+C:\xampp\php\php.exe scripts\test-workflow.php
+C:\xampp\php\php.exe scripts\test-workflow-api.php
+C:\xampp\php\php.exe scripts\test-staff-auth.php
+C:\xampp\php\php.exe scripts\check-database.php
+node scripts\test-reports.mjs
+```
 
-Each entrepreneur profile includes a searchable customer directory with contact/address details and that shop's purchase history. Registered buyers are grouped by customer ID; legacy guest orders remain separate to avoid merging unrelated customers. Orders are matched to entrepreneur IDs rather than names.
+The API integration test creates and removes an isolated temporary MySQL database.
+
+## Security and reliability notes
+
+- Stock reservation, price validation, shop ownership, payment state changes, and payout eligibility are enforced by the PHP API.
+- Checkout uses an idempotency key so a network retry does not duplicate an order.
+- Customer, entrepreneur, and staff sessions remain separated.
+- Private receipts are served only after ownership or staff authorization checks.
+- Administrative writes are audited, sign-in attempts are rate-limited, and staff sessions expire.
+- Returns restore CAMY warehouse stock once. A return cancels unpaid commission; if commission was already paid, the recovery is recorded against the entrepreneur.

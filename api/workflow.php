@@ -5,8 +5,8 @@ function workflow_owner(array $user, string $member): void {
     if(!in_array($user['role'],['admin','manager'],true)&&($user['role']!=='entrepreneur'||(string)$user['member_id']!==$member))response(['message'=>'You cannot review another shop order.'],403);
 }
 function workflow_transition(string $old,string $next,bool $supply): void {
-    $allowed=['Pending'=>['Awaiting payment','Rejected'],'Awaiting payment'=>['Rejected'],'Payment review'=>['Processing','Awaiting payment'],'Processing'=>['Dispatched'],'Dispatched'=>['Delivered','Returned'],'Delivered'=>['Returned']];
-    if($supply){$allowed['Payment review']=['Approved','Awaiting payment'];$allowed['Approved']=['Dispatched'];}
+    $allowed=['Pending'=>['Awaiting payment','Processing','Rejected'],'Awaiting payment'=>['Rejected'],'Payment review'=>['Processing','Awaiting payment'],'Processing'=>['Dispatched'],'Dispatched'=>['Delivered','Returned'],'Delivered'=>['Returned']];
+    if($supply){$allowed['Pending']=['Awaiting payment','Rejected'];$allowed['Payment review']=['Approved','Awaiting payment'];$allowed['Approved']=['Dispatched'];}
     if(!in_array($next,$allowed[$old] ?? [],true))response(['message'=>'This action is not available at the current stage.'],409);
 }
 function workflow_bank_required(array $bank): void {
@@ -114,12 +114,13 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         if($action==='receipt'){
             if(!$supply&&!$customer)response(['message'=>'Use the customer tracking link to upload payment proof.'],403);
             if($supply&&(!$user||$user['role']!=='entrepreneur'||(string)$user['member_id']!==(string)$row['entrepreneurId']))response(['message'=>'Only the buyer may upload the receipt.'],403);
-            if($row['status']!=='Awaiting payment')response(['message'=>'Wait for approval before paying and uploading a receipt.'],409);
+            if(!$supply&&($row['paymentMethod'] ?? 'bank_transfer')!=='bank_transfer')response(['message'=>'Cash-on-delivery orders do not use payment receipts.'],409);
+            if($row['status']!=='Awaiting payment')response(['message'=>'Wait for CAMY approval before paying and uploading a receipt.'],409);
             $file=workflow_receipt($data,$row['id']);$state[$list][$index]['receiptPath']=$file;$state[$list][$index]['receipt']='/api/marketplace/'.$m[1].'/'.$row['id'].'/receipt';$state[$list][$index]['receiptName']=basename((string)($data['receiptName'] ?? 'receipt'));$state[$list][$index]['reference']=trim((string)$data['reference']);$state[$list][$index]['status']='Payment review';$state[$list][$index]['receiptUploadedAt']=date(DATE_ATOM);$state[$list][$index]['paymentNote']='';
             if($supply)$pdo->prepare('UPDATE stock_supply_requests SET payment_reference=?,receipt_path=? WHERE id=?')->execute([trim((string)$data['reference']),$file,$row['id']]);
         }elseif(in_array($action,['verify','retry'],true)){
-            if(!$user)response(['message'=>'Seller login required.'],401);workflow_owner($user,(string)$row['entrepreneurId']);if($supply&&!in_array($user['role'],['admin','manager'],true))response(['message'=>'CAMY Admin must verify stock payments.'],403);
-            if($action==='verify'&&empty($row['receipt']))response(['message'=>'A payment receipt is required before verification.'],409);$next=$action==='verify'?($supply?'Approved':'Processing'):'Awaiting payment';workflow_transition($row['status'],$next,$supply);if($supply&&$action==='verify'&&!array_key_exists('reserved',$row)){workflow_reserve($state,$row['items'],null);$state[$list][$index]['reserved']=true;}if($action==='retry'){$reason=trim((string)($data['reason'] ?? ''));if(!$reason||strlen($reason)>500)response(['message'=>'Enter a receipt correction reason up to 500 characters.'],422);$state[$list][$index]['paymentNote']=$reason;}$state[$list][$index]['status']=$next;
+            if(!$user)response(['message'=>'CAMY staff login required.'],401);if(!in_array($user['role'],['admin','manager'],true))response(['message'=>'CAMY Operations must verify customer payments.'],403);
+            if($action==='verify'&&empty($row['receipt']))response(['message'=>'A payment receipt is required before verification.'],409);$next=$action==='verify'?($supply?'Approved':'Processing'):'Awaiting payment';workflow_transition($row['status'],$next,$supply);if($supply&&$action==='verify'&&!array_key_exists('reserved',$row)){workflow_reserve($state,$row['items'],null);$state[$list][$index]['reserved']=true;}if(!$supply&&$action==='verify')market_apply_payment($state,$index,'bank_transfer',(string)($row['reference'] ?? ''));if($action==='retry'){$reason=trim((string)($data['reason'] ?? ''));if(!$reason||strlen($reason)>500)response(['message'=>'Enter a receipt correction reason up to 500 characters.'],422);$state[$list][$index]['paymentNote']=$reason;}$state[$list][$index]['status']=$next;
         }else response(['message'=>'Invalid action.'],422);
         $state[$list][$index]['updatedAt']=date(DATE_ATOM);$table=$supply?'stock_supply_requests':'shop_orders';$pdo->prepare("UPDATE $table SET status=? WHERE id=?")->execute([$state[$list][$index]['status'],$row['id']]);market_save($pdo,$state);$pdo->commit();$row=$state[$list][$index];unset($row['trackingToken'],$row['receiptPath']);if($customer&&!empty($row['receipt']))$row['receipt'].='?token='.rawurlencode($token);response(['order'=>$row]);
     }

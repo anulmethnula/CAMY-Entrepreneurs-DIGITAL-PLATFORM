@@ -12,7 +12,7 @@ function return_route(PDO $pdo,string $path,string $method): void {
     if($index===null)response(['message'=>'Order not found.'],404);
     $order=&$state['orders'][$index];
     if($customer&&(int)($order['customerId']??0)!==(int)$customer['id'])response(['message'=>'This order belongs to another customer.'],403);
-    if($user)workflow_owner($user,(string)$order['entrepreneurId']);
+    if($user&&!in_array($user['role'],['admin','manager'],true))response(['message'=>'CAMY Operations manages returns and refunds.'],403);
     $return=$order['return']??[];$stage=$return['status']??'';
     $text=static function(string $key,int $min,int $max)use($data):string{$value=trim((string)($data[$key]??''));if(strlen($value)<$min||strlen($value)>$max||preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f]/',$value))response(['message'=>'Enter valid '.str_replace('_',' ',$key).' ('.$min.'–'.$max.' characters).'],422);return $value;};
     if($action==='request'){
@@ -28,8 +28,12 @@ function return_route(PDO $pdo,string $path,string $method): void {
         $return['status']='Shipped';$return['shippedAt']=date(DATE_ATOM);
     }elseif($action==='receive'){
         if($stage!=='Shipped'||$order['status']!=='Delivered')response(['message'=>'Only a shipped return can be confirmed received.'],409);
-        if($order['reserved']??true){workflow_release($state,$order['items'],(string)$order['entrepreneurId']);$order['reserved']=false;}
+        if($order['reserved']??true){workflow_release($state,$order['items'],null);$order['reserved']=false;}
         $return['status']='Received';$return['receivedAt']=date(DATE_ATOM);$return['refundStatus']='Pending';$return['refundAmount']=(float)$order['amount'];
+        if(($order['commissionStatus'] ?? '')==='Payable')$order['commissionStatus']='Cancelled - returned';
+        elseif(($order['commissionStatus'] ?? '')==='Paid'&&!($order['commissionRecoveryApplied'] ?? false)){
+            $recovery=max(0,(float)($order['commissionAmount'] ?? 0));foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$order['entrepreneurId']){$person['used']=round((float)($person['used'] ?? 0)+$recovery,2);break;}unset($person);$order['commissionRecoveryApplied']=true;
+        }
         $order['status']='Returned';$pdo->prepare("UPDATE shop_orders SET status='Returned' WHERE id=?")->execute([$order['id']]);
         $sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$order['entrepreneurId']&&$entry['status']==='Delivered')$sales+=(float)$entry['amount'];
         $credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales)$credit=max($credit,(float)$tier['credit']);
