@@ -47,6 +47,7 @@ jobs:
           php -l api/index.php
           php -l api/config.php
           php -l api/marketplace.php
+          php -l api/security.php
           php -l api/workflow.php
           php -l api/storage.php
           php -l api/catalogue.php
@@ -71,3 +72,12 @@ jobs:
           CAMY_DB_PASSWORD: ""
           CAMY_BOOTSTRAP_PASSWORD: "CAMY-CI-Temporary-123"
         run: php -r "require 'api/config.php'; \$pdo=database(); echo DB_NAME . ' tables=' . count(\$pdo->query('SHOW TABLES')->fetchAll()) . PHP_EOL;"
+
+      - name: Confirm registration schema
+        env:
+          CAMY_DB_HOST: 127.0.0.1
+          CAMY_DB_PORT: "3306"
+          CAMY_DB_NAME: camy_new
+          CAMY_DB_USER: root
+          CAMY_DB_PASSWORD: ""
+        run: php -r "require 'api/config.php'; \$pdo=database(); \$need=['address','occupation','has_online_business','social_media_url','followers_count','facebook_marketing','join_reason','agreement_accepted','nic_front_path','nic_back_path']; \$have=array_column(\$pdo->query('SHOW COLUMNS FROM registration_requests')->fetchAll(),'Field'); foreach(\$need as \$field){if(!in_array(\$field,\$have,true))throw new RuntimeException('Missing registration field: '.\$field);} echo 'registration schema ok'.PHP_EOL;"
