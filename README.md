@@ -142,13 +142,19 @@ Web build:
 npm.cmd run build
 ```
 
-PHP syntax:
+PHP / XAMPP detection:
 
 ```powershell
-C:\xampp\php\php.exe -l api\index.php
-C:\xampp\php\php.exe -l api\marketplace.php
-C:\xampp\php\php.exe -l api\workflow.php
-C:\xampp\php\php.exe -l api\config.php
+npm.cmd run php:version
+```
+
+PHP is auto-detected from PATH, common XAMPP locations on available Windows drives, or the optional `CAMY_PHP_PATH` environment variable.
+
+For an unusual XAMPP folder, set it for the current PowerShell session:
+
+```powershell
+$env:CAMY_PHP_PATH='D:\your-xampp-folder\php\php.exe'
+npm.cmd run php:version
 ```
 
 Local database setup:
