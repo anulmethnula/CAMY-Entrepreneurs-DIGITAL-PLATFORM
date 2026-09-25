@@ -134,6 +134,14 @@ The active system uses:
 
 ## Checks
 
+Non-destructive local database health check:
+
+```powershell
+npm.cmd run db:check
+```
+
+This checks required tables, operational indexes, active credit commitments, dropship payout-ledger consistency and other critical database invariants without deleting records.
+
 Frontend build:
 
 ```powershell
