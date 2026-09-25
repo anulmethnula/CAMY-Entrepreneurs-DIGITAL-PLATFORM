@@ -37,6 +37,40 @@ function workflow_receipt(array $data,string $id): string {
     if(file_put_contents($dir.'/'.$file,$bytes)===false)throw new RuntimeException('Could not save receipt.');return $file;
 }
 function workflow_route(PDO $pdo,string $path,string $method): void {
+    if($path==='/marketplace/dropship-orders'&&$method==='POST'){
+        $user=current_user($pdo);
+        if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
+        $data=input();
+        if(!is_array($data['customer']??null))response(['message'=>'Enter the client delivery details.'],422);
+        $customer=customer_details($data['customer']);
+        $name=trim((string)($customer['name']??''));$phone=preg_replace('/[\\s-]/','',(string)($customer['phone']??''));$district=trim((string)($customer['district']??''));$address=trim((string)($customer['address']??''));$notes=trim((string)($data['customer']['notes']??''));
+        if(!$name||strlen($name)>150||!preg_match('/^(?:\\+94|0)7\\d{8}$/',$phone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter a valid client name, Sri Lankan mobile number, district and delivery address.'],422);
+        $items=workflow_items($data['items']??[]);
+        if(!$items)response(['message'=>'Add at least one CAMY product to the order.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);
+        if(empty($state['catalogue_live'])){$pdo->rollBack();response(['message'=>'CAMY Admin must activate the verified catalogue before orders can be placed.'],409);}
+        $selected=[];$clientTotal=0;$camyCost=0;$count=0;
+        foreach($items as $item){
+            $product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($item['productId']??'')){$product=$candidate;break;}
+            $qty=(int)($item['qty']??0);$sell=filter_var($item['sellPrice']??null,FILTER_VALIDATE_FLOAT);
+            if(!$product||$qty<1||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A selected CAMY product is unavailable in the requested quantity.'],409);}
+            if($sell===false||!is_finite($sell)||$sell<(float)$product['price']||$sell>100000000){$pdo->rollBack();response(['message'=>'Client selling price must be at least the CAMY product price.'],422);}
+            $sell=round((float)$sell,2);$base=round((float)$product['price'],2);
+            $selected[]=['id'=>$product['id'],'productId'=>$product['id'],'name'=>$product['name'],'qty'=>$qty,'price'=>$sell,'camyPrice'=>$base,'image'=>$product['image']??'','category'=>$product['category']??'Other'];
+            $clientTotal+=$sell*$qty;$camyCost+=$base*$qty;$count+=$qty;
+        }
+        workflow_reserve($state,$selected,null);
+        $groupId='DROP-'.bin2hex(random_bytes(5));
+        $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
+        $id='CMY-'.bin2hex(random_bytes(5));$token=bin2hex(random_bytes(24));
+        $entrepreneurName=(string)$user['full_name'];
+        $order=['id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,'amount'=>round($clientTotal,2),'camyCost'=>round($camyCost,2),'entrepreneurMargin'=>round($clientTotal-$camyCost,2),'date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>false,'entrepreneur'=>$entrepreneurName,'entrepreneurId'=>(string)$user['member_id'],'source'=>'shop','orderMode'=>'dropship','createdBy'=>'Entrepreneur'];
+        $state['orders'][]=$order;
+        $pdo->prepare("INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status) VALUES(?,?,?,?, 'Processing')")->execute([$id,$groupId,$user['member_id'],round($clientTotal,2)]);
+        foreach($selected as $item){$code='';foreach($state['products'] as $product)if((string)$product['id']===(string)$item['id']){$code=(string)($product['code']??$product['id']);break;}$pdo->prepare('INSERT INTO shop_order_items(order_id,product_code,quantity,sell_price) VALUES(?,?,?,?)')->execute([$id,$code,$item['qty'],$item['price']]);}
+        market_save($pdo,$state);$pdo->commit();
+        $safe=$order;unset($safe['trackingToken']);response(['order'=>$safe],201);
+    }
     if(preg_match('#^/marketplace/orders/([^/]+)/confirm-delivery$#',$path,$match)&&$method==='POST'){
         $customer=customer_required($pdo);$pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
         foreach($state['orders'] as $key=>$order)if($order['id']===$match[1]){$index=$key;break;}
