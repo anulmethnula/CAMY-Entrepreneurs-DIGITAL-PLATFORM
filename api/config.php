@@ -63,6 +63,19 @@ function initialise_database(PDO $pdo): void
     foreach(['stock_supply_requests','shop_orders'] as $table){$column=$pdo->query("SHOW COLUMNS FROM $table LIKE 'status'")->fetch();if(!str_contains($column['Type'],'varchar'))$pdo->exec("ALTER TABLE $table MODIFY status VARCHAR(40) NOT NULL DEFAULT 'Pending'");}
     if(!$pdo->query("SHOW COLUMNS FROM shop_orders LIKE 'delivered_at'")->fetch())$pdo->exec('ALTER TABLE shop_orders ADD COLUMN delivered_at DATETIME NULL AFTER status');
     $pdo->exec("UPDATE shop_orders SET delivered_at=created_at WHERE status='Delivered' AND delivered_at IS NULL");
+
+    // Operational indexes are also applied to existing local databases. These keep
+    // entrepreneur/state refreshes and the 90-day activity check responsive as data grows.
+    foreach([
+        'users'=>['users_role_status_member'=>'(role,status,member_id)'],
+        'stock_supply_requests'=>['supply_member_status_created'=>'(entrepreneur_member_id,status,created_at)'],
+        'shop_orders'=>['shop_orders_member_status_delivery'=>'(entrepreneur_member_id,status,delivered_at)'],
+    ] as $table=>$indexes){
+        foreach($indexes as $name=>$columns){
+            $check=$pdo->prepare("SHOW INDEX FROM `$table` WHERE Key_name=?");$check->execute([$name]);
+            if(!$check->fetch())$pdo->exec("ALTER TABLE `$table` ADD INDEX `$name` $columns");
+        }
+    }
     $count = (int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
     if ($count === 0) {
         $password=getenv('CAMY_BOOTSTRAP_PASSWORD') ?: 'Camy!'.bin2hex(random_bytes(12)).'7';
