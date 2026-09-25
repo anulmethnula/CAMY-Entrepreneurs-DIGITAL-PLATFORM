@@ -1,59 +1,160 @@
-# CAMY Entrepreneurs
+# CAMY Entrepreneurs Digital Platform
 
-React/Vite portal with a PHP/MySQL API for CAMY stock supply, entrepreneur shops and customer orders.
+CAMY is now an **Entrepreneur + CAMY Admin** dropship operations platform.
 
-## Run locally
+There is no active customer portal. Entrepreneurs sell to their own clients, enter those client orders into CAMY, and CAMY Admin handles fulfilment and delivery updates.
 
-Start MySQL in XAMPP, then run `npm.cmd install` and `npm.cmd run dev`. The web app runs on `http://127.0.0.1:8080`; the PHP API runs on port 8000. The customer shop directory is a separate route at `http://127.0.0.1:8080/shops`. A specific shop can be shared as `/shops?shop=CE-0201`.
+## Current business flow
 
-In PowerShell, use `npm.cmd` if `npm` is blocked by the script execution policy. Startup checks MySQL connectivity before launching the app. If MySQL starts and immediately stops, inspect `C:/xampp/mysql/data/mysql_error.log`; back up the database directory before attempting recovery. Ports 8000 and 8080 must be available; the app will not silently switch web ports, and a server failure stops its companion process.
+1. CAMY Admin manages the CAMY product catalogue, prices and warehouse stock.
+2. An entrepreneur finds and sells to a client outside this system.
+3. The entrepreneur opens **New client order** in CAMY.
+4. The entrepreneur selects CAMY products, quantity and client selling price.
+5. The entrepreneur enters the client's name, Sri Lankan mobile number, district, delivery address and optional notes.
+6. CAMY records the order as **Processing** and reserves the required quantity from CAMY warehouse stock.
+7. CAMY Admin sees the entrepreneur, client, delivery address, products, CAMY cost, client order value and fulfilment status.
+8. CAMY Admin dispatches the parcel and records a required tracking number plus an optional courier.
+9. The entrepreneur sees the latest delivery status from the Orders / Delivery tracking page. The order view refreshes periodically while the dropship workspace is open.
+10. CAMY Admin marks the order **Delivered** when complete.
+11. Delivered sales feed the entrepreneur's verified sales and credit-tier calculation.
 
-The API creates missing tables from [database/schema.sql](database/schema.sql) when it connects. Existing installations also receive the `registration_requests.nic_image_path` column automatically. Private NIC photos, payment receipts and PHP sessions live under `private/`, outside the API document root. Do not publish or commit that directory.
+Normal fulfilment path:
 
-If the MySQL `products` table is empty, the API loads a sample catalogue for review. Paid stock requests are blocked until CAMY Admin verifies real products, prices and stock, then activates the catalogue from Admin Products or Stock Requests. Activation writes the confirmed catalogue into MySQL `products`.
+```text
+Entrepreneur creates client order
+        ↓
+Processing
+        ↓
+CAMY Admin packs order
+        ↓
+Dispatched + tracking number
+        ↓
+Delivered
+        ↓
+Verified sales + credit tier update
+```
 
-## Current flow
+CAMY Admin can reject a Processing order when fulfilment cannot continue. Reserved CAMY warehouse stock is restored when a reserved dropship order is rejected or returned.
 
-1. An entrepreneur requests an account with contact details, NIC number, and a camera/upload NIC photo. CAMY Admin checks the private photo and approves the account.
-2. CAMY Admin saves the CAMY bank account in Stock Requests. Entrepreneurs save their own buyer payment account in My Inventory; approved customers receive these details through their private order tracking link. Real account details must be entered before requests can be approved.
-3. The entrepreneur requests stock without paying. CAMY Admin approves availability and reserves the stock. The approved request shows its fixed total and a copy of the CAMY bank details. The entrepreneur pays outside the platform and uploads a receipt. Admin verifies the money in the bank account, then dispatches stock. An incorrect receipt can be returned with a reason for resubmission.
-4. Dispatched items appear in the entrepreneur's own shop. They can set a separate customer selling price or hide a listing. They cannot edit CAMY warehouse quantities.
-5. Anyone can browse `/shops`. Customers register or sign in before sending an order request. Customer accounts are separate from entrepreneur and staff access and need no administrator approval. Delivery name, mobile number, district and address are saved and filled in for future purchases; customers can edit them through Saved details. Checkout creates a distinct request per shop linked to the signed-in customer. My orders reloads their requests on return and refreshes shop approvals and delivery stages automatically. The entrepreneur opens Customer Orders and approves or rejects the request. Approval reserves shop stock and fixes the bank account and order amount. Customers pay that shop outside the platform and upload the receipt in My orders. Each shop is paid separately. Older guest orders remain accessible through their existing private tracking links; they are not matched to new accounts by name or phone.
-6. The entrepreneur verifies customer payment before dispatch, then records delivery or return. Dispatching requires a parcel tracking number; the courier company is optional. Tracking details are saved with the order and shown to the customer in My orders. Admin status changes also open the order details for tracking entry before dispatch. Admin can review shop orders. Only Delivered orders count toward verified sales and credit tiers. Cancelling unpaid approved requests releases their reserved stock; returning customer orders restores stock once. Refunds are arranged directly with the seller outside the platform.
+## Local XAMPP setup
 
-The customer cart groups items by shop and shows each shop's subtotal. For example, buying Rs. 12,000 from Shop A and Rs. 5,500 from Shop B sends two requests. When Shop A approves, only its order becomes ready to pay and shows Shop A's bank account. Shop B may approve later or reject independently. Customers transfer each approved order's amount to that shop and upload its own receipt. A receipt or rejection on one order never advances the other order. Bank details are withheld until approval. Checkout is atomic across shops; an unavailable item prevents partial submission. The customer page uses a stable checkout reference so retrying after a lost response returns the same orders instead of creating duplicates.
+Requirements:
 
-Customers open product details by tapping the image or title. The image viewer supports zoom in, zoom out, reset, dragging and touch panning, with pinch zoom on touch devices. Explore shops and My orders have separate views, and the mobile cart shortcut shows the total and number of shops.
+- Windows
+- XAMPP installed at `C:\xampp`
+- XAMPP MySQL running
+- Node.js / npm
 
-Receipt buttons open a private on-page preview for images or PDFs, with an optional new-tab view. Receipt endpoints serve files inline while retaining buyer/seller access checks. The customer header and footer use the original uploaded red CAMY mark from `camylogo.png`. Customer CSS loads after shared styles; product images use normal rendering without blend or backdrop filters.
+The default local database is:
 
-Customer accounts include Overview, My orders, Purchase history, Saved products, My feedback and Address book. The dashboard shows actual order/payment counts, delivered purchase value and recent item thumbnails. Purchase history filters by product/order search, status, category, shop and dates, with newest/oldest/value sorting. Product browsing includes categories, price bounds and price/name sorting. Buy again adds available items at current shop prices and preserves the previous quantities for review. Up to 200 favourites and 10 additional delivery addresses are saved in MySQL; unavailable saved products remain visible and removable. Default address changes and password changes are available from the account; changing a password revokes other customer sessions.
+```text
+camy_new
+```
 
-Only the owner of a Delivered purchase can submit or edit a 1–5 star rating and product comment. Feedback is unique per customer, shop and product. New and edited feedback goes to Pending. CAMY staff with order-management access review it under Orders → Ratings & feedback, with search/status filters, publish/hide controls and a CAMY reply. Product pages and rating summaries show Published reviews only, with a first-name verified-buyer label. Customer emails, order identifiers and unpublished feedback are excluded from the public review response. Owners can see their own feedback and replies in My feedback.
+Database connection defaults are in `api/config.php`:
 
-If no live shops have stock, `/shops` displays a clearly labelled temporary preview collection with existing sample catalogue images and realistic sample shops. Preview data is returned separately by `/marketplace/preview`; it never creates live products, inventory, sales, orders or fake reviews. Sample ordering, saving and payments are blocked. Remove preview / view live shops hides it, with the preference retained in the browser; View temporary sample collection restores it from the empty directory. Existing real catalogue, stock and customer purchases remain the source for live shopping and account history.
+```text
+Host: 127.0.0.1
+Port: 3306
+Database: camy_new
+User: root
+Password: empty
+```
 
-Stages: Pending → Awaiting payment → Payment review → Payment verified (stored as Approved for supply / Processing for customer orders) → Dispatched. Customer orders then become Delivered or Returned. Receipt correction returns Payment review to Awaiting payment with a reason. Uploading proof does not automatically confirm payment. Receipts accept JPG, PNG, WebP or PDF files up to 5 MB and remain private.
+These defaults match a normal fresh XAMPP installation. Production must use environment variables and a dedicated database account.
 
-Existing databases migrate the supply and shop-order status columns automatically. Historical supply requests with receipts already submitted move to payment review; already approved supply requests still require stock checks before dispatch. Existing customer orders keep their current fulfilment stage. Private customer tracking links are issued for new requests.
+### Fresh database
 
-Products, entrepreneur profiles and finances, shop inventory, supply requests, customer orders/items, settlements, credit tiers and settings are stored in relational MySQL tables. Existing snapshot records are backfilled automatically. The JSON row remains a compatibility snapshot and transaction lock; reads use the relational storage. Payment verification is a seller decision; there is no bank integration or online payment collection. Notifications are in-system only; customers should save their private tracking links. WhatsApp/SMS notifications are not implemented.
+To create the database and apply the complete current schema:
 
-Run `npm.cmd run build` to check the web build. PHP files can be checked with `C:\xampp\php\php.exe -l api\index.php` and `C:\xampp\php\php.exe -l api\marketplace.php`.
+```powershell
+npm.cmd run db:setup
+```
 
-Run `C:\xampp\php\php.exe scripts\test-workflow.php` for workflow rules and `C:\xampp\php\php.exe scripts\test-workflow-api.php` for both complete API flows. The API checks use a temporary isolated MySQL database and remove it and their test receipts afterward.
+To deliberately delete the current local `camy_new` database and rebuild it from scratch:
 
-## Accounts, security and reports
+```powershell
+npm.cmd run db:reset
+```
 
-Staff access is stored in MySQL with role permissions. Creating staff or resetting their password issues a temporary password, shown once to the administrator. The recipient must replace it at first sign-in. Password changes revoke other sessions. Disabled accounts lose access immediately. Sessions expire after 30 minutes of inactivity or eight hours overall; sign-in attempts are rate limited and administrative writes are audited. Mutating requests require JSON and the application request header. Private files and database material are blocked from Vite serving.
+**Warning:** `db:reset` deletes all data inside the configured local database.
 
-New installations generate bootstrap credentials in private/bootstrap-credentials.txt. Existing accounts using known demonstration passwords must change them. Configure CAMY_DB_HOST, CAMY_DB_PORT, CAMY_DB_NAME, CAMY_DB_USER and CAMY_DB_PASSWORD for deployment; CAMY_ENV=production requires a dedicated database user and nonempty password. Serve production through HTTPS.
+A fresh installation creates an administrator account. When a new temporary password is generated, read it from:
 
-Catalogue and credit-rule changes have explicit Save buttons; background refresh preserves drafts. Database-backed profile updates, account closure and credit settlements are validated on the server. Existing training records are retained; the training loader now requires a separate database named with training, test or demo.
+```text
+private/bootstrap-credentials.txt
+```
 
-Downloads are genuine .xlsx workbooks with branded headings, readable column widths, frozen headers, filters, typed dates and LKR amounts, totals and order-item sheets. Identifiers remain text, and user text cannot become an Excel formula.
+The administrator must change the temporary password after signing in.
 
-Additional checks: node scripts/test-reports.mjs; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-report-format.ps1; C:/xampp/php/php.exe scripts/test-staff-auth.php; C:/xampp/php/php.exe scripts/check-database.php; node scripts/browser-smoke.mjs (requires the local development servers). Browser smoke uses fictional UI fixtures without changing live orders.
-Customer returns are available inside delivered orders in My orders / Purchase history. A request covers the complete order from that shop. The shop approves it with a return address and instructions, or declines it with a reason. The customer records the return courier and tracking number after shipping. Confirming receipt restores reserved stock once, marks the order Returned, and recalculates verified delivered sales and credit eligibility. The shop records the reference after making the refund by bank transfer outside the platform; the application never transfers money. Other shops' orders continue independently. Open returns and pending refunds prevent entrepreneur account closure. The purchase-history status filter includes Return requests.
+## Run the project
 
-Each entrepreneur profile includes a searchable customer directory with contact/address details and that shop's purchase history. Registered buyers are grouped by customer ID; legacy guest orders remain separate to avoid merging unrelated customers. Orders are matched to entrepreneur IDs rather than names.
+Start **MySQL** in XAMPP first.
+
+Then:
+
+```powershell
+npm.cmd install
+npm.cmd run dev
+```
+
+Development addresses:
+
+- Web app: `http://127.0.0.1:8080`
+- PHP API: `http://127.0.0.1:8000`
+- API health: `http://127.0.0.1:8080/api/health`
+
+`npm run dev` verifies MySQL, creates `camy_new` when it is missing, applies `database/schema.sql`, and only then starts the PHP API and Vite.
+
+## VS Code SQL note
+
+`database/schema.sql` is **MySQL/MariaDB SQL**, not Microsoft SQL Server syntax.
+
+The repository workspace disables MSSQL IntelliSense for this schema and recommends MySQL-compatible SQL tooling. If VS Code previously showed hundreds of red errors for valid syntax such as `AUTO_INCREMENT`, `ENUM`, `TINYINT` or `ON UPDATE CURRENT_TIMESTAMP`, reload the VS Code window after pulling the latest `main`.
+
+## Important files
+
+- `src/DropshipMarketplace.jsx` — entrepreneur order creation, tracking and credit sensor
+- `src/App.jsx` — entrepreneur/admin application shell
+- `api/workflow.php` — dropship order creation and workflow rules
+- `api/marketplace.php` — marketplace state and admin fulfilment
+- `api/config.php` — MySQL connection and automatic schema initialization
+- `database/schema.sql` — database schema
+- `scripts/setup-local-db.php` — one-command local database setup/reset
+- `CURRENT-DROPSHIP-FLOW.md` — current process reference
+
+`src/MarketplaceLegacy.jsx` is retained only as migration/history reference. It is not imported by the active marketplace module.
+
+## Retired customer portal
+
+The previous public customer-shop workflow has been retired.
+
+- `/shops` is no longer an active application entry point.
+- Customer API entry points and the old public marketplace endpoints return a retired-flow response.
+- Client name, phone and delivery details are still stored with dropship orders because CAMY needs them to deliver the entrepreneur's order.
+- Some legacy database tables/files may remain temporarily for migration compatibility; they are not the active ordering flow.
+
+## Checks
+
+Web build:
+
+```powershell
+npm.cmd run build
+```
+
+PHP syntax:
+
+```powershell
+C:\xampp\php\php.exe -l api\index.php
+C:\xampp\php\php.exe -l api\marketplace.php
+C:\xampp\php\php.exe -l api\workflow.php
+C:\xampp\php\php.exe -l api\config.php
+```
+
+Local database setup:
+
+```powershell
+npm.cmd run db:setup
+```
+
+The current process is documented in `CURRENT-DROPSHIP-FLOW.md`.
