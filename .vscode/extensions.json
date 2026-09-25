@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-mysql"
+  ],
+  "unwantedRecommendations": [
+    "ms-mssql.mssql"
+  ]
+}
