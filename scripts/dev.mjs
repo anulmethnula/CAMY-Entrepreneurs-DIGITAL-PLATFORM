@@ -10,13 +10,16 @@ if (!existsSync(php)) {
   process.exit(1)
 }
 
-// Check connectivity without creating tables or changing existing data.
+// Verify MySQL, create the local database when missing, and apply the current schema
+// before either development server starts.
 const databaseCheck = spawnSync(php, ['-r', `
 require 'api/config.php';
 try {
-    new PDO('mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';charset=utf8mb4', DB_USER, DB_PASS);
+    database();
+    fwrite(STDOUT, "CAMY database ready: " . DB_NAME . "\\n");
 } catch (Throwable $error) {
-    fwrite(STDERR, "CAMY cannot connect to MySQL. Start MySQL in XAMPP. If it stops immediately, inspect C:/xampp/mysql/data/mysql_error.log.\\n");
+    fwrite(STDERR, "CAMY database setup failed: " . $error->getMessage() . "\\n");
+    fwrite(STDERR, "Start MySQL in XAMPP. If it stops immediately, inspect C:/xampp/mysql/data/mysql_error.log.\\n");
     exit(1);
 }
 `], { stdio: 'inherit' })
