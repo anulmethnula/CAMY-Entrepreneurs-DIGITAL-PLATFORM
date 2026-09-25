@@ -14,7 +14,8 @@ function security_request(string $method): void {
     if(($_SERVER['HTTP_X_CAMY_REQUEST'] ?? '')!=='1')response(['message'=>'Refresh CAMY and submit this action from the app.'],403);
     if(strtolower(trim(explode(';',$_SERVER['CONTENT_TYPE'] ?? '')[0]))!=='application/json')response(['message'=>'Send a JSON request.'],415);
     $requestPath=(string)parse_url($_SERVER['REQUEST_URI']??'',PHP_URL_PATH);
-    $limit=in_array($requestPath,['/api/admin/product-media','/admin/product-media'],true)?14*1024*1024:8*1024*1024;
+    $largeUpload=in_array($requestPath,['/api/admin/product-media','/admin/product-media','/api/auth/register','/auth/register'],true);
+    $limit=$largeUpload?14*1024*1024:8*1024*1024;
     if((int)($_SERVER['CONTENT_LENGTH'] ?? 0)>$limit)response(['message'=>'The upload is too large. Maximum request size is '.($limit/1024/1024).' MB.'],413);
 }
 function security_client_data(array $data): array {
