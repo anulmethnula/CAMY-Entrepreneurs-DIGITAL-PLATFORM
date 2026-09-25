@@ -8,7 +8,9 @@
     "web": "vite",
     "api": "C:\\xampp\\php\\php.exe -S 127.0.0.1:8000 -t api api/index.php",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:setup": "C:\\xampp\\php\\php.exe scripts\\setup-local-db.php",
+    "db:reset": "C:\\xampp\\php\\php.exe scripts\\setup-local-db.php --reset"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
