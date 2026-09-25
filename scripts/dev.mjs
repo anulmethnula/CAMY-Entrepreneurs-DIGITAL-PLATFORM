@@ -1,14 +1,16 @@
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { resolvePhp } from './find-php.mjs'
 
 process.chdir(fileURLToPath(new URL('..', import.meta.url)))
 
-const php = 'C:\\xampp\\php\\php.exe'
-if (!existsSync(php)) {
-  console.error('XAMPP PHP was not found at C:\\xampp\\php\\php.exe')
+const php = resolvePhp()
+if (!php) {
+  console.error('CAMY could not find PHP from your XAMPP installation.')
+  console.error('Set CAMY_PHP_PATH to your php.exe if XAMPP is installed in a custom folder.')
   process.exit(1)
 }
+console.log('CAMY PHP:', php)
 
 // Verify MySQL, create the local database when missing, and apply the current schema
 // before either development server starts.
