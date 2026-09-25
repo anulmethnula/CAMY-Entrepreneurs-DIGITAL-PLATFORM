@@ -39,8 +39,24 @@ function initialise_database(PDO $pdo): void
     foreach(['products'=>['record_json'=>'LONGTEXT NULL'],'stock_supply_requests'=>['record_json'=>'LONGTEXT NULL'],'shop_orders'=>['record_json'=>'LONGTEXT NULL'],'credit_tiers'=>['record_json'=>'LONGTEXT NULL'],'entrepreneur_shop_items'=>['visible'=>'TINYINT(1) NOT NULL DEFAULT 1']] as $table=>$fields){
         foreach($fields as $field=>$definition)if(!$pdo->query("SHOW COLUMNS FROM $table LIKE '$field'")->fetch())$pdo->exec("ALTER TABLE $table ADD COLUMN $field $definition");
     }
-    $columns=$pdo->query("SHOW COLUMNS FROM registration_requests LIKE 'nic_image_path'")->fetchAll();
-    if(!$columns)$pdo->exec('ALTER TABLE registration_requests ADD COLUMN nic_image_path VARCHAR(255) NULL AFTER city');
+    foreach([
+        'address'=>'TEXT NULL',
+        'occupation'=>'VARCHAR(150) NULL',
+        'has_online_business'=>"ENUM('yes','no') NOT NULL DEFAULT 'no'",
+        'online_business_products'=>'VARCHAR(255) NULL',
+        'online_business_duration'=>'VARCHAR(120) NULL',
+        'monthly_income'=>'VARCHAR(120) NULL',
+        'social_media_url'=>'VARCHAR(500) NULL',
+        'followers_count'=>'INT UNSIGNED NULL',
+        'facebook_marketing'=>"ENUM('yes','a_little','no') NOT NULL DEFAULT 'no'",
+        'join_reason'=>'TEXT NULL',
+        'agreement_accepted'=>'TINYINT(1) NOT NULL DEFAULT 0',
+        'nic_image_path'=>'VARCHAR(255) NULL',
+        'nic_front_path'=>'VARCHAR(255) NULL',
+        'nic_back_path'=>'VARCHAR(255) NULL',
+    ] as $field=>$definition){
+        if(!$pdo->query("SHOW COLUMNS FROM registration_requests LIKE '$field'")->fetch())$pdo->exec("ALTER TABLE registration_requests ADD COLUMN $field $definition");
+    }
     $identityColumn=$pdo->query("SHOW COLUMNS FROM entrepreneurs LIKE 'nic_image_path'")->fetchAll();
     if(!$identityColumn)$pdo->exec('ALTER TABLE entrepreneurs ADD COLUMN nic_image_path VARCHAR(255) NULL AFTER nic');
 
