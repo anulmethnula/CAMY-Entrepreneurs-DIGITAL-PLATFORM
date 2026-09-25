@@ -112,8 +112,10 @@ function market_public(array $state): array {
 require_once __DIR__.'/workflow.php';
 function market_route(PDO $pdo, string $path, string $method): void {
     market_ensure_order_schema($pdo);
-    customer_route($pdo,$path,$method);
+    // Customer storefront/account endpoints were retired from the active CAMY workflow.
+    // Historical customer code remains in the repository for data compatibility only.
     return_route($pdo,$path,$method);
+    if(in_array($path,['/marketplace/public','/marketplace/preview'],true))response(['message'=>'The customer storefront has been retired. CAMY entrepreneurs now submit client orders from their portal.'],410);
     workflow_route($pdo,$path,$method);
     if($path==='/marketplace/preview' && $method==='GET'){
         $catalogue=json_decode((string)file_get_contents(__DIR__.'/../database/demo_catalog.json'),true,64,JSON_THROW_ON_ERROR);
@@ -274,6 +276,55 @@ function market_route(PDO $pdo, string $path, string $method): void {
         if($action==='dispatch')foreach($request['items'] as $item){$foundInventory=false;foreach($state['inventory'] as &$inventory)if((string)$inventory['entrepreneurId']===(string)$request['entrepreneurId']&&(string)$inventory['productId']===(string)$item['productId']){$inventory['qty']+=$item['qty'];$foundInventory=true;break;}unset($inventory);if(!$foundInventory)$state['inventory'][]=['entrepreneurId'=>$request['entrepreneurId'],'productId'=>$item['productId'],'qty'=>$item['qty'],'price'=>$item['price']];}
         $state['requests'][$found]['status']=$next;$state['requests'][$found]['reviewedAt']=date(DATE_ATOM);$pdo->prepare('UPDATE stock_supply_requests SET status=?,reviewed_at=NOW() WHERE id=?')->execute([$next,$request['id']]);market_save($pdo,$state);$pdo->commit();response(['state'=>$state]);
     }
+    if ($path === '/marketplace/entrepreneur-orders' && $method === 'POST') {
+        $user=current_user($pdo);
+        if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
+        $data=input();
+        $client=is_array($data['customer'] ?? null)?$data['customer']:[];
+        $name=trim((string)($client['name'] ?? ''));
+        $phone=preg_replace('/[\\s-]+/','',trim((string)($client['phone'] ?? '')));
+        $district=trim((string)($client['district'] ?? ''));
+        $address=trim((string)($client['address'] ?? ''));
+        $channel=trim((string)($data['salesChannel'] ?? 'Entrepreneur direct sale'));
+        $clientReference=trim((string)($data['clientReference'] ?? ''));
+        $notes=trim((string)($data['notes'] ?? ''));
+        if(!$name||strlen($name)>150||!preg_match('/^(?:\\+94|0)7\\d{8}$/',$phone)||!$district||strlen($district)>100||!$address||strlen($address)>2000)response(['message'=>'Enter the client name, valid Sri Lankan mobile number, district and delivery address.'],422);
+        if(strlen($channel)>80||strlen($clientReference)>120||strlen($notes)>1000)response(['message'=>'Order source, reference or notes are too long.'],422);
+        $items=workflow_items($data['items'] ?? [],false);
+        if(!$items)response(['message'=>'Add at least one CAMY product to the order.'],422);
+        $pdo->beginTransaction();
+        $state=market_state($pdo,true);
+        $member=(string)$user['member_id'];
+        $person=null;
+        foreach($state['entrepreneurs'] as $candidate)if((string)$candidate['id']===$member){$person=$candidate;break;}
+        if(!$person){$pdo->rollBack();response(['message'=>'Your entrepreneur profile could not be found.'],404);}
+        $selected=[];$total=0.0;$camyAmount=0.0;$count=0;
+        foreach($items as $item){
+            $product=null;
+            foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($item['productId'] ?? '')){$product=$candidate;break;}
+            if(!$product){$pdo->rollBack();response(['message'=>'One selected CAMY product is unavailable. Refresh and try again.'],409);}
+            $qty=(int)$item['qty'];
+            $sellPrice=filter_var($item['sellPrice'] ?? $product['price'],FILTER_VALIDATE_FLOAT);
+            if($sellPrice===false||!is_finite((float)$sellPrice)||(float)$sellPrice<=0||(float)$sellPrice>100000000){$pdo->rollBack();response(['message'=>'Enter a valid selling price for every product.'],422);}
+            $line=['id'=>$product['id'],'productId'=>$product['id'],'name'=>$product['name'],'qty'=>$qty,'price'=>round((float)$sellPrice,2),'basePrice'=>round((float)$product['price'],2),'image'=>$product['image'] ?? '', 'category'=>$product['category'] ?? 'Other'];
+            $selected[]=$line;$total+=(float)$line['price']*$qty;$camyAmount+=(float)$line['basePrice']*$qty;$count+=$qty;
+        }
+        workflow_reserve($state,$selected,null);
+        $commission=round($total-$camyAmount,2);
+        $id='CMY-'.strtoupper(bin2hex(random_bytes(5)));
+        $groupId='DIRECT-'.strtoupper(bin2hex(random_bytes(5)));
+        $now=date(DATE_ATOM);
+        $order=['id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'address'=>$address.', '.$district,'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,'amount'=>round($total,2),'camyAmount'=>round($camyAmount,2),'commissionAmount'=>$commission,'sellerContribution'=>max(0,-$commission),'commissionStatus'=>'Not eligible','paymentMethod'=>'cash_on_delivery','paymentStatus'=>'COD pending','date'=>date('Y-m-d'),'createdAt'=>$now,'updatedAt'=>$now,'status'=>'Pending','trackingToken'=>bin2hex(random_bytes(24)),'reserved'=>true,'entrepreneur'=>$user['full_name'],'entrepreneurId'=>$member,'source'=>'shop','orderOrigin'=>'entrepreneur_portal','submittedByEntrepreneur'=>true,'submittedBy'=>$user['full_name'],'salesChannel'=>$channel,'clientReference'=>$clientReference,'notes'=>$notes,'statusHistory'=>[['status'=>'Pending','label'=>'Entrepreneur submitted client order to CAMY','at'=>$now,'by'=>$user['full_name']]]];
+        $state['orders'][]=$order;
+        market_save($pdo,$state);
+        $pdo->commit();
+        response(['message'=>'Client order sent to CAMY Operations.','order'=>$order,'orders'=>array_values(array_filter($state['orders'],static fn($entry)=>(string)$entry['entrepreneurId']===$member))],201);
+    }
+
+    if ($path === '/marketplace/orders' && $method === 'POST' && !empty(current_user($pdo))) {
+        response(['message'=>'Customer ordering has been retired. Entrepreneurs now submit client orders from the CAMY portal.'],410);
+    }
+
     if ($path === '/marketplace/orders' && $method === 'POST') {
         $account=customer_required($pdo);
         $data=input();if(!is_array($data['customer'] ?? null))response(['message'=>'Enter delivery details.'],422);
@@ -319,7 +370,11 @@ function market_route(PDO $pdo, string $path, string $method): void {
         if(in_array($status,['Rejected','Returned'],true)&&($order['reserved'] ?? true)){workflow_release($state,$order['items'],null);$state['orders'][$index]['reserved']=false;}
         if($order['status']==='Payment review'&&$status==='Awaiting payment'){$reason=trim((string)($data['reason'] ?? ''));if(!$reason)response(['message'=>'Explain why the receipt was rejected.'],422);$state['orders'][$index]['paymentNote']=$reason;}
         $state['orders'][$index]['updatedAt']=date(DATE_ATOM);
-        $state['orders'][$index]['status']=$status;$pdo->prepare('UPDATE shop_orders SET status=? WHERE id=?')->execute([$status,$matches[1]]);$shop=$state['orders'][$index]['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)$entry['amount'];$credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales&&$tier['credit']>$credit)$credit=(float)$tier['credit'];foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
+        $state['orders'][$index]['status']=$status;
+        $labels=['Processing'=>'CAMY confirmed the order and started packing','Dispatched'=>'CAMY dispatched the client parcel','Delivered'=>'Client delivery completed','Rejected'=>'CAMY rejected the order','Returned'=>'Order returned','Awaiting payment'=>'Payment requested','Payment review'=>'Payment is under review'];
+        if(!isset($state['orders'][$index]['statusHistory'])||!is_array($state['orders'][$index]['statusHistory']))$state['orders'][$index]['statusHistory']=[];
+        $state['orders'][$index]['statusHistory'][]=['status'=>$status,'label'=>$labels[$status] ?? $status,'at'=>date(DATE_ATOM),'by'=>$user['full_name']];
+        $pdo->prepare('UPDATE shop_orders SET status=? WHERE id=?')->execute([$status,$matches[1]]);$shop=$state['orders'][$index]['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)$entry['amount'];$credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales&&$tier['credit']>$credit)$credit=(float)$tier['credit'];foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
         market_save($pdo,$state);$pdo->commit();response(['orders'=>array_values(array_filter($state['orders'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['entrepreneurId']===(string)$user['member_id'])),'inventory'=>in_array($user['role'],['admin','manager'],true)?market_listings($state):market_listings($state,(string)$user['member_id']),'entrepreneurs'=>array_values(array_filter($state['entrepreneurs'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['id']===(string)$user['member_id']))]);
     }
     if(preg_match('#^/marketplace/orders/([^/]+)/(collect-cod|pay-commission)$#',$path,$matches)&&$method==='POST'){
