@@ -10,34 +10,34 @@ function market_state(PDO $pdo, bool $lock = false): array {
     $ownsTransaction=!$pdo->inTransaction();if($ownsTransaction)$pdo->beginTransaction();
     try {
     $pdo->exec("INSERT IGNORE INTO marketplace_state (id,state_json) VALUES (1,'{\"products\":[],\"entrepreneurs\":[],\"tiers\":[],\"requests\":[],\"inventory\":[],\"orders\":[]}')");
-    $query = $pdo->query('SELECT state_json FROM marketplace_state WHERE id = 1' . ' FOR UPDATE');
+    $query = $pdo->query('SELECT state_json FROM marketplace_state WHERE id = 1' . ($lock ? ' FOR UPDATE' : ''));
     $snapshot=(string)$query->fetchColumn();
     $stored=storage_read($pdo);
     $state=$stored ?? json_decode($snapshot,true,64,JSON_THROW_ON_ERROR);
     $changed=$stored===null;
     if(!is_array($state)){$state=['products'=>[], 'entrepreneurs'=>[], 'tiers'=>[], 'requests'=>[], 'inventory'=>[], 'orders'=>[], 'settlements'=>[]];$changed=true;}
     if(!isset($state['settlements'])||!is_array($state['settlements'])){$state['settlements']=[];$changed=true;}
-    // Keep a relational money ledger for every dropship order, including orders created
-    // before the payout feature was added.
+    // Hydrate the dropship payout ledger in bulk. This avoids the previous N+1
+    // INSERT + SELECT pair for every order on every 10-second dashboard refresh.
+    $payoutRows=$pdo->query("SELECT order_id,client_payment_method,payout_status,payout_reference,payout_receipt_path,paid_at,collection_status FROM entrepreneur_payouts")->fetchAll();
+    $payoutByOrder=[];foreach($payoutRows as $row)$payoutByOrder[(string)$row['order_id']]=$row;
+    $insertPayout=$pdo->prepare("INSERT IGNORE INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount,collection_status,payout_status,collected_at) VALUES(?,?,?,?,?,?,?,?,?)");
     foreach($state['orders'] ?? [] as &$ledgerOrder){
         if(($ledgerOrder['orderMode'] ?? '')!=='dropship')continue;
-        $clientTotal=round((float)($ledgerOrder['amount'] ?? 0),2);
-        $camyCost=round((float)($ledgerOrder['camyCost'] ?? $clientTotal),2);
-        $margin=round((float)($ledgerOrder['entrepreneurMargin'] ?? max(0,$clientTotal-$camyCost)),2);
-        $method=in_array(($ledgerOrder['clientPaymentMethod'] ?? ''),['cod','bank'],true)?$ledgerOrder['clientPaymentMethod']:'cod';
-        $delivered=($ledgerOrder['status'] ?? '')==='Delivered';
-        $defaultPayout=$delivered?($margin>0?'pending_transfer':'cancelled'):'pending_delivery';
-        $pdo->prepare("INSERT IGNORE INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount,collection_status,payout_status,collected_at) VALUES(?,?,?,?,?,?,?, ?, ?)")->execute([
-            $ledgerOrder['id'],$ledgerOrder['entrepreneurId'],$method,$clientTotal,$camyCost,$margin,$delivered?'collected':'pending',$defaultPayout,$delivered?date('Y-m-d H:i:s',strtotime((string)($ledgerOrder['deliveredAt'] ?? 'now'))):null
-        ]);
-        $ledger=$pdo->prepare("SELECT payout_status,payout_reference,payout_receipt_path,paid_at,collection_status FROM entrepreneur_payouts WHERE order_id=?");$ledger->execute([$ledgerOrder['id']]);$ledgerRow=$ledger->fetch();
-        if($ledgerRow){
-            $ledgerOrder['payoutAmount']=$margin;$ledgerOrder['payoutStatus']=$ledgerRow['payout_status']==='cancelled'&&$margin<=0?'not_required':$ledgerRow['payout_status'];
-            $ledgerOrder['clientPaymentStatus']=$ledgerRow['collection_status']==='collected'?'Collected by CAMY':($method==='cod'?'Collect on delivery':'Receipt uploaded');
-            if($ledgerRow['payout_reference'])$ledgerOrder['payoutReference']=$ledgerRow['payout_reference'];
-            if($ledgerRow['payout_receipt_path'])$ledgerOrder['payoutReceipt']='/api/marketplace/orders/'.$ledgerOrder['id'].'/payout-receipt';
-            if($ledgerRow['paid_at'])$ledgerOrder['payoutPaidAt']=date(DATE_ATOM,strtotime((string)$ledgerRow['paid_at']));
+        $orderId=(string)$ledgerOrder['id'];$clientTotal=round((float)($ledgerOrder['amount'] ?? 0),2);$camyCost=round((float)($ledgerOrder['camyCost'] ?? $clientTotal),2);$margin=round((float)($ledgerOrder['entrepreneurMargin'] ?? max(0,$clientTotal-$camyCost)),2);
+        $delivered=($ledgerOrder['status'] ?? '')==='Delivered';$ledgerRow=$payoutByOrder[$orderId] ?? null;
+        if(!$ledgerRow){
+            // New active orders are COD-only. A historical bank value is preserved only
+            // when an older record already contains it.
+            $method=(($ledgerOrder['clientPaymentMethod'] ?? 'cod')==='bank')?'bank':'cod';$defaultPayout=$delivered?($margin>0?'pending_transfer':'cancelled'):'pending_delivery';
+            $insertPayout->execute([$orderId,$ledgerOrder['entrepreneurId'],$method,$clientTotal,$camyCost,$margin,$delivered?'collected':'pending',$defaultPayout,$delivered?date('Y-m-d H:i:s',strtotime((string)($ledgerOrder['deliveredAt'] ?? 'now'))):null]);
+            $ledgerRow=['client_payment_method'=>$method,'payout_status'=>$defaultPayout,'payout_reference'=>null,'payout_receipt_path'=>null,'paid_at'=>null,'collection_status'=>$delivered?'collected':'pending'];$payoutByOrder[$orderId]=$ledgerRow;
         }
+        $ledgerOrder['payoutAmount']=$margin;$ledgerOrder['payoutStatus']=$ledgerRow['payout_status']==='cancelled'&&$margin<=0?'not_required':$ledgerRow['payout_status'];
+        $ledgerOrder['clientPaymentStatus']=$ledgerRow['collection_status']==='collected'?'Collected by CAMY':'Collect on delivery';
+        if($ledgerRow['payout_reference'])$ledgerOrder['payoutReference']=$ledgerRow['payout_reference'];
+        if($ledgerRow['payout_receipt_path'])$ledgerOrder['payoutReceipt']='/api/marketplace/orders/'.$orderId.'/payout-receipt';
+        if($ledgerRow['paid_at'])$ledgerOrder['payoutPaidAt']=date(DATE_ATOM,strtotime((string)$ledgerRow['paid_at']));
     }unset($ledgerOrder);
     if(empty($state['products'])&&empty($state['catalogue_seeded'])){
         $rows=$pdo->query("SELECT id,code,name,category,description,price,stock,image FROM products WHERE status='active' ORDER BY id")->fetchAll();
@@ -46,23 +46,27 @@ function market_state(PDO $pdo, bool $lock = false): array {
         $state['catalogue_seeded']=true;$changed=true;
     }
     if(!array_key_exists('catalogue_live',$state)){$state['catalogue_live']=!empty($state['inventory'])||!empty($state['requests'])||!empty($state['orders'])||(int)$pdo->query('SELECT COUNT(*) FROM products')->fetchColumn()>0;$changed=true;}
-    // CAMY rule: an entrepreneur with no successful sale for 90 days is automatically
-    // deactivated. Orders and history are retained; accounts with active fulfilment are not touched.
-    $pdo->exec("UPDATE users u JOIN entrepreneurs e ON e.user_id=u.id SET u.status='inactive',u.session_version=u.session_version+1 WHERE u.role='entrepreneur' AND u.status='active' AND e.joined_date<=DATE_SUB(CURDATE(),INTERVAL 90 DAY) AND NOT EXISTS (SELECT 1 FROM shop_orders s WHERE s.entrepreneur_member_id=e.member_id AND s.status='Delivered' AND COALESCE(s.delivered_at,s.created_at)>=DATE_SUB(NOW(),INTERVAL 90 DAY)) AND NOT EXISTS (SELECT 1 FROM shop_orders a WHERE a.entrepreneur_member_id=e.member_id AND a.status NOT IN ('Delivered','Returned','Rejected'))");
+    // CAMY rule: no successful sale for 90 days deactivates the account. Run this
+    // maintenance once per calendar day instead of on every state poll.
+    $today=date('Y-m-d');
+    if(($state['maintenance']['inactiveCheckDate'] ?? '')!==$today){
+        $pdo->exec("UPDATE users u JOIN entrepreneurs e ON e.user_id=u.id SET u.status='inactive',u.session_version=u.session_version+1 WHERE u.role='entrepreneur' AND u.status='active' AND e.joined_date<=DATE_SUB(CURDATE(),INTERVAL 90 DAY) AND NOT EXISTS (SELECT 1 FROM shop_orders s WHERE s.entrepreneur_member_id=e.member_id AND s.status='Delivered' AND COALESCE(s.delivered_at,s.created_at)>=DATE_SUB(NOW(),INTERVAL 90 DAY)) AND NOT EXISTS (SELECT 1 FROM shop_orders a WHERE a.entrepreneur_member_id=e.member_id AND a.status NOT IN ('Delivered','Returned','Rejected'))");
+        $state['maintenance']['inactiveCheckDate']=$today;$changed=true;
+    }
     $members=$pdo->query("SELECT u.member_id,u.full_name,u.email,u.status,e.nic,e.phone,e.address,e.city,e.joined_date,e.profile_image,e.bank_name,e.bank_branch,e.account_holder,e.account_number FROM users u LEFT JOIN entrepreneurs e ON e.user_id=u.id WHERE u.role='entrepreneur' AND u.member_id IS NOT NULL")->fetchAll();
-    foreach($members as $member){$found=false;foreach($state['entrepreneurs'] ?? [] as $person)if((string)$person['id']===(string)$member['member_id']){$found=true;break;}if(!$found){$state['entrepreneurs'][]=['id'=>(string)$member['member_id'],'name'=>(string)$member['full_name'],'city'=>(string)($member['city'] ?: 'Sri Lanka'),'stage'=>'Trial seller','sales'=>0,'credit'=>0,'used'=>0];$changed=true;}}
-    foreach($members as $member)if(!empty($member['account_number']))foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$member['member_id']&&!isset($person['bankDetails'])){$person['bankDetails']=['bank'=>$member['bank_name'],'branch'=>$member['bank_branch'],'holder'=>$member['account_holder'],'account'=>$member['account_number']];$changed=true;}unset($person);
-    foreach($members as $member)foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$member['member_id']){
-        $before=$person;
+    $personIndex=[];foreach($state['entrepreneurs'] ?? [] as $index=>$person)$personIndex[(string)$person['id']]=$index;
+    foreach($members as $member){
+        $memberId=(string)$member['member_id'];
+        if(!array_key_exists($memberId,$personIndex)){$state['entrepreneurs'][]=['id'=>$memberId,'name'=>(string)$member['full_name'],'city'=>(string)($member['city'] ?: 'Sri Lanka'),'stage'=>'Trial seller','sales'=>0,'credit'=>0,'used'=>0];$personIndex[$memberId]=array_key_last($state['entrepreneurs']);$changed=true;}
+        $index=$personIndex[$memberId];$before=$state['entrepreneurs'][$index];$person=&$state['entrepreneurs'][$index];
         $person['name']=$member['full_name'];$person['email']=$member['email'];$person['active']=$member['status']==='active';
         foreach(['nic','phone','address','city'] as $field)if($member[$field]!==null)$person[$field]=$member[$field];
-        if($member['joined_date'])$person['joined']=$member['joined_date'];
-        if($member['profile_image'])$person['image']=$member['profile_image'];
+        if($member['joined_date'])$person['joined']=$member['joined_date'];if($member['profile_image'])$person['image']=$member['profile_image'];
+        if(!empty($member['account_number']))$person['bankDetails']=['bank'=>$member['bank_name'],'branch'=>$member['bank_branch'],'holder'=>$member['account_holder'],'account'=>$member['account_number']];
         if($member['status']!=='active')$person['stage']='Departed';
         $person['initials']=implode('',array_map(static fn($word)=>substr($word,0,1),array_slice(explode(' ',$person['name']),0,2)));
-        if($before!==$person)$changed=true;
-        break;
-    }unset($person);
+        if($before!==$person)$changed=true;unset($person);
+    }
     foreach($state['requests'] as &$request)if($request['status']==='Pending'&&!empty($request['receipt'])){$request['status']='Payment review';$pdo->prepare('UPDATE stock_supply_requests SET status=? WHERE id=?')->execute(['Payment review',$request['id']]);$changed=true;}unset($request);
     if($changed)market_save($pdo,$state);
     if($ownsTransaction)$pdo->commit();
