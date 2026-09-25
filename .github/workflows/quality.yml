@@ -80,4 +80,5 @@ jobs:
           CAMY_DB_NAME: camy_new
           CAMY_DB_USER: root
           CAMY_DB_PASSWORD: ""
-        run: php -r "require 'api/config.php'; \$pdo=database(); \$need=['address','occupation','has_online_business','social_media_url','followers_count','facebook_marketing','join_reason','agreement_accepted','nic_front_path','nic_back_path']; \$have=array_column(\$pdo->query('SHOW COLUMNS FROM registration_requests')->fetchAll(),'Field'); foreach(\$need as \$field){if(!in_array(\$field,\$have,true))throw new RuntimeException('Missing registration field: '.\$field);} echo 'registration schema ok'.PHP_EOL;"
+        run: |
+          php -r "require 'api/config.php'; \$pdo=database(); \$need=['address','occupation','has_online_business','social_media_url','followers_count','facebook_marketing','join_reason','agreement_accepted','nic_front_path','nic_back_path']; \$have=array_column(\$pdo->query('SHOW COLUMNS FROM registration_requests')->fetchAll(),'Field'); foreach(\$need as \$field){if(!in_array(\$field,\$have,true))throw new RuntimeException('Missing registration field '.\$field);} echo 'registration schema ok'.PHP_EOL;"
