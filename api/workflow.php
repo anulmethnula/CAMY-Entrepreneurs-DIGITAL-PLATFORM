@@ -5,8 +5,11 @@ function workflow_owner(array $user, string $member): void {
     if(!in_array($user['role'],['admin','manager'],true)&&($user['role']!=='entrepreneur'||(string)$user['member_id']!==$member))response(['message'=>'You cannot review another shop order.'],403);
 }
 function workflow_transition(string $old,string $next,bool $supply): void {
-    $allowed=['Pending'=>['Awaiting payment','Rejected'],'Awaiting payment'=>['Rejected'],'Payment review'=>['Processing','Awaiting payment'],'Processing'=>['Dispatched','Rejected'],'Dispatched'=>['Delivered','Returned'],'Delivered'=>['Returned']];
-    if($supply){$allowed['Payment review']=['Approved','Awaiting payment'];$allowed['Approved']=['Dispatched'];}
+    if($supply){
+        $allowed=['Pending'=>['Approved','Rejected'],'Approved'=>['Dispatched','Rejected'],'Dispatched'=>[],'Rejected'=>[]];
+    }else{
+        $allowed=['Pending'=>['Awaiting payment','Rejected'],'Awaiting payment'=>['Rejected'],'Payment review'=>['Processing','Awaiting payment'],'Processing'=>['Dispatched','Rejected'],'Dispatched'=>['Delivered','Returned'],'Delivered'=>['Returned']];
+    }
     if(!in_array($next,$allowed[$old] ?? [],true))response(['message'=>'This action is not available at the current stage.'],409);
 }
 function workflow_bank_required(array $bank): void {
@@ -46,7 +49,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $name=trim((string)($customer['name']??''));$phone=preg_replace('/[\\s-]/','',(string)($customer['phone']??''));$district=trim((string)($customer['district']??''));$address=trim((string)($customer['address']??''));$notes=trim((string)($data['customer']['notes']??''));
         if(!$name||strlen($name)>150||!preg_match('/^(?:\\+94|0)7\\d{8}$/',$phone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter a valid client name, Sri Lankan mobile number, district and delivery address.'],422);
         $paymentMethod=strtolower(trim((string)($data['paymentMethod'] ?? 'cod')));
-        if(!in_array($paymentMethod,['cod','bank'],true))response(['message'=>'Choose Cash on delivery or Bank transfer to CAMY.'],422);
+        if($paymentMethod!=='cod')response(['message'=>'CAMY client orders are Cash on Delivery only. No client bank receipt is accepted.'],422);
         $items=workflow_items($data['items']??[]);
         if(!$items)response(['message'=>'Add at least one CAMY product to the order.'],422);
         $pdo->beginTransaction();$state=market_state($pdo,true);
@@ -64,30 +67,20 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $clientTotal=round($clientTotal,2);$camyCost=round($camyCost,2);$margin=round($clientTotal-$camyCost,2);
         workflow_reserve($state,$selected,null);
         $groupId='DROP-'.bin2hex(random_bytes(5));$id='CMY-'.bin2hex(random_bytes(5));$token=bin2hex(random_bytes(24));
-        $clientReference='';$clientReceipt='';
-        if($paymentMethod==='bank'){
-            $clientReference=trim((string)($data['clientPaymentReference'] ?? ''));
-            $clientReceipt=workflow_receipt(['receipt'=>(string)($data['clientPaymentReceipt'] ?? ''),'reference'=>$clientReference],$id.'-client');
-        }
         $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
         $entrepreneurName=(string)$user['full_name'];
         $order=[
             'id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,
             'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,
             'amount'=>$clientTotal,'camyCost'=>$camyCost,'entrepreneurMargin'=>$margin,
-            'clientPaymentMethod'=>$paymentMethod,'clientPaymentStatus'=>$paymentMethod==='cod'?'Collect on delivery':'Receipt uploaded',
+            'clientPaymentMethod'=>'cod','clientPaymentStatus'=>'Collect on delivery',
             'payoutAmount'=>$margin,'payoutStatus'=>$margin>0?'pending_delivery':'not_required',
             'date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>true,
             'entrepreneur'=>$entrepreneurName,'entrepreneurId'=>(string)$user['member_id'],'source'=>'shop','orderMode'=>'dropship','createdBy'=>'Entrepreneur'
         ];
-        if($clientReceipt){
-            $order['receiptPath']=$clientReceipt;$order['receipt']='/api/marketplace/orders/'.$id.'/receipt';
-            $order['receiptName']=basename((string)($data['clientPaymentReceiptName'] ?? 'client-payment-receipt'));
-            $order['reference']=$clientReference;$order['clientPaymentReference']=$clientReference;$order['receiptUploadedAt']=date(DATE_ATOM);
-        }
         $state['orders'][]=$order;
         $pdo->prepare("INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status) VALUES(?,?,?,?, 'Processing')")->execute([$id,$groupId,$user['member_id'],$clientTotal]);
-        $pdo->prepare("INSERT INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount,client_payment_reference,client_payment_receipt_path) VALUES(?,?,?,?,?,?,?,?)")->execute([$id,$user['member_id'],$paymentMethod,$clientTotal,$camyCost,$margin,$clientReference?:null,$clientReceipt?:null]);
+        $pdo->prepare("INSERT INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount) VALUES(?,?,?,?,?,?)")->execute([$id,$user['member_id'],'cod',$clientTotal,$camyCost,$margin]);
         foreach($selected as $item){$code='';foreach($state['products'] as $product)if((string)$product['id']===(string)$item['id']){$code=(string)($product['code']??$product['id']);break;}$pdo->prepare('INSERT INTO shop_order_items(order_id,product_code,quantity,sell_price) VALUES(?,?,?,?)')->execute([$id,$code,$item['qty'],$item['price']]);}
         market_save($pdo,$state);$pdo->commit();
         $safe=$order;unset($safe['trackingToken'],$safe['receiptPath']);response(['order'=>$safe],201);
