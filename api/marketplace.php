@@ -170,48 +170,82 @@ function market_route(PDO $pdo, string $path, string $method): void {
     }
     if ($path === '/marketplace/requests' && $method === 'POST') {
         $user=current_user($pdo);if (!$user || $user['role']!=='entrepreneur' || !$user['member_id']) response(['message'=>'Entrepreneur access is required.'],403);
-        $data=input();$items=workflow_items($data['items'] ?? []);$reference='';
-        if(!$items)response(['message'=>'Choose stock for your request.'],422);
-        $pdo->beginTransaction();$state=market_state($pdo,true);if(empty($state['catalogue_live'])){$pdo->rollBack();response(['message'=>'CAMY Admin must verify and activate the real product catalogue before stock can be purchased.'],409);}$clean=[];$total=0;
-        foreach($items as $item){$product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($item['productId'] ?? '')){$product=$candidate;break;}$qty=(int)($item['qty'] ?? 0);if(!$product||$qty<1||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A requested product is unavailable at CAMY.'],409);}$clean[]=['productId'=>$product['id'],'qty'=>$qty,'price'=>$product['price']];$total+=$product['price']*$qty;}
-        $request=['id'=>'SUP-'.bin2hex(random_bytes(5)),'entrepreneurId'=>(string)$user['member_id'],'entrepreneurName'=>(string)$user['full_name'],'items'=>$clean,'total'=>$total,'reference'=>$reference,'receipt'=>'','receiptName'=>basename((string)($data['receiptName'] ?? 'receipt')),'status'=>'Pending','createdAt'=>date(DATE_ATOM)];
-        $file='';
-        $pdo->prepare('INSERT INTO stock_supply_requests(id,entrepreneur_member_id,payment_reference,receipt_path,total) VALUES(?,?,?,?,?)')->execute([$request['id'],$request['entrepreneurId'],$reference,$file,$total]);foreach($clean as $item){$code='';foreach($state['products'] as $product)if((string)$product['id']===(string)$item['productId']){$code=(string)($product['code'] ?? $product['id']);break;}$pdo->prepare('INSERT INTO stock_supply_request_items(request_id,product_code,quantity,purchase_price) VALUES(?,?,?,?)')->execute([$request['id'],$code,$item['qty'],$item['price']]);}
+        $data=input();$items=workflow_items($data['items'] ?? []);
+        if(!$items)response(['message'=>'Choose stock for your credit request.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);
+        if(empty($state['catalogue_live'])){$pdo->rollBack();response(['message'=>'CAMY Admin must verify and activate the real product catalogue before credit stock can be requested.'],409);}
+        $personIndex=null;foreach($state['entrepreneurs'] as $index=>$person)if((string)$person['id']===(string)$user['member_id']){$personIndex=$index;break;}
+        if($personIndex===null){$pdo->rollBack();response(['message'=>'Your entrepreneur profile could not be found.'],404);}
+        $person=$state['entrepreneurs'][$personIndex];$credit=round((float)($person['credit'] ?? 0),2);$used=round((float)($person['used'] ?? 0),2);
+        if($credit<=0||($person['stage'] ?? '')==='Departed'||($person['active'] ?? true)===false){$pdo->rollBack();response(['message'=>'Credit stock is available only after you become Credit eligible. Drop-shipping remains available.'],403);}
+        $clean=[];$total=0;
+        foreach($items as $item){
+            $product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($item['productId'] ?? '')){$product=$candidate;break;}
+            $qty=(int)($item['qty'] ?? 0);
+            if(!$product||$qty<1||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A requested product is unavailable in the requested quantity.'],409);}
+            $price=round((float)$product['price'],2);$clean[]=['productId'=>$product['id'],'qty'=>$qty,'price'=>$price];$total+=$price*$qty;
+        }
+        $total=round($total,2);$committed=0;
+        foreach($state['requests'] as $entry)if((string)($entry['entrepreneurId'] ?? '')===(string)$user['member_id']&&($entry['creditMode'] ?? false)===true&&in_array($entry['status'],['Pending','Approved'],true))$committed+=(float)($entry['total'] ?? 0);
+        $available=max(0,round($credit-$used-$committed,2));
+        if($total>$available+0.009){$pdo->rollBack();response(['message'=>'This request exceeds your available CAMY credit. Available: Rs. '.number_format($available,2,'.',',').'.'],422);}
+        $request=['id'=>'SUP-'.bin2hex(random_bytes(5)),'entrepreneurId'=>(string)$user['member_id'],'entrepreneurName'=>(string)$user['full_name'],'items'=>$clean,'total'=>$total,'creditMode'=>true,'creditLimitAtRequest'=>$credit,'outstandingAtRequest'=>$used,'availableCreditAtRequest'=>$available,'status'=>'Pending','createdAt'=>date(DATE_ATOM)];
+        $pdo->prepare('INSERT INTO stock_supply_requests(id,entrepreneur_member_id,payment_reference,receipt_path,total,status) VALUES(?,?,?,?,?,?)')->execute([$request['id'],$request['entrepreneurId'],'','',$total,'Pending']);
+        foreach($clean as $item){$code='';foreach($state['products'] as $product)if((string)$product['id']===(string)$item['productId']){$code=(string)($product['code'] ?? $product['id']);break;}$pdo->prepare('INSERT INTO stock_supply_request_items(request_id,product_code,quantity,purchase_price) VALUES(?,?,?,?)')->execute([$request['id'],$code,$item['qty'],$item['price']]);}
         array_unshift($state['requests'],$request);market_save($pdo,$state);$pdo->commit();response(['request'=>$request],201);
     }
     if (preg_match('#^/marketplace/requests/([^/]+)/edit$#',$path,$matches) && $method==='POST') {
         require_admin($pdo);$data=input();$pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
         foreach($state['requests'] as $key=>$request)if($request['id']===$matches[1]){$index=$key;break;}
-        if($index===null)response(['message'=>'Request not found.'],404);
+        if($index===null){$pdo->rollBack();response(['message'=>'Credit stock request not found.'],404);}
         $request=$state['requests'][$index];
-        if($request['status']!=='Pending')response(['message'=>'Only pending requests can be edited. Approved requests already have a payment amount and reserved stock.'],409);
-        $items=workflow_items($data['items'] ?? []);if(!$items)response(['message'=>'Keep at least one product in the request.'],422);
+        if(($request['creditMode'] ?? false)!==true){$pdo->rollBack();response(['message'=>'Legacy paid stock requests can no longer be edited in the active CAMY flow.'],409);}
+        if($request['status']!=='Pending'){$pdo->rollBack();response(['message'=>'Only pending credit requests can be edited.'],409);}
+        $items=workflow_items($data['items'] ?? []);if(!$items){$pdo->rollBack();response(['message'=>'Keep at least one product in the request.'],422);}
         $clean=[];$total=0;
         foreach($items as $item){
-            $original=null;$product=null;
-            foreach($request['items'] as $candidate)if((string)$candidate['productId']===(string)$item['productId']){$original=$candidate;break;}
-            foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)$item['productId']){$product=$candidate;break;}
-            $price=filter_var($item['price'] ?? null,FILTER_VALIDATE_FLOAT);
-            if(!$original||!$product||$item['qty']>(int)$product['stock']||$price===false||!is_finite($price)||$price<=0||$price>100000000)response(['message'=>'Use available quantities and a valid positive unit price.'],422);
-            $price=round($price,2);$clean[]=['productId'=>$original['productId'],'qty'=>$item['qty'],'price'=>$price];$total+=$price*$item['qty'];
+            $product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)$item['productId']){$product=$candidate;break;}
+            if(!$product||$item['qty']>(int)$product['stock']){$pdo->rollBack();response(['message'=>'Use currently available CAMY warehouse quantities.'],422);}
+            $price=round((float)$product['price'],2);$clean[]=['productId'=>$product['id'],'qty'=>$item['qty'],'price'=>$price];$total+=$price*$item['qty'];
         }
-        $state['requests'][$index]['items']=$clean;$state['requests'][$index]['total']=round($total,2);$state['requests'][$index]['updatedAt']=date(DATE_ATOM);
-        $pdo->prepare('UPDATE stock_supply_requests SET total=? WHERE id=?')->execute([round($total,2),$request['id']]);
+        $person=null;foreach($state['entrepreneurs'] as $candidate)if((string)$candidate['id']===(string)$request['entrepreneurId']){$person=$candidate;break;}
+        if(!$person|| (float)($person['credit'] ?? 0)<=0){$pdo->rollBack();response(['message'=>'This entrepreneur is no longer credit eligible.'],409);}
+        $committed=0;foreach($state['requests'] as $entry)if($entry['id']!==$request['id']&&(string)($entry['entrepreneurId'] ?? '')===(string)$request['entrepreneurId']&&($entry['creditMode'] ?? false)===true&&in_array($entry['status'],['Pending','Approved'],true))$committed+=(float)($entry['total'] ?? 0);
+        $available=max(0,(float)$person['credit']-(float)($person['used'] ?? 0)-$committed);$total=round($total,2);
+        if($total>$available+0.009){$pdo->rollBack();response(['message'=>'Edited request exceeds the entrepreneur\'s available credit.'],422);}
+        $state['requests'][$index]['items']=$clean;$state['requests'][$index]['total']=$total;$state['requests'][$index]['updatedAt']=date(DATE_ATOM);
+        $pdo->prepare('UPDATE stock_supply_requests SET total=? WHERE id=?')->execute([$total,$request['id']]);
         $pdo->prepare('DELETE FROM stock_supply_request_items WHERE request_id=?')->execute([$request['id']]);
         foreach($clean as $item){$code='';foreach($state['products'] as $product)if((string)$product['id']===(string)$item['productId']){$code=(string)($product['code'] ?? $product['id']);break;}$pdo->prepare('INSERT INTO stock_supply_request_items(request_id,product_code,quantity,purchase_price) VALUES(?,?,?,?)')->execute([$request['id'],$code,$item['qty'],$item['price']]);}
         market_save($pdo,$state);$pdo->commit();response(['state'=>$state]);
     }
     if (preg_match('#^/marketplace/requests/([^/]+)/(approve|reject|dispatch)$#',$path,$matches) && $method==='POST') {
-        require_admin($pdo);$pdo->beginTransaction();$state=market_state($pdo,true);$found=null;
+        $admin=require_admin($pdo);$pdo->beginTransaction();$state=market_state($pdo,true);$found=null;
         foreach($state['requests'] as $index=>$request)if($request['id']===$matches[1]){$found=$index;break;}
-        if($found===null){$pdo->rollBack();response(['message'=>'Stock request not found.'],404);}
-        $request=$state['requests'][$found];$action=$matches[2];$next=['approve'=>'Awaiting payment','reject'=>'Rejected','dispatch'=>'Dispatched'][$action];
-        workflow_transition($request['status'],$next,true);
-        if($action==='approve'){$bank=$state['camyBank'] ?? [];workflow_bank_required($bank);workflow_reserve($state,$request['items'],null);$state['requests'][$found]['reserved']=true;$state['requests'][$found]['bankDetails']=$bank;}
+        if($found===null){$pdo->rollBack();response(['message'=>'Credit stock request not found.'],404);}
+        $request=$state['requests'][$found];$action=$matches[2];
+        if(($request['creditMode'] ?? false)!==true){$pdo->rollBack();response(['message'=>'This is a legacy paid stock request and is not part of the active Phase 2 flow.'],409);}
+        $next=['approve'=>'Approved','reject'=>'Rejected','dispatch'=>'Dispatched'][$action];workflow_transition($request['status'],$next,true);
+        $personIndex=null;foreach($state['entrepreneurs'] as $index=>$person)if((string)$person['id']===(string)$request['entrepreneurId']){$personIndex=$index;break;}
+        if($personIndex===null){$pdo->rollBack();response(['message'=>'Entrepreneur record not found.'],404);}
+        $person=&$state['entrepreneurs'][$personIndex];$credit=(float)($person['credit'] ?? 0);$used=(float)($person['used'] ?? 0);
+        if($credit<=0||($person['stage'] ?? '')==='Departed'){unset($person);$pdo->rollBack();response(['message'=>'This entrepreneur is not currently credit eligible.'],409);}
+        if($action==='approve'){
+            $otherCommitted=0;foreach($state['requests'] as $entry)if($entry['id']!==$request['id']&&(string)($entry['entrepreneurId'] ?? '')===(string)$request['entrepreneurId']&&($entry['creditMode'] ?? false)===true&&in_array($entry['status'],['Pending','Approved'],true))$otherCommitted+=(float)($entry['total'] ?? 0);
+            $available=max(0,$credit-$used-$otherCommitted);
+            if((float)$request['total']>$available+0.009){unset($person);$pdo->rollBack();response(['message'=>'The entrepreneur no longer has enough available credit for this request.'],409);}
+            workflow_reserve($state,$request['items'],null);$state['requests'][$found]['reserved']=true;$state['requests'][$found]['approvedAt']=date(DATE_ATOM);$state['requests'][$found]['approvedBy']=$admin['id'];
+        }
         if($action==='reject'&&!empty($request['reserved'])){workflow_release($state,$request['items'],null);$state['requests'][$found]['reserved']=false;}
-        if($action==='dispatch'&&!array_key_exists('reserved',$request))workflow_reserve($state,$request['items'],null);
-        if($action==='dispatch')foreach($request['items'] as $item){$foundInventory=false;foreach($state['inventory'] as &$inventory)if((string)$inventory['entrepreneurId']===(string)$request['entrepreneurId']&&(string)$inventory['productId']===(string)$item['productId']){$inventory['qty']+=$item['qty'];$foundInventory=true;break;}unset($inventory);if(!$foundInventory)$state['inventory'][]=['entrepreneurId'=>$request['entrepreneurId'],'productId'=>$item['productId'],'qty'=>$item['qty'],'price'=>$item['price']];}
-        $state['requests'][$found]['status']=$next;$state['requests'][$found]['reviewedAt']=date(DATE_ATOM);$pdo->prepare('UPDATE stock_supply_requests SET status=?,reviewed_at=NOW() WHERE id=?')->execute([$next,$request['id']]);market_save($pdo,$state);$pdo->commit();response(['state'=>$state]);
+        if($action==='dispatch'){
+            if(empty($request['reserved'])){unset($person);$pdo->rollBack();response(['message'=>'Approve this request before dispatching it.'],409);}
+            if($used+(float)$request['total']>$credit+0.009){unset($person);$pdo->rollBack();response(['message'=>'Dispatch would exceed the entrepreneur\'s current credit limit. Review outstanding settlements or credit rules first.'],409);}
+            foreach($request['items'] as $item){$foundInventory=false;foreach($state['inventory'] as &$inventory)if((string)$inventory['entrepreneurId']===(string)$request['entrepreneurId']&&(string)$inventory['productId']===(string)$item['productId']){$inventory['qty']+=$item['qty'];$foundInventory=true;break;}unset($inventory);if(!$foundInventory)$state['inventory'][]=['entrepreneurId'=>$request['entrepreneurId'],'productId'=>$item['productId'],'qty'=>$item['qty'],'price'=>$item['price'],'visible'=>false];}
+            $person['used']=round($used+(float)$request['total'],2);$state['requests'][$found]['creditIssuedAt']=date(DATE_ATOM);$state['requests'][$found]['creditIssuedAmount']=round((float)$request['total'],2);$state['requests'][$found]['dispatchedBy']=$admin['id'];
+        }
+        unset($person);
+        $state['requests'][$found]['status']=$next;$state['requests'][$found]['reviewedAt']=date(DATE_ATOM);$state['requests'][$found]['updatedAt']=date(DATE_ATOM);
+        $pdo->prepare('UPDATE stock_supply_requests SET status=?,reviewed_at=NOW() WHERE id=?')->execute([$next,$request['id']]);market_save($pdo,$state);$pdo->commit();response(['state'=>$state]);
     }
     if ($path === '/marketplace/orders' && $method === 'POST') {
         $account=customer_required($pdo);
