@@ -1817,3 +1817,60 @@ input:focus, select:focus, textarea:focus {
 
 .page-title-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:9px; }
 @media (max-width:620px) { .page-title-actions,.page-title-actions .btn { width:100%; } }
+
+
+/* Admin entrepreneur record controls */
+.admin-entrepreneur-record { max-height: 86vh; overflow-y: auto; padding-right: 4px; }
+.member-status-line { margin-top: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.account-state { padding: 7px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.account-state.active { color: #24624a; background: #eaf8f1; }
+.account-state.inactive { color: #8a3333; background: #fff0f0; }
+.admin-record-loading { margin: 14px 0; padding: 12px 14px; border: 1px solid #dce6ef; border-radius: 12px; color: #60768b; background: #f7fafc; font-size: 12px; }
+.admin-account-section,
+.admin-application-history,
+.admin-danger-zone { margin-top: 20px; padding: 18px; border: 1px solid #dce6ef; border-radius: 16px; background: #fbfcfd; }
+.admin-profile-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 11px; }
+.admin-profile-grid label { min-width: 0; padding: 12px; border: 1px solid #e3e9ef; border-radius: 12px; background: #fff; display: grid; gap: 6px; }
+.admin-profile-grid label.wide { grid-column: 1 / -1; }
+.admin-profile-grid small,
+.account-audit-grid small,
+.application-history-grid small { color: #7b8b9c; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.admin-profile-grid strong,
+.account-audit-grid strong,
+.application-history-grid strong { color: #1e405e; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.admin-profile-grid input,
+.admin-profile-grid textarea { width: 100%; border: 1px solid #cfdeeb; border-radius: 10px; background: #fff; color: #183c5d; font: inherit; font-size: 12px; }
+.admin-profile-grid input { height: 40px; padding: 0 10px; }
+.admin-profile-grid textarea { padding: 10px; resize: vertical; }
+.account-audit-grid { margin-top: 12px; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; }
+.account-audit-grid > span,
+.application-history-grid > span { min-width: 0; padding: 12px; border: 1px solid #e4eaf0; border-radius: 12px; background: #fff; }
+.account-audit-grid strong,
+.application-history-grid strong { display: block; margin-top: 5px; }
+.account-access-actions { margin-top: 13px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+.inline-password-reset { width: 100%; padding: 13px; border: 1px solid #d6e3ed; border-radius: 12px; background: #f6f9fc; display: grid; grid-template-columns: minmax(220px,1fr) auto auto; align-items: end; gap: 8px; }
+.inline-password-reset label { display: grid; gap: 6px; color: #39556f; font-size: 11px; font-weight: 750; }
+.inline-password-reset input { height: 40px; padding: 0 11px; border: 1px solid #cad9e5; border-radius: 9px; font: inherit; }
+.application-history-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; }
+.application-history-grid .wide { grid-column: span 2; }
+.application-history-grid a { color: #176bb0; word-break: break-all; }
+.admin-danger-zone { border-color: #f0d4d4; background: #fff9f9; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.admin-danger-zone > div { max-width: 760px; }
+.admin-danger-zone > div > span { color: #a14b4b; font-size: 10px; font-weight: 850; letter-spacing: .11em; }
+.admin-danger-zone h3 { margin: 5px 0 5px; color: #653737; font-size: 17px; }
+.admin-danger-zone p { margin: 0; color: #7b6060; font-size: 12px; line-height: 1.55; }
+.admin-danger-zone small { display: block; margin-top: 8px; color: #9a4f4f; font-weight: 700; }
+.admin-danger-zone .btn.secondary { border-color: #e2b5b5; color: #8b3f3f; background: #fff; }
+.admin-danger-zone .btn.secondary:disabled { opacity: .5; cursor: not-allowed; }
+
+@media (max-width: 960px) {
+  .admin-profile-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .account-audit-grid,.application-history-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .inline-password-reset { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .admin-profile-grid,.account-audit-grid,.application-history-grid { grid-template-columns: 1fr; }
+  .admin-profile-grid label.wide,.application-history-grid .wide { grid-column: auto; }
+  .admin-danger-zone { align-items: stretch; flex-direction: column; }
+  .admin-danger-zone .btn { width: 100%; }
+}
