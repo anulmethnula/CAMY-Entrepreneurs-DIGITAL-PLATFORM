@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
   status ENUM('active','suspended','inactive') NOT NULL DEFAULT 'active',
   last_login_at DATETIME NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX users_role_status_member (role,status,member_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS entrepreneurs (
@@ -109,7 +110,8 @@ CREATE TABLE IF NOT EXISTS stock_supply_requests (
   status VARCHAR(40) NOT NULL DEFAULT 'Pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   reviewed_at DATETIME NULL,
-  record_json LONGTEXT NULL
+  record_json LONGTEXT NULL,
+  INDEX supply_member_status_created (entrepreneur_member_id,status,created_at)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS stock_supply_request_items (
@@ -149,6 +151,7 @@ CREATE TABLE IF NOT EXISTS shop_orders (
   delivered_at DATETIME NULL,
   record_json LONGTEXT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX shop_orders_member_status_delivery (entrepreneur_member_id,status,delivered_at),
   FOREIGN KEY (group_id) REFERENCES customer_order_groups(id)
 ) ENGINE=InnoDB;
 
