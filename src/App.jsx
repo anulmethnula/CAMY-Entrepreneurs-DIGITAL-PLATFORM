@@ -317,8 +317,9 @@ function AdminEntrepreneurs({ entrepreneurs, orders, setEntrepreneurs, openEntre
     return statusOk&&businessOk&&haystack.includes(registrationSearch.toLowerCase())
   })
   const openMessage=request=>{const url=applicationWhatsAppUrl(request);if(!url){notify('This application does not have a usable WhatsApp number.');return}window.open(url,'_blank','noopener,noreferrer')}
+  const copyRegistrationLink=async()=>{const url=new URL(window.location.origin);url.searchParams.set('apply','1');try{await navigator.clipboard.writeText(url.toString());notify('Public CAMY registration link copied.')}catch{window.prompt('Copy this CAMY registration link:',url.toString())}}
   return <div className="content-page">
-    <PageTitle eyebrow="ENTREPRENEUR CRM" title="Applications and entrepreneur accounts" text="Review event registrations, approve accounts one by one, keep rejected records, and manage the active entrepreneur network."><Button icon={UserPlus} onClick={openAdd}>Add entrepreneur manually</Button></PageTitle>
+    <PageTitle eyebrow="ENTREPRENEUR CRM" title="Applications and entrepreneur accounts" text="Review event registrations, approve accounts one by one, keep rejected records, and manage the active entrepreneur network."><div className="page-title-actions"><Button variant="secondary" icon={FileText} onClick={copyRegistrationLink}>Copy registration link</Button><Button icon={UserPlus} onClick={openAdd}>Add entrepreneur manually</Button></div></PageTitle>
     <section className="application-workspace card">
       <div className="section-title"><div><span>REGISTRATION DESK</span><h2>Entrepreneur applications</h2></div><b>{pendingCount} waiting for review</b></div>
       <div className="application-kpis"><span><small>Pending</small><strong>{pendingCount}</strong></span><span><small>Approved</small><strong>{approvedCount}</strong></span><span><small>Rejected</small><strong>{rejectedCount}</strong></span><span><small>Total received</small><strong>{registrations.length}</strong></span></div>
@@ -479,7 +480,7 @@ function ChangePasswordModal({ required=false, close, done }) {
 
 function LoginScreen({ onLogin }) {
   const emptyForm={email:'',password:'',confirmPassword:'',fullName:'',phone:'',nic:'',address:'',city:'',occupation:'',hasOnlineBusiness:'',onlineBusinessProducts:'',onlineBusinessDuration:'',monthlyIncome:'',socialMediaUrl:'',followersCount:'',facebookMarketing:'',joinReason:'',agreementAccepted:false,nicFrontImage:'',nicBackImage:''}
-  const [view,setView]=useState('login')
+  const [view,setView]=useState(()=>new URLSearchParams(window.location.search).get('apply')==='1'?'register':'login')
   const [step,setStep]=useState(1)
   const [form,setForm]=useState(emptyForm)
   const [error,setError]=useState('')
@@ -520,13 +521,14 @@ function LoginScreen({ onLogin }) {
         setForm({...emptyForm,email})
         setStep(1)
         setView('login')
+        const url=new URL(window.location.href);url.searchParams.delete('apply');window.history.replaceState({},'',url.pathname+url.search)
         return
       }
       const result=await api('/auth/login',{method:'POST',body:JSON.stringify({email:form.email,password:form.password})})
       onLogin(result.user,result.passwordResetRequired)
     }catch(reason){setError(reason.message.includes('fetch')?'Cannot reach the CAMY API. Confirm MySQL is running, then restart npm.cmd run dev.':reason.message)}finally{setBusy(false)}
   }
-  const switchView=()=>{setView(view==='login'?'register':'login');setStep(1);setError('');setSuccess('')}
+  const switchView=()=>{const next=view==='login'?'register':'login';setView(next);setStep(1);setError('');setSuccess('');const url=new URL(window.location.href);if(next==='register')url.searchParams.set('apply','1');else url.searchParams.delete('apply');window.history.replaceState({},'',url.pathname+url.search)}
   return <main className="login-page">
     <section className="login-brand-panel"><div className="login-brand"><Brand/><span>ENTREPRENEUR BUSINESS PLATFORM</span></div><div><span className="login-eyebrow"><Sparkles/> CAMY DIGITAL WORKSPACE</span><h1>Start small.<br/><em>Grow with CAMY.</em></h1><p>Register once, let CAMY review your application, then use your own secure account to place client orders and follow deliveries.</p><div className="login-benefits"><span><Check/> Simple entrepreneur application</span><span><Check/> Admin approval before access</span><span><Check/> Your orders and growth in one place</span></div></div><small>CAMY Entrepreneurs · Sri Lanka</small></section>
     <section className="login-form-panel"><form className={`login-card ${view==='register'?'registration-card registration-wizard':''}`} onSubmit={submit}>
