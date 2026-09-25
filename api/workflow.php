@@ -80,8 +80,8 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         if(!in_array($order['status'],['Dispatched','Delivered'],true)||!empty($order['return']))response(['message'=>'Only dispatched or delivered orders without a return can be confirmed.'],409);
         if(empty($order['deliveryConfirmations']['customer'])){
             $state['orders'][$index]['deliveryConfirmations']['customer']=['id'=>(int)$customer['id'],'name'=>$customer['name'],'at'=>date(DATE_ATOM)];
-            $state['orders'][$index]['status']='Delivered';$state['orders'][$index]['updatedAt']=date(DATE_ATOM);
-            $pdo->prepare("UPDATE shop_orders SET status='Delivered' WHERE id=?")->execute([$order['id']]);
+            $state['orders'][$index]['status']='Delivered';$state['orders'][$index]['updatedAt']=date(DATE_ATOM);$state['orders'][$index]['deliveredAt']=date(DATE_ATOM);
+            $pdo->prepare("UPDATE shop_orders SET status='Delivered',delivered_at=COALESCE(delivered_at,NOW()) WHERE id=?")->execute([$order['id']]);
             $shop=$order['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)$entry['amount'];
             $credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales)$credit=max($credit,(float)$tier['credit']);
             foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
