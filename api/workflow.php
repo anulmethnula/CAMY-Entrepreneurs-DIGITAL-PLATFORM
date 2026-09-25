@@ -45,6 +45,8 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $customer=customer_details($data['customer']);
         $name=trim((string)($customer['name']??''));$phone=preg_replace('/[\\s-]/','',(string)($customer['phone']??''));$district=trim((string)($customer['district']??''));$address=trim((string)($customer['address']??''));$notes=trim((string)($data['customer']['notes']??''));
         if(!$name||strlen($name)>150||!preg_match('/^(?:\\+94|0)7\\d{8}$/',$phone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter a valid client name, Sri Lankan mobile number, district and delivery address.'],422);
+        $paymentMethod=strtolower(trim((string)($data['paymentMethod'] ?? 'cod')));
+        if(!in_array($paymentMethod,['cod','bank'],true))response(['message'=>'Choose Cash on delivery or Bank transfer to CAMY.'],422);
         $items=workflow_items($data['items']??[]);
         if(!$items)response(['message'=>'Add at least one CAMY product to the order.'],422);
         $pdo->beginTransaction();$state=market_state($pdo,true);
@@ -54,22 +56,69 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
             $product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($item['productId']??'')){$product=$candidate;break;}
             $qty=(int)($item['qty']??0);$sell=filter_var($item['sellPrice']??null,FILTER_VALIDATE_FLOAT);
             if(!$product||$qty<1||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A selected CAMY product is unavailable in the requested quantity.'],409);}
-            if($sell===false||!is_finite($sell)||$sell<(float)$product['price']||$sell>100000000){$pdo->rollBack();response(['message'=>'Client selling price must be at least the CAMY product price.'],422);}
+            if($sell===false||!is_finite($sell)||$sell<(float)$product['price']||$sell>100000000){$pdo->rollBack();response(['message'=>'Your client price can be any amount at or above the CAMY product price.'],422);}
             $sell=round((float)$sell,2);$base=round((float)$product['price'],2);
             $selected[]=['id'=>$product['id'],'productId'=>$product['id'],'name'=>$product['name'],'qty'=>$qty,'price'=>$sell,'camyPrice'=>$base,'image'=>$product['image']??'','category'=>$product['category']??'Other'];
             $clientTotal+=$sell*$qty;$camyCost+=$base*$qty;$count+=$qty;
         }
+        $clientTotal=round($clientTotal,2);$camyCost=round($camyCost,2);$margin=round($clientTotal-$camyCost,2);
         workflow_reserve($state,$selected,null);
-        $groupId='DROP-'.bin2hex(random_bytes(5));
+        $groupId='DROP-'.bin2hex(random_bytes(5));$id='CMY-'.bin2hex(random_bytes(5));$token=bin2hex(random_bytes(24));
+        $clientReference='';$clientReceipt='';
+        if($paymentMethod==='bank'){
+            $clientReference=trim((string)($data['clientPaymentReference'] ?? ''));
+            $clientReceipt=workflow_receipt(['receipt'=>(string)($data['clientPaymentReceipt'] ?? ''),'reference'=>$clientReference],$id.'-client');
+        }
         $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
-        $id='CMY-'.bin2hex(random_bytes(5));$token=bin2hex(random_bytes(24));
         $entrepreneurName=(string)$user['full_name'];
-        $order=['id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,'amount'=>round($clientTotal,2),'camyCost'=>round($camyCost,2),'entrepreneurMargin'=>round($clientTotal-$camyCost,2),'date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>true,'entrepreneur'=>$entrepreneurName,'entrepreneurId'=>(string)$user['member_id'],'source'=>'shop','orderMode'=>'dropship','createdBy'=>'Entrepreneur'];
+        $order=[
+            'id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,
+            'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,
+            'amount'=>$clientTotal,'camyCost'=>$camyCost,'entrepreneurMargin'=>$margin,
+            'clientPaymentMethod'=>$paymentMethod,'clientPaymentStatus'=>$paymentMethod==='cod'?'Collect on delivery':'Receipt uploaded',
+            'payoutAmount'=>$margin,'payoutStatus'=>$margin>0?'pending_delivery':'not_required',
+            'date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>true,
+            'entrepreneur'=>$entrepreneurName,'entrepreneurId'=>(string)$user['member_id'],'source'=>'shop','orderMode'=>'dropship','createdBy'=>'Entrepreneur'
+        ];
+        if($clientReceipt){
+            $order['receiptPath']=$clientReceipt;$order['receipt']='/api/marketplace/orders/'.$id.'/receipt';
+            $order['receiptName']=basename((string)($data['clientPaymentReceiptName'] ?? 'client-payment-receipt'));
+            $order['reference']=$clientReference;$order['clientPaymentReference']=$clientReference;$order['receiptUploadedAt']=date(DATE_ATOM);
+        }
         $state['orders'][]=$order;
-        $pdo->prepare("INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status) VALUES(?,?,?,?, 'Processing')")->execute([$id,$groupId,$user['member_id'],round($clientTotal,2)]);
+        $pdo->prepare("INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status) VALUES(?,?,?,?, 'Processing')")->execute([$id,$groupId,$user['member_id'],$clientTotal]);
+        $pdo->prepare("INSERT INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount,client_payment_reference,client_payment_receipt_path) VALUES(?,?,?,?,?,?,?,?)")->execute([$id,$user['member_id'],$paymentMethod,$clientTotal,$camyCost,$margin,$clientReference?:null,$clientReceipt?:null]);
         foreach($selected as $item){$code='';foreach($state['products'] as $product)if((string)$product['id']===(string)$item['id']){$code=(string)($product['code']??$product['id']);break;}$pdo->prepare('INSERT INTO shop_order_items(order_id,product_code,quantity,sell_price) VALUES(?,?,?,?)')->execute([$id,$code,$item['qty'],$item['price']]);}
         market_save($pdo,$state);$pdo->commit();
-        $safe=$order;unset($safe['trackingToken']);response(['order'=>$safe],201);
+        $safe=$order;unset($safe['trackingToken'],$safe['receiptPath']);response(['order'=>$safe],201);
+    }
+    if(preg_match('#^/marketplace/orders/([^/]+)/payout-receipt$#',$path,$payoutReceipt)&&$method==='GET'){
+        $user=current_user($pdo);if(!$user)response(['message'=>'Authentication required.'],401);
+        $query=$pdo->prepare('SELECT entrepreneur_member_id,payout_receipt_path FROM entrepreneur_payouts WHERE order_id=?');$query->execute([$payoutReceipt[1]]);$payout=$query->fetch();
+        if(!$payout)response(['message'=>'Payout record not found.'],404);
+        if(!in_array($user['role'],['admin','manager'],true)&&($user['role']!=='entrepreneur'||(string)$user['member_id']!==(string)$payout['entrepreneur_member_id']))response(['message'=>'You cannot view this payout receipt.'],403);
+        $file=__DIR__.'/../private/receipts/'.basename((string)$payout['payout_receipt_path']);if(!is_file($file))response(['message'=>'Payout receipt not found.'],404);
+        header('Content-Type: '.(mime_content_type($file) ?: 'application/octet-stream'));header('Content-Disposition: inline; filename="'.basename($file).'"');header('Content-Length: '.filesize($file));readfile($file);exit;
+    }
+    if(preg_match('#^/marketplace/orders/([^/]+)/payout$#',$path,$payoutMatch)&&$method==='POST'){
+        $admin=require_admin($pdo);$data=input();$orderId=(string)$payoutMatch[1];
+        $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
+        foreach($state['orders'] as $key=>$candidate)if((string)$candidate['id']===$orderId){$index=$key;break;}
+        if($index===null){$pdo->rollBack();response(['message'=>'Order not found.'],404);}
+        $order=$state['orders'][$index];
+        if(($order['orderMode'] ?? '')!=='dropship'){$pdo->rollBack();response(['message'=>'This payout action is only for CAMY dropship orders.'],409);}
+        if($order['status']!=='Delivered'){$pdo->rollBack();response(['message'=>'Entrepreneur earnings can be transferred only after a successful delivery.'],409);}
+        $row=$pdo->prepare('SELECT * FROM entrepreneur_payouts WHERE order_id=? FOR UPDATE');$row->execute([$orderId]);$payout=$row->fetch();
+        if(!$payout){$pdo->rollBack();response(['message'=>'Payout ledger record not found.'],404);}
+        if($payout['payout_status']==='paid'){$pdo->rollBack();response(['message'=>'This entrepreneur payout is already recorded as paid.'],409);}
+        $amount=round((float)$payout['payout_amount'],2);
+        if($amount<=0){$pdo->prepare("UPDATE entrepreneur_payouts SET payout_status='cancelled',collection_status='collected',collected_at=COALESCE(collected_at,NOW()) WHERE order_id=?")->execute([$orderId]);$state['orders'][$index]['payoutStatus']='not_required';market_save($pdo,$state);$pdo->commit();response(['order'=>$state['orders'][$index],'message'=>'No entrepreneur margin is due for this order.']);}
+        $bank=[];foreach($state['entrepreneurs'] as $person)if((string)$person['id']===(string)$order['entrepreneurId']){$bank=$person['bankDetails'] ?? [];break;}
+        workflow_bank_required($bank);
+        $reference=trim((string)($data['reference'] ?? ''));$receipt=workflow_receipt(['receipt'=>(string)($data['receipt'] ?? ''),'reference'=>$reference],$orderId.'-payout');
+        $pdo->prepare("UPDATE entrepreneur_payouts SET collection_status='collected',payout_status='paid',payout_reference=?,payout_receipt_path=?,collected_at=COALESCE(collected_at,NOW()),paid_at=NOW(),recorded_by=? WHERE order_id=?")->execute([$reference,$receipt,$admin['id'],$orderId]);
+        $state['orders'][$index]['payoutStatus']='paid';$state['orders'][$index]['payoutAmount']=$amount;$state['orders'][$index]['payoutReference']=$reference;$state['orders'][$index]['payoutReceipt']='/api/marketplace/orders/'.$orderId.'/payout-receipt';$state['orders'][$index]['payoutPaidAt']=date(DATE_ATOM);$state['orders'][$index]['payoutBankDetails']=$bank;$state['orders'][$index]['updatedAt']=date(DATE_ATOM);
+        market_save($pdo,$state);$pdo->commit();response(['order'=>$state['orders'][$index],'message'=>'Entrepreneur margin transfer recorded successfully.']);
     }
     if(preg_match('#^/marketplace/orders/([^/]+)/confirm-delivery$#',$path,$match)&&$method==='POST'){
         $customer=customer_required($pdo);$pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
@@ -82,7 +131,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
             $state['orders'][$index]['deliveryConfirmations']['customer']=['id'=>(int)$customer['id'],'name'=>$customer['name'],'at'=>date(DATE_ATOM)];
             $state['orders'][$index]['status']='Delivered';$state['orders'][$index]['updatedAt']=date(DATE_ATOM);$state['orders'][$index]['deliveredAt']=date(DATE_ATOM);
             $pdo->prepare("UPDATE shop_orders SET status='Delivered',delivered_at=COALESCE(delivered_at,NOW()) WHERE id=?")->execute([$order['id']]);
-            $shop=$order['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)$entry['amount'];
+            $shop=$order['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)($entry['camyCost'] ?? $entry['amount']);
             $credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales)$credit=max($credit,(float)$tier['credit']);
             foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
             market_save($pdo,$state);
