@@ -53,6 +53,7 @@ jobs:
           php -l api/catalogue.php
           php -l api/profiles.php
           php -l scripts/setup-local-db.php
+          php -l scripts/test-dropship-payout.php
 
       - name: Create clean database and apply schema
         env:
@@ -83,3 +84,12 @@ jobs:
           CAMY_DB_PASSWORD: ""
         run: |
           php -r "require 'api/config.php'; \$pdo=database(); \$need=['address','occupation','has_online_business','social_media_url','followers_count','facebook_marketing','join_reason','agreement_accepted','nic_front_path','nic_back_path']; \$have=array_column(\$pdo->query('SHOW COLUMNS FROM registration_requests')->fetchAll(),'Field'); foreach(\$need as \$field){if(!in_array(\$field,\$have,true))throw new RuntimeException('Missing registration field '.\$field);} echo 'registration schema ok'.PHP_EOL;"
+
+      - name: Test dropship payout flow
+        env:
+          CAMY_DB_HOST: 127.0.0.1
+          CAMY_DB_PORT: "3306"
+          CAMY_DB_NAME: camy_new
+          CAMY_DB_USER: root
+          CAMY_DB_PASSWORD: ""
+        run: php scripts/test-dropship-payout.php
