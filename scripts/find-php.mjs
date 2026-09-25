@@ -23,10 +23,13 @@ export function phpCandidates() {
 
       addCandidate(candidates, path.join(drive, 'xampp', 'php', 'php.exe'))
       addCandidate(candidates, path.join(drive, 'XAMPP', 'php', 'php.exe'))
+      // Some Windows installations use the common xammp typo as the folder name.
+      addCandidate(candidates, path.join(drive, 'xammp', 'php', 'php.exe'))
+      addCandidate(candidates, path.join(drive, 'XAMMP', 'php', 'php.exe'))
 
       try {
         for (const entry of readdirSync(drive, { withFileTypes: true })) {
-          if (!entry.isDirectory() || !/^xampp/i.test(entry.name)) continue
+          if (!entry.isDirectory() || !/^xam{1,2}p/i.test(entry.name)) continue
           addCandidate(candidates, path.join(drive, entry.name, 'php', 'php.exe'))
         }
       } catch {
