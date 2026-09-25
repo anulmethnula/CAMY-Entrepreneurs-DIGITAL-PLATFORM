@@ -60,7 +60,7 @@ jobs:
           CAMY_DB_USER: root
           CAMY_DB_PASSWORD: ""
           CAMY_BOOTSTRAP_PASSWORD: "CAMY-CI-Temporary-123"
-        run: php scripts/setup-local-db.php --reset
+        run: npm run db:reset
 
       - name: Confirm API database bootstrap
         env:
