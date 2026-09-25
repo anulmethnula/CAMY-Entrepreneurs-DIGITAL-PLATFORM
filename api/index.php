@@ -246,15 +246,28 @@ try {
         response(['message'=>'Registration approved. The entrepreneur can now sign in.','memberId'=>$memberId,'phone'=>$request['phone'],'activationMessage'=>$activationMessage]);
     }
     if ($path === '/admin/entrepreneurs' && $method === 'POST') {
-        require_admin($pdo); $data=valid_registration(input());
+        require_admin($pdo);$payload=input();
+        $data=[
+            'full_name'=>trim((string)($payload['name'] ?? $payload['fullName'] ?? '')),
+            'email'=>strtolower(trim((string)($payload['email'] ?? ''))),
+            'password'=>(string)($payload['password'] ?? ''),
+            'phone'=>trim((string)($payload['phone'] ?? '')),
+            'nic'=>trim((string)($payload['nic'] ?? '')),
+            'address'=>trim((string)($payload['address'] ?? '')),
+            'city'=>trim((string)($payload['city'] ?? '')),
+            'joined'=>trim((string)($payload['joined'] ?? date('Y-m-d'))),
+        ];
+        if(!$data['full_name']||!filter_var($data['email'],FILTER_VALIDATE_EMAIL)||!preg_match('/^(?:\\+94|0)7\\d{8}$/',preg_replace('/[\\s-]/','',$data['phone']))||!preg_match('/^(?:\\d{9}[VvXx]|\\d{12})$/',$data['nic'])||!$data['city'])response(['message'=>'Enter a full name, valid email, Sri Lankan mobile number, NIC and city.'],422);
+        valid_password($data['password']);
+        $joined=DateTime::createFromFormat('Y-m-d',$data['joined']);if(!$joined||$joined->format('Y-m-d')!==$data['joined'])response(['message'=>'Enter a valid joined date.'],422);
         $check=$pdo->prepare('SELECT COUNT(*) FROM users WHERE email=?'); $check->execute([$data['email']]);
         if((int)$check->fetchColumn()) response(['message'=>'An account already exists with this email.'],409);
         $pdo->beginTransaction(); $memberId=member_id($pdo);
         $userInsert=$pdo->prepare("INSERT INTO users(member_id,full_name,email,password_hash,role,status,must_change_password) VALUES(?,?,?,?, 'entrepreneur','active',1)");
         $userInsert->execute([$memberId,$data['full_name'],$data['email'],password_hash($data['password'],PASSWORD_DEFAULT)]); $userId=(int)$pdo->lastInsertId();
-        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,nic,phone,city,joined_date) VALUES(?,?,?,?,?,CURDATE())');
-        $entrepreneurInsert->execute([$userId,$memberId,$data['nic'],$data['phone'],$data['city']]); $pdo->commit();
-        response(['entrepreneur'=>['id'=>$memberId,'name'=>$data['full_name'],'email'=>$data['email'],'phone'=>$data['phone'],'nic'=>$data['nic'],'city'=>$data['city'],'joined'=>date('Y-m-d'),'sales'=>0,'credit'=>0,'used'=>0,'stage'=>'Trial seller','initials'=>strtoupper(substr($data['full_name'],0,1))]],201);
+        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,nic,phone,address,city,joined_date) VALUES(?,?,?,?,?,?,?)');
+        $entrepreneurInsert->execute([$userId,$memberId,$data['nic'],$data['phone'],$data['address'],$data['city'],$data['joined']]); $pdo->commit();
+        response(['entrepreneur'=>['id'=>$memberId,'name'=>$data['full_name'],'email'=>$data['email'],'phone'=>$data['phone'],'nic'=>$data['nic'],'address'=>$data['address'],'city'=>$data['city'],'joined'=>$data['joined'],'sales'=>0,'credit'=>0,'used'=>0,'active'=>true,'stage'=>'Trial seller','initials'=>strtoupper(substr($data['full_name'],0,1))]],201);
     }
 
     staff_route($pdo, $path, $method);
