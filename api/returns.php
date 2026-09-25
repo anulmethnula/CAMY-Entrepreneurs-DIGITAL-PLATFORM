@@ -13,6 +13,9 @@ function return_route(PDO $pdo,string $path,string $method): void {
     $order=&$state['orders'][$index];
     if($customer&&(int)($order['customerId']??0)!==(int)$customer['id'])response(['message'=>'This order belongs to another customer.'],403);
     if($user)workflow_owner($user,(string)$order['entrepreneurId']);
+    $dropship=($order['orderMode'] ?? '')==='dropship';
+    if($dropship && $customer)response(['message'=>'The retired customer portal cannot manage CAMY dropship returns. Contact CAMY Admin.'],410);
+    if($dropship && $user && !in_array($user['role'],['admin','manager'],true))response(['message'=>'CAMY Admin controls returns for dropship orders.'],403);
     $return=$order['return']??[];$stage=$return['status']??'';
     $text=static function(string $key,int $min,int $max)use($data):string{$value=trim((string)($data[$key]??''));if(strlen($value)<$min||strlen($value)>$max||preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f]/',$value))response(['message'=>'Enter valid '.str_replace('_',' ',$key).' ('.$min.'–'.$max.' characters).'],422);return $value;};
     if($action==='request'){
@@ -28,10 +31,16 @@ function return_route(PDO $pdo,string $path,string $method): void {
         $return['status']='Shipped';$return['shippedAt']=date(DATE_ATOM);
     }elseif($action==='receive'){
         if($stage!=='Shipped'||$order['status']!=='Delivered')response(['message'=>'Only a shipped return can be confirmed received.'],409);
-        if($order['reserved']??true){workflow_release($state,$order['items'],(string)$order['entrepreneurId']);$order['reserved']=false;}
+        if($order['reserved']??true){workflow_release($state,$order['items'],$dropship?null:(string)$order['entrepreneurId']);$order['reserved']=false;}
         $return['status']='Received';$return['receivedAt']=date(DATE_ATOM);$return['refundStatus']='Pending';$return['refundAmount']=(float)$order['amount'];
         $order['status']='Returned';$pdo->prepare("UPDATE shop_orders SET status='Returned' WHERE id=?")->execute([$order['id']]);
-        $sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$order['entrepreneurId']&&$entry['status']==='Delivered')$sales+=(float)$entry['amount'];
+        if($dropship){
+            $payout=$pdo->prepare('SELECT payout_status FROM entrepreneur_payouts WHERE order_id=? FOR UPDATE');$payout->execute([$order['id']]);$payoutStatus=(string)($payout->fetchColumn() ?: '');
+            $nextPayout=$payoutStatus==='paid'?'reversal_required':'cancelled';
+            $pdo->prepare('UPDATE entrepreneur_payouts SET payout_status=? WHERE order_id=?')->execute([$nextPayout,$order['id']]);
+            $order['payoutStatus']=$nextPayout;
+        }
+        $sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$order['entrepreneurId']&&$entry['status']==='Delivered')$sales+=(float)($entry['camyCost'] ?? $entry['amount']);
         $credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales)$credit=max($credit,(float)$tier['credit']);
         foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$order['entrepreneurId']){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
     }else{
