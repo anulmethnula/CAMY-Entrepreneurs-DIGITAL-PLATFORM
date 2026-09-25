@@ -86,6 +86,16 @@ jobs:
         run: |
           php -r "require 'api/config.php'; \$pdo=database(); \$need=['address','occupation','has_online_business','social_media_url','followers_count','facebook_marketing','join_reason','agreement_accepted','nic_front_path','nic_back_path']; \$have=array_column(\$pdo->query('SHOW COLUMNS FROM registration_requests')->fetchAll(),'Field'); foreach(\$need as \$field){if(!in_array(\$field,\$have,true))throw new RuntimeException('Missing registration field '.\$field);} echo 'registration schema ok'.PHP_EOL;"
 
+      - name: Confirm operational indexes
+        env:
+          CAMY_DB_HOST: 127.0.0.1
+          CAMY_DB_PORT: "3306"
+          CAMY_DB_NAME: camy_new
+          CAMY_DB_USER: root
+          CAMY_DB_PASSWORD: ""
+        run: |
+          php -r "require 'api/config.php'; \$pdo=database(); \$need=['users'=>['users_role_status_member'],'stock_supply_requests'=>['supply_member_status_created'],'shop_orders'=>['shop_orders_member_status_delivery']]; foreach(\$need as \$table=>\$indexes){\$have=array_column(\$pdo->query('SHOW INDEX FROM '.\$table)->fetchAll(),'Key_name'); foreach(\$indexes as \$index){if(!in_array(\$index,\$have,true))throw new RuntimeException('Missing index '.\$table.'.'.\$index);}} echo 'operational indexes ok'.PHP_EOL;"
+
       - name: Test dropship payout flow
         env:
           CAMY_DB_HOST: 127.0.0.1
