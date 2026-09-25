@@ -25,6 +25,23 @@ const shortMoney = (value) => value >= 1000000 ? `Rs. ${(value / 1000000).toFixe
 const displayDate = (value) => !value || Number.isNaN(new Date(value).getTime()) ? 'Not provided' : new Intl.DateTimeFormat('en-LK', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(value))
 const avatarFor = (person) => person.avatar || person.image || `https://i.pravatar.cc/160?img=${(Number.parseInt(String(person.id).replace(/\D/g, ''), 10) || 1) % 70 + 1}`
 const readImageFile = (event, update) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => update('image', String(reader.result)); reader.readAsDataURL(file) }
+const userPermissions = user => {
+  if (!user || user.role === 'admin' || user.permissions_json == null) return null
+  try {
+    const parsed = JSON.parse(user.permissions_json)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+const applicationWhatsAppUrl = request => {
+  let number = String(request?.phone || '').replace(/\D/g, '')
+  if (number.startsWith('0')) number = '94' + number.slice(1)
+  const member = request?.member_id ? ` Member ID: ${request.member_id}.` : ''
+  const message = `Hello ${request?.full_name || 'CAMY Entrepreneur'}, your CAMY entrepreneur account has been approved. Your login username is ${request?.email || ''}. Please use the password you created during registration to sign in.${member}`
+  return number ? `https://wa.me/${number}?text=${encodeURIComponent(message)}` : ''
+}
+
 function useStoredState(key, fallback) {
   const [value, setValue] = useState(() => {
     try { return JSON.parse(localStorage.getItem(key)) ?? fallback } catch { return fallback }
@@ -56,7 +73,7 @@ const initialSystemUsers = [
 ]
 
 function Sidebar({ mode, setMode, page, setPage, open, setOpen, notify, onLogout, onChangePassword, user }) {
-  const allowed = user?.role === 'admin' || user?.permissions_json == null ? null : JSON.parse(user.permissions_json)
+  const allowed = userPermissions(user)
   const nav = mode === 'admin' ? adminNav.filter(([id]) => allowed === null || allowed.includes(id)) : entrepreneurNav
   return <>
     <aside className={`sidebar-v2 ${open ? 'open' : ''}`}>
@@ -102,7 +119,7 @@ function Button({ children, variant = 'primary', icon: Icon, ...props }) {
   const reviewablePending=children==='Request pending'; return <button className={`btn ${variant}`} {...props} disabled={reviewablePending?false:props.disabled}>{Icon && <Icon />}{children}</button>
 }
 
-function Status({ value }) { return <span className={`status-pill ${value.toLowerCase().replaceAll(' ', '-')}`}><i />{value}</span> }
+function Status({ value }) { const label=String(value || 'Unknown'); const css=label.toLowerCase().replace(/[^a-z0-9]+/g,'-'); return <span className={`status-pill ${css}`}><i />{label}</span> }
 
 function Metric({ icon: Icon, label, value, detail, tone = 'coral' }) {
   return <article className="metric-v2"><div className={`metric-icon ${tone}`}><Icon /></div><div><span>{label}</span><strong>{value}</strong><small><TrendingUp />{detail}</small></div></article>
@@ -238,14 +255,82 @@ function ExitRequestQueue({ entrepreneurs, orders, setEntrepreneurs, notify }) {
   return <section className="exit-request-section"><div className="section-title"><div><span>ADMIN ACTION REQUIRED</span><h2>Entrepreneur exit requests</h2></div><b>{requests.length} pending</b></div><div className="exit-request-grid">{requests.map(person=>{const active=orders.filter(order=>order.entrepreneur===person.name&&!['Delivered','Returned'].includes(order.status)).length;const blocked=Number(person.used||0)>0||active>0;return <article className="card exit-inbox" key={person.id}><header><div className="person"><i>{person.initials}</i><div><strong>{person.name}</strong><small>{person.id} · Requested {displayDate(person.exitRequest.requestedAt)}</small></div></div><Status value="Exit requested"/></header><div className="leave-checks"><span className={Number(person.used||0)===0?'clear':'blocked'}><WalletCards/><small>Outstanding credit</small><strong>{money(person.used)}</strong></span><span className={active===0?'clear':'blocked'}><PackageOpen/><small>Active orders</small><strong>{active}</strong></span></div>{blocked&&<p>Approval is locked until all financial and order obligations are cleared.</p>}<footer><Button variant="secondary" onClick={()=>review(person,'Rejected')}>Reject request</Button><Button icon={Check} disabled={blocked} onClick={()=>review(person,'Approved')}>Approve & archive</Button></footer></article>})}</div></section>
 }
 
+function RegistrationApplicationModal({ request, close, review, reviewing }) {
+  if (!request) return null
+  const field=(label,value)=><span><small>{label}</small><strong>{value || 'Not provided'}</strong></span>
+  const marketing={yes:'Yes',a_little:'A little',no:'No'}[request.facebook_marketing] || request.facebook_marketing
+  return <Modal onClose={close} wide><div className="application-detail">
+    <header className="application-detail-head"><div><span className="modal-kicker">ENTREPRENEUR APPLICATION · #{request.id}</span><h2>{request.full_name}</h2><p>{request.email} · {request.phone}</p></div><Status value={request.status}/></header>
+    <section><h3>Personal & login details</h3><div className="application-detail-grid">{field('Full name',request.full_name)}{field('NIC number',request.nic)}{field('Home address',request.address)}{field('City / district',request.city)}{field('WhatsApp number',request.phone)}{field('Login username',request.email)}{field('Current occupation',request.occupation)}{field('Applied',displayDate(request.created_at))}</div></section>
+    <section><h3>NIC verification</h3><div className="nic-review-links"><a className="btn secondary" href={`/api/admin/registrations/${request.id}/nic/front`} target="_blank" rel="noreferrer">View NIC front</a><a className="btn secondary" href={`/api/admin/registrations/${request.id}/nic/back`} target="_blank" rel="noreferrer">View NIC back</a></div></section>
+    <section><h3>Business background</h3><div className="application-detail-grid">{field('Currently doing an online business',request.has_online_business==='yes'?'Yes':'No')}{field('What they sell',request.online_business_products)}{field('How long',request.online_business_duration)}{field('Average monthly online income',request.monthly_income)}{field('Social-media page',request.social_media_url ? <a href={request.social_media_url} target="_blank" rel="noreferrer">Open page</a> : 'Not provided')}{field('Approx. followers',request.followers_count ?? 'Not provided')}{field('Facebook marketing / boosting',marketing)}</div></section>
+    <section><h3>Why CAMY?</h3><p className="application-reason">{request.join_reason || 'Not provided'}</p><p className="application-agreement"><Check/> {request.agreement_accepted ? 'Applicant confirmed the information is correct and CAMY may review it.' : 'Agreement was not recorded.'}</p></section>
+    {request.admin_note&&<section className="application-admin-note"><h3>Admin decision note</h3><p>{request.admin_note}</p></section>}
+    <footer className="application-detail-actions">
+      {request.status==='pending'&&<><Button variant="secondary" disabled={reviewing===request.id} onClick={()=>review(request,'reject')}>Reject application</Button><Button icon={Check} disabled={reviewing===request.id} onClick={()=>review(request,'approve')}>{reviewing===request.id?'Saving…':'Approve account'}</Button></>}
+      {request.status==='approved'&&<a className="btn primary" href={applicationWhatsAppUrl(request)} target="_blank" rel="noreferrer"><Phone/> Message activation on WhatsApp</a>}
+      <Button variant="soft" onClick={close}>Close</Button>
+    </footer>
+  </div></Modal>
+}
+
 function AdminEntrepreneurs({ entrepreneurs, orders, setEntrepreneurs, openEntrepreneur, openAdd, notify }) {
-  const [search,setSearch]=useState(''); const [stage,setStage]=useState('All'); const [registrations,setRegistrations]=useState([]); const [reviewing,setReviewing]=useState(null)
-  const loadRegistrations=()=>api('/admin/registrations').then(result=>setRegistrations(result.registrations)).catch(reason=>notify(reason.message))
+  const [search,setSearch]=useState('')
+  const [stage,setStage]=useState('All')
+  const [registrations,setRegistrations]=useState([])
+  const [registrationSearch,setRegistrationSearch]=useState('')
+  const [registrationStatus,setRegistrationStatus]=useState('pending')
+  const [businessFilter,setBusinessFilter]=useState('All')
+  const [reviewing,setReviewing]=useState(null)
+  const [selectedApplication,setSelectedApplication]=useState(null)
+  const loadRegistrations=()=>api('/admin/registrations').then(result=>setRegistrations(result.registrations||[])).catch(reason=>notify(reason.message))
   useEffect(()=>{loadRegistrations()},[])
-  const reviewRegistration=async(request,decision)=>{setReviewing(request.id);try{const result=await api(`/admin/registrations/${request.id}/${decision}`,{method:'POST'});setRegistrations(old=>old.filter(item=>item.id!==request.id));if(decision==='approve')setEntrepreneurs(old=>[...old,{id:result.memberId,name:request.full_name,email:request.email,phone:request.phone,nic:request.nic,city:request.city,joined:new Date().toISOString().slice(0,10),sales:0,credit:0,used:0,stage:'Trial seller',initials:request.full_name.split(' ').map(word=>word[0]).slice(0,2).join('').toUpperCase()}]);notify(result.message)}catch(reason){notify(reason.message)}finally{setReviewing(null)}}
-  const removeEntrepreneur=async person=>{if(!window.confirm('Archive '+person.name+' and disable sign-in?'))return;try{const result=await api('/admin/entrepreneurs/'+encodeURIComponent(person.id),{method:'DELETE'});setEntrepreneurs(old=>old.map(item=>item.id===person.id?result.person:item));notify('Entrepreneur archived. History is retained.')}catch(reason){notify(reason.message)}}
-  const visible=entrepreneurs.filter(p=>!p.demoArchived&&(stage==='All'||p.stage===stage)&&`${p.name} ${p.id} ${p.nic} ${p.city}`.toLowerCase().includes(search.toLowerCase()))
-  return <div className="content-page"><PageTitle eyebrow="ENTREPRENEUR CRM" title="Grow and support your network" text="Registration details, sales history, stages, credit, and exit requests in one place."><Button icon={UserPlus} onClick={openAdd}>Add entrepreneur account</Button></PageTitle>{registrations.length>0&&<section className="registration-queue"><div className="section-title"><div><span>ACCOUNT APPROVAL</span><h2>New registration requests</h2></div><b>{registrations.length} pending</b></div><div>{registrations.map(request=><article className="card" key={request.id}><span className="person"><i>{request.full_name.split(' ').map(word=>word[0]).slice(0,2).join('')}</i><div><strong>{request.full_name}</strong><small>{request.email} · {request.city}</small></div></span><div className="registration-meta"><span><small>NIC</small><strong>{request.nic}</strong></span><span><small>Contact</small><strong>{request.phone}</strong></span><span><small>Requested</small><strong>{displayDate(request.created_at)}</strong></span><span><small>Identity</small>{request.nic_image_path?<a href={`/api/admin/registrations/${request.id}/nic`} target="_blank" rel="noreferrer">View NIC photo</a>:<strong>No photo</strong>}</span></div><footer><Button variant="secondary" disabled={reviewing===request.id} onClick={()=>reviewRegistration(request,'reject')}>Reject</Button><Button icon={Check} disabled={reviewing===request.id} onClick={()=>reviewRegistration(request,'approve')}>Approve account</Button></footer></article>)}</div></section>}<ExitRequestQueue entrepreneurs={entrepreneurs} orders={orders} setEntrepreneurs={setEntrepreneurs} notify={notify}/><div className="management-filters"><label><Search /><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, ID, NIC number, or city" /></label><select value={stage} onChange={e=>setStage(e.target.value)}><option>All</option><option>Trial seller</option><option>Credit eligible</option><option>Departed</option></select><Button variant="soft" icon={Download} onClick={()=>exportReport('camy-entrepreneurs.xlsx',entrepreneurs)}>Download Excel report</Button></div><article className="card table-card"><EntrepreneurTable people={visible} onOpen={openEntrepreneur} onRemove={removeEntrepreneur} /></article></div>
+  const reviewRegistration=async(request,decision)=>{
+    let note=''
+    if(decision==='reject'){
+      const answer=window.prompt('Why are you rejecting this application? This note will be kept in the admin history.')
+      if(answer===null)return
+      note=answer.trim()
+      if(note.length<3){notify('Add a short rejection reason.');return}
+    } else if(!window.confirm(`Approve ${request.full_name} and activate their CAMY login?`)) return
+    setReviewing(request.id)
+    try{
+      const result=await api(`/admin/registrations/${request.id}/${decision}`,{method:'POST',body:JSON.stringify({note})})
+      const updated={...request,status:decision==='approve'?'approved':'rejected',admin_note:note||request.admin_note,reviewed_at:new Date().toISOString(),member_id:result.memberId||request.member_id}
+      setRegistrations(old=>old.map(item=>item.id===request.id?updated:item))
+      setSelectedApplication(old=>old?.id===request.id?updated:old)
+      if(decision==='approve'){
+        setEntrepreneurs(old=>old.some(item=>item.id===result.memberId)?old:[...old,{id:result.memberId,name:request.full_name,email:request.email,phone:request.phone,nic:request.nic,address:request.address,city:request.city,joined:new Date().toISOString().slice(0,10),sales:0,credit:0,used:0,stage:'Trial seller',initials:String(request.full_name).split(' ').map(word=>word[0]).slice(0,2).join('').toUpperCase()}])
+      }
+      notify(result.message)
+    }catch(reason){notify(reason.message)}finally{setReviewing(null)}
+  }
+  const removeEntrepreneur=async person=>{if(!window.confirm('Archive '+person.name+' and disable sign-in? All order and application history will be kept.'))return;try{const result=await api('/admin/entrepreneurs/'+encodeURIComponent(person.id),{method:'DELETE'});setEntrepreneurs(old=>old.map(item=>item.id===person.id?result.person:item));notify('Entrepreneur archived. History is retained.')}catch(reason){notify(reason.message)}}
+  const visible=entrepreneurs.filter(p=>!p.demoArchived&&(stage==='All'||p.stage===stage)&&`${p.name||''} ${p.id||''} ${p.nic||''} ${p.city||''}`.toLowerCase().includes(search.toLowerCase()))
+  const pendingCount=registrations.filter(item=>item.status==='pending').length
+  const approvedCount=registrations.filter(item=>item.status==='approved').length
+  const rejectedCount=registrations.filter(item=>item.status==='rejected').length
+  const applicationRows=registrations.filter(item=>{
+    const statusOk=registrationStatus==='all'||item.status===registrationStatus
+    const businessOk=businessFilter==='All'||(businessFilter==='Online business' ? item.has_online_business==='yes' : item.has_online_business!=='yes')
+    const haystack=`${item.full_name||''} ${item.email||''} ${item.phone||''} ${item.nic||''} ${item.city||''} ${item.occupation||''} ${item.online_business_products||''}`.toLowerCase()
+    return statusOk&&businessOk&&haystack.includes(registrationSearch.toLowerCase())
+  })
+  const openMessage=request=>{const url=applicationWhatsAppUrl(request);if(!url){notify('This application does not have a usable WhatsApp number.');return}window.open(url,'_blank','noopener,noreferrer')}
+  return <div className="content-page">
+    <PageTitle eyebrow="ENTREPRENEUR CRM" title="Applications and entrepreneur accounts" text="Review event registrations, approve accounts one by one, keep rejected records, and manage the active entrepreneur network."><Button icon={UserPlus} onClick={openAdd}>Add entrepreneur manually</Button></PageTitle>
+    <section className="application-workspace card">
+      <div className="section-title"><div><span>REGISTRATION DESK</span><h2>Entrepreneur applications</h2></div><b>{pendingCount} waiting for review</b></div>
+      <div className="application-kpis"><span><small>Pending</small><strong>{pendingCount}</strong></span><span><small>Approved</small><strong>{approvedCount}</strong></span><span><small>Rejected</small><strong>{rejectedCount}</strong></span><span><small>Total received</small><strong>{registrations.length}</strong></span></div>
+      <div className="application-filters"><label><Search/><input value={registrationSearch} onChange={event=>setRegistrationSearch(event.target.value)} placeholder="Search name, NIC, phone, email, city or occupation"/></label><select value={registrationStatus} onChange={event=>setRegistrationStatus(event.target.value)}><option value="pending">Pending approval</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All applications</option></select><select value={businessFilter} onChange={event=>setBusinessFilter(event.target.value)}><option>All</option><option>Online business</option><option>No online business</option></select></div>
+      <div className="application-table-wrap"><div className="application-table application-table-head"><span>Applicant</span><span>Contact</span><span>Business</span><span>Applied</span><span>Status</span><span>Actions</span></div>{applicationRows.map(request=><div className="application-table application-table-row" key={request.id}><span className="person"><i>{String(request.full_name||'CE').split(' ').map(word=>word[0]).slice(0,2).join('').toUpperCase()}</i><div><strong>{request.full_name}</strong><small>{request.nic} · {request.city}</small></div></span><span><strong>{request.phone}</strong><small>{request.email}</small></span><span><strong>{request.has_online_business==='yes'?'Online seller':'New / not selling online'}</strong><small>{request.occupation||'Occupation not provided'}</small></span><span><strong>{displayDate(request.created_at)}</strong><small>{request.reviewed_at?`Reviewed ${displayDate(request.reviewed_at)}`:'Waiting for CAMY'}</small></span><span><Status value={request.status}/></span><span className="application-row-actions"><button className="btn soft" onClick={()=>setSelectedApplication(request)}>View</button>{request.status==='pending'&&<><button className="btn secondary" disabled={reviewing===request.id} onClick={()=>reviewRegistration(request,'reject')}>Reject</button><button className="btn primary" disabled={reviewing===request.id} onClick={()=>reviewRegistration(request,'approve')}>Approve</button></>}{request.status==='approved'&&<button className="btn secondary" onClick={()=>openMessage(request)}><Phone/> Message</button>}</span></div>)}</div>
+      {!applicationRows.length&&<Empty icon={FileText} title="No matching applications" text="Change the application filters or wait for new registrations."/>}
+    </section>
+    <ExitRequestQueue entrepreneurs={entrepreneurs} orders={orders} setEntrepreneurs={setEntrepreneurs} notify={notify}/>
+    <div className="management-filters"><label><Search/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search active entrepreneurs by name, ID, NIC, or city"/></label><select value={stage} onChange={e=>setStage(e.target.value)}><option>All</option><option>Trial seller</option><option>Credit eligible</option><option>Departed</option></select><Button variant="soft" icon={Download} onClick={()=>exportReport('camy-entrepreneurs.xlsx',entrepreneurs)}>Download Excel report</Button></div>
+    <article className="card table-card"><EntrepreneurTable people={visible} onOpen={openEntrepreneur} onRemove={removeEntrepreneur}/></article>
+    {selectedApplication&&<RegistrationApplicationModal request={selectedApplication} close={()=>setSelectedApplication(null)} review={reviewRegistration} reviewing={reviewing}/>}
+  </div>
 }
 
 function AdminOrders({ orders, setOrders, openOrder, onUpdateStatus, products, entrepreneurs, onManualOrder }) {
@@ -393,13 +478,75 @@ function ChangePasswordModal({ required=false, close, done }) {
 }
 
 function LoginScreen({ onLogin }) {
-  const [view,setView]=useState('login'); const [form,setForm]=useState({email:'',password:'',fullName:'',phone:'',nic:'',city:'',nicImage:''}); const [error,setError]=useState(''); const [success,setSuccess]=useState(''); const [busy,setBusy]=useState(false)
+  const emptyForm={email:'',password:'',confirmPassword:'',fullName:'',phone:'',nic:'',address:'',city:'',occupation:'',hasOnlineBusiness:'',onlineBusinessProducts:'',onlineBusinessDuration:'',monthlyIncome:'',socialMediaUrl:'',followersCount:'',facebookMarketing:'',joinReason:'',agreementAccepted:false,nicFrontImage:'',nicBackImage:''}
+  const [view,setView]=useState('login')
+  const [step,setStep]=useState(1)
+  const [form,setForm]=useState(emptyForm)
+  const [error,setError]=useState('')
+  const [success,setSuccess]=useState('')
+  const [busy,setBusy]=useState(false)
   const update=(key,value)=>setForm(old=>({...old,[key]:value}))
-  const uploadNic=event=>{const file=event.target.files?.[0];if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)){setError('Use a JPG, PNG or WebP NIC photo.');return}const reader=new FileReader();reader.onload=()=>update('nicImage',String(reader.result));reader.onerror=()=>setError('Could not read NIC photo.');reader.readAsDataURL(file)}
-  const submit=async event=>{event.preventDefault();if(view==='register'&&!form.nicImage){setError('Take or upload a NIC card photo before registering.');return}setBusy(true);setError('');setSuccess('');try{if(view==='register'){const result=await api('/auth/register',{method:'POST',body:JSON.stringify(form)});setSuccess(result.message);setView('login');setForm(old=>({...old,password:''}));return}const result=await api('/auth/login',{method:'POST',body:JSON.stringify({email:form.email,password:form.password})});onLogin(result.user,result.passwordResetRequired)}catch(reason){setError(reason.message.includes('fetch')?'Cannot reach the CAMY API. Confirm MySQL is running, then restart npm.cmd run dev.':reason.message)}finally{setBusy(false)}}
+  const uploadNic=(key,event)=>{const file=event.target.files?.[0];event.target.value='';if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){setError('Use a JPG, PNG or WebP NIC photo up to 5 MB.');return}const reader=new FileReader();reader.onload=()=>update(key,String(reader.result));reader.onerror=()=>setError('Could not read the NIC photo.');reader.readAsDataURL(file)}
+  const validateStep=current=>{
+    setError('')
+    if(current===1){
+      if(!form.fullName.trim()||!form.nic.trim()||!form.address.trim()||!form.city.trim()||!form.phone.trim()||!form.email.trim())return setError('Complete all personal and contact details.'),false
+      if(!form.nicFrontImage||!form.nicBackImage)return setError('Upload both the front and back of your NIC.'),false
+      if(form.password.length<8||!/[A-Za-z]/.test(form.password)||!/\d/.test(form.password))return setError('Create a password with at least 8 characters, including letters and numbers.'),false
+      if(form.password!==form.confirmPassword)return setError('The two passwords do not match.'),false
+    }
+    if(current===2){
+      if(!form.occupation.trim()||!form.hasOnlineBusiness||!form.facebookMarketing)return setError('Complete your occupation, online-business status and Facebook marketing experience.'),false
+      if(form.hasOnlineBusiness==='yes'&&(!form.onlineBusinessProducts.trim()||!form.onlineBusinessDuration.trim()||!form.monthlyIncome.trim()))return setError('Complete the online-business questions before continuing.'),false
+    }
+    if(current===3){
+      if(form.joinReason.trim().length<5)return setError('Tell us briefly why you want to join CAMY.'),false
+      if(!form.agreementAccepted)return setError('Confirm that your information is correct and CAMY can review it.'),false
+    }
+    return true
+  }
+  const next=()=>{if(validateStep(step))setStep(old=>Math.min(3,old+1))}
+  const submit=async event=>{
+    event.preventDefault()
+    setError('');setSuccess('')
+    if(view==='register'&&step<3){next();return}
+    if(view==='register'&&!validateStep(3))return
+    setBusy(true)
+    try{
+      if(view==='register'){
+        const result=await api('/auth/register',{method:'POST',body:JSON.stringify(form)})
+        setSuccess(result.message)
+        const email=form.email
+        setForm({...emptyForm,email})
+        setStep(1)
+        setView('login')
+        return
+      }
+      const result=await api('/auth/login',{method:'POST',body:JSON.stringify({email:form.email,password:form.password})})
+      onLogin(result.user,result.passwordResetRequired)
+    }catch(reason){setError(reason.message.includes('fetch')?'Cannot reach the CAMY API. Confirm MySQL is running, then restart npm.cmd run dev.':reason.message)}finally{setBusy(false)}
+  }
+  const switchView=()=>{setView(view==='login'?'register':'login');setStep(1);setError('');setSuccess('')}
   return <main className="login-page">
-    <section className="login-brand-panel"><div className="login-brand"><Brand/><span>ENTREPRENEUR BUSINESS PLATFORM</span></div><div><span className="login-eyebrow"><Sparkles/> CAMY DIGITAL WORKSPACE</span><h1>Grow your business.<br/><em>Manage it simply.</em></h1><p>One secure platform for customer orders, live stock, entrepreneur growth, credit, settlements, and CAMY administration.</p><div className="login-benefits"><span><Check/> Secure role-based access</span><span><Check/> Live business information</span><span><Check/> Built for CAMY entrepreneurs</span></div></div><small>CAMY Entrepreneurs · Sri Lanka</small></section>
-    <section className="login-form-panel"><form className={`login-card ${view==='register'?'registration-card':''}`} onSubmit={submit}><span className="login-kicker">{view==='login'?'WELCOME TO CAMY':'ENTREPRENEUR REGISTRATION'}</span><h2>{view==='login'?'Sign in to your account':'Request a CAMY account'}</h2><p>{view==='login'?'Use the email and password assigned to your account.':'Submit your details. CAMY Admin will review and activate your account.'}</p>{error&&<div className="login-error">{error}</div>}{success&&<div className="login-success">{success}</div>}{view==='register'&&<div className="registration-grid"><label>Full name<input required value={form.fullName} onChange={e=>update('fullName',e.target.value)} /></label><label>Contact number<input required value={form.phone} onChange={e=>update('phone',e.target.value)} /></label><label>NIC number<input required value={form.nic} onChange={e=>update('nic',e.target.value)} /></label><label>City / district<input required value={form.city} onChange={e=>update('city',e.target.value)} /></label></div>}{view==='register'&&<div className="nic-upload"><strong>NIC card photo</strong><small>Take a clear photo or upload one. Only CAMY Admin can review it.</small><label>Use camera<input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={uploadNic}/></label><label>Upload photo<input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadNic}/></label>{form.nicImage&&<span>Photo ready for review</span>}</div>}<label>Email address<input type="email" required autoComplete="username" value={form.email} onChange={e=>update('email',e.target.value)} placeholder="name@example.com"/></label><label>Password<input type="password" minLength="8" required autoComplete={view==='login'?'current-password':'new-password'} value={form.password} onChange={e=>update('password',e.target.value)} placeholder={view==='register'?'At least 8 characters, letters and numbers':'Enter your password'}/></label><button className="login-submit" disabled={busy}>{busy?'Please wait…':view==='login'?'Sign in securely':'Send registration request'}<ArrowRight/></button><button className="login-switch" type="button" onClick={()=>{setView(view==='login'?'register':'login');setError('');setSuccess('')}}>{view==='login'?'New entrepreneur? Request an account':'Already registered? Return to sign in'}</button></form></section>
+    <section className="login-brand-panel"><div className="login-brand"><Brand/><span>ENTREPRENEUR BUSINESS PLATFORM</span></div><div><span className="login-eyebrow"><Sparkles/> CAMY DIGITAL WORKSPACE</span><h1>Start small.<br/><em>Grow with CAMY.</em></h1><p>Register once, let CAMY review your application, then use your own secure account to place client orders and follow deliveries.</p><div className="login-benefits"><span><Check/> Simple entrepreneur application</span><span><Check/> Admin approval before access</span><span><Check/> Your orders and growth in one place</span></div></div><small>CAMY Entrepreneurs · Sri Lanka</small></section>
+    <section className="login-form-panel"><form className={`login-card ${view==='register'?'registration-card registration-wizard':''}`} onSubmit={submit}>
+      <span className="login-kicker">{view==='login'?'WELCOME TO CAMY':'BECOME A CAMY ENTREPRENEUR'}</span>
+      <h2>{view==='login'?'Sign in to your account':'Entrepreneur application'}</h2>
+      <p>{view==='login'?'Use the email and password you created for your CAMY account.':'Complete the three short steps. CAMY Admin will review each application before activating the account.'}</p>
+      {error&&<div className="login-error" role="alert">{error}</div>}{success&&<div className="login-success" role="status">{success}</div>}
+      {view==='login'?<>
+        <label>Email address<input type="email" required autoComplete="username" value={form.email} onChange={e=>update('email',e.target.value)} placeholder="name@example.com"/></label>
+        <label>Password<input type="password" required autoComplete="current-password" value={form.password} onChange={e=>update('password',e.target.value)} placeholder="Enter your password"/></label>
+        <button className="login-submit" disabled={busy}>{busy?'Signing in…':'Sign in securely'}<ArrowRight/></button>
+      </>:<>
+        <div className="registration-steps"><button type="button" className={step>=1?'active':''} onClick={()=>step>1&&setStep(1)}><b>1</b><span>Personal</span></button><i/><button type="button" className={step>=2?'active':''} onClick={()=>step>2&&setStep(2)}><b>2</b><span>Business</span></button><i/><button type="button" className={step>=3?'active':''}><b>3</b><span>Confirm</span></button></div>
+        {step===1&&<section className="registration-step-panel"><div className="registration-section-head"><span>STEP 1 OF 3</span><h3>Your details & login</h3><p>Your email becomes your login username. Keep the password you create.</p></div><div className="registration-grid"><label>Full name<input required value={form.fullName} onChange={e=>update('fullName',e.target.value)}/></label><label>NIC number<input required value={form.nic} onChange={e=>update('nic',e.target.value)}/></label><label className="wide">Home address<textarea rows="2" required value={form.address} onChange={e=>update('address',e.target.value)}/></label><label>City / district<input required value={form.city} onChange={e=>update('city',e.target.value)}/></label><label>WhatsApp number<input required inputMode="tel" value={form.phone} onChange={e=>update('phone',e.target.value)} placeholder="07XXXXXXXX"/></label><label>Email address <small>Login username</small><input type="email" required autoComplete="username" value={form.email} onChange={e=>update('email',e.target.value)} placeholder="name@example.com"/></label><label>Password<input type="password" minLength="8" required autoComplete="new-password" value={form.password} onChange={e=>update('password',e.target.value)} placeholder="8+ characters, letters & numbers"/></label><label>Confirm password<input type="password" minLength="8" required autoComplete="new-password" value={form.confirmPassword} onChange={e=>update('confirmPassword',e.target.value)}/></label></div><div className="nic-upload-grid"><label className={form.nicFrontImage?'ready':''}><strong>NIC front photo</strong><small>Clear JPG, PNG or WebP · max 5 MB</small><span>{form.nicFrontImage?'✓ Front photo ready':'Choose front photo'}</span><input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={e=>uploadNic('nicFrontImage',e)}/></label><label className={form.nicBackImage?'ready':''}><strong>NIC back photo</strong><small>Clear JPG, PNG or WebP · max 5 MB</small><span>{form.nicBackImage?'✓ Back photo ready':'Choose back photo'}</span><input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={e=>uploadNic('nicBackImage',e)}/></label></div></section>}
+        {step===2&&<section className="registration-step-panel"><div className="registration-section-head"><span>STEP 2 OF 3</span><h3>Your selling experience</h3><p>This helps CAMY understand how to support you. There is no wrong answer.</p></div><div className="registration-grid"><label className="wide">Current occupation<input required value={form.occupation} onChange={e=>update('occupation',e.target.value)}/></label><label>Are you currently doing an online business?<select required value={form.hasOnlineBusiness} onChange={e=>update('hasOnlineBusiness',e.target.value)}><option value="">Choose one</option><option value="yes">Yes</option><option value="no">No</option></select></label><label>Facebook marketing / boosting knowledge<select required value={form.facebookMarketing} onChange={e=>update('facebookMarketing',e.target.value)}><option value="">Choose one</option><option value="yes">Yes</option><option value="a_little">A little</option><option value="no">No</option></select></label>{form.hasOnlineBusiness==='yes'&&<><label>What do you sell?<input required value={form.onlineBusinessProducts} onChange={e=>update('onlineBusinessProducts',e.target.value)} placeholder="e.g. clothes, cosmetics"/></label><label>How long have you been doing it?<input required value={form.onlineBusinessDuration} onChange={e=>update('onlineBusinessDuration',e.target.value)} placeholder="e.g. 8 months"/></label><label>Average monthly online income<input required value={form.monthlyIncome} onChange={e=>update('monthlyIncome',e.target.value)} placeholder="e.g. Rs. 25,000"/></label></>}<label className="wide">Social-media page link <small>Facebook / Instagram / TikTok</small><input type="url" value={form.socialMediaUrl} onChange={e=>update('socialMediaUrl',e.target.value)} placeholder="https://facebook.com/yourpage"/></label><label>Approximate followers on your main page<input type="number" min="0" value={form.followersCount} onChange={e=>update('followersCount',e.target.value)} placeholder="0"/></label></div></section>}
+        {step===3&&<section className="registration-step-panel"><div className="registration-section-head"><span>STEP 3 OF 3</span><h3>Final confirmation</h3><p>CAMY Admin will review your answers and NIC before activating the account.</p></div><label>Why do you want to join CAMY?<textarea rows="4" required value={form.joinReason} onChange={e=>update('joinReason',e.target.value)} placeholder="Tell us briefly what you want to achieve with CAMY."/></label><label className="registration-agreement"><input type="checkbox" checked={form.agreementAccepted} onChange={e=>update('agreementAccepted',e.target.checked)}/><span>My information is correct and CAMY can review my application.</span></label><div className="registration-summary"><Check/><div><strong>Your login is saved securely.</strong><p>After approval, sign in using <b>{form.email||'your email'}</b> and the password you created. CAMY Admin cannot see your password.</p></div></div></section>}
+        <div className="registration-nav">{step>1&&<button className="btn secondary" type="button" onClick={()=>{setError('');setStep(old=>old-1)}}>Back</button>}<button className="login-submit" type="submit" disabled={busy}>{busy?'Sending application…':step<3?'Continue':'Send application'}<ArrowRight/></button></div>
+      </>}
+      <button className="login-switch" type="button" onClick={switchView}>{view==='login'?'New entrepreneur? Apply to CAMY':'Already applied or approved? Return to sign in'}</button>
+    </form></section>
   </main>
 }
 
@@ -475,5 +622,5 @@ export default function App() {
   if(!authUser)return <LoginScreen onLogin={login}/>
   if(passwordResetRequired||passwordModal)return <ChangePasswordModal required={passwordResetRequired} close={()=>setPasswordModal(false)} done={message=>{setPasswordResetRequired(false);setPasswordModal(false);notify(message)}}/>
   if(!marketReady)return <div className="auth-loading">{syncError?<><strong>Business data could not load</strong><p>{syncError}</p><Button onClick={()=>setRefreshVersion(old=>old+1)}>Retry loading</Button><Button variant="secondary" onClick={logout}>Sign out</Button></>:<><span/><strong>Loading your business data...</strong></>}</div>
-  return <div className="app-v2"><Sidebar mode={mode} setMode={setMode} page={page} setPage={setPage} open={menu} setOpen={setMenu} notify={notify} onLogout={logout} user={authUser}/><main><Topbar mode={mode} page={page} setPage={setPage} onMenu={()=>setMenu(true)} onCart={()=>setCartOpen(true)} cartCount={cart.reduce((s,x)=>s+x.qty,0)} notifications={notifications} setNotifications={setNotifyOpen} query={globalQuery} setQuery={setGlobalQuery} profile={profile} user={authUser}/>{mode==='admin'?(authUser.role==='admin'||authUser.permissions_json==null||JSON.parse(authUser.permissions_json).includes(page)?adminPages[page]||adminPages.overview:<Empty icon={Settings} title="Access restricted" text="Choose an available page from your menu."/>):customerPages[page]||customerPages.home}</main><nav className="mobile-nav-v2">{(mode==='admin'?adminNav.filter(([id])=>authUser.role==='admin'||authUser.permissions_json==null||JSON.parse(authUser.permissions_json).includes(id)).slice(0,5):entrepreneurNav.slice(0,5)).map(([id,label,Icon])=><button className={page===id?'active':''} key={id} onClick={()=>setPage(id)}><Icon/><span>{label}</span></button>)}</nav>{productModal&&<ProductModal product={productModal} close={()=>setProductModal(null)} addToCart={addToCart} admin={mode==='admin'} setProducts={editProducts} notify={notify}/>} {orderModal&&<OrderModal onUpdated={()=>setRefreshVersion(old=>old+1)} order={orderModal} products={products} admin={mode==='admin'} updateOrderStatus={updateOrderStatus} updateOrderDetails={updateOrderDetails} openEntrepreneur={()=>{const person=entrepreneurs.find(item=>item.name===orderModal.entrepreneur);if(person){setOrderModal(null);setPersonModal({person,readOnly:true})}else notify('Entrepreneur profile was not found')}} close={()=>setOrderModal(null)}/>} {cartOpen&&<CartDrawer cart={cart} setCart={setCart} close={()=>setCartOpen(false)} placeOrder={placeOrder}/>} {notifyOpen&&<NotificationsDrawer notifications={notifications} setNotifications={setNotifications} close={()=>setNotifyOpen(false)}/>} {settlementModal&&<SettlementModal close={()=>setSettlementModal(false)} submit={submitSettlement}/>} {addEntrepreneur&&<AddEntrepreneurModal close={()=>setAddEntrepreneur(false)} submit={createEntrepreneur}/>} {personModal&&<EntrepreneurModal person={personModal.person} readOnly={personModal.readOnly} orders={orders} setOrders={setOrders} close={()=>setPersonModal(null)} setEntrepreneurs={setEntrepreneurs} notify={notify}/>} {addProduct&&<AddProductModal close={()=>setAddProduct(false)} submit={createProduct}/>} {addCategory&&<AddCategoryModal close={()=>setAddCategory(false)} submit={createCategory}/>} {toast&&<div className="toast-v2"><span><Check/></span>{toast}</div>}</div>
+  return <div className="app-v2"><Sidebar mode={mode} setMode={setMode} page={page} setPage={setPage} open={menu} setOpen={setMenu} notify={notify} onLogout={logout} user={authUser}/><main><Topbar mode={mode} page={page} setPage={setPage} onMenu={()=>setMenu(true)} onCart={()=>setCartOpen(true)} cartCount={cart.reduce((s,x)=>s+x.qty,0)} notifications={notifications} setNotifications={setNotifyOpen} query={globalQuery} setQuery={setGlobalQuery} profile={profile} user={authUser}/>{mode==='admin'?(userPermissions(authUser)===null||userPermissions(authUser).includes(page)?adminPages[page]||adminPages.overview:<Empty icon={Settings} title="Access restricted" text="Choose an available page from your menu."/>):customerPages[page]||customerPages.home}</main><nav className="mobile-nav-v2">{(mode==='admin'?adminNav.filter(([id])=>userPermissions(authUser)===null||userPermissions(authUser).includes(id)).slice(0,5):entrepreneurNav.slice(0,5)).map(([id,label,Icon])=><button className={page===id?'active':''} key={id} onClick={()=>setPage(id)}><Icon/><span>{label}</span></button>)}</nav>{productModal&&<ProductModal product={productModal} close={()=>setProductModal(null)} addToCart={addToCart} admin={mode==='admin'} setProducts={editProducts} notify={notify}/>} {orderModal&&<OrderModal onUpdated={()=>setRefreshVersion(old=>old+1)} order={orderModal} products={products} admin={mode==='admin'} updateOrderStatus={updateOrderStatus} updateOrderDetails={updateOrderDetails} openEntrepreneur={()=>{const person=entrepreneurs.find(item=>item.name===orderModal.entrepreneur);if(person){setOrderModal(null);setPersonModal({person,readOnly:true})}else notify('Entrepreneur profile was not found')}} close={()=>setOrderModal(null)}/>} {cartOpen&&<CartDrawer cart={cart} setCart={setCart} close={()=>setCartOpen(false)} placeOrder={placeOrder}/>} {notifyOpen&&<NotificationsDrawer notifications={notifications} setNotifications={setNotifications} close={()=>setNotifyOpen(false)}/>} {settlementModal&&<SettlementModal close={()=>setSettlementModal(false)} submit={submitSettlement}/>} {addEntrepreneur&&<AddEntrepreneurModal close={()=>setAddEntrepreneur(false)} submit={createEntrepreneur}/>} {personModal&&<EntrepreneurModal person={personModal.person} readOnly={personModal.readOnly} orders={orders} setOrders={setOrders} close={()=>setPersonModal(null)} setEntrepreneurs={setEntrepreneurs} notify={notify}/>} {addProduct&&<AddProductModal close={()=>setAddProduct(false)} submit={createProduct}/>} {addCategory&&<AddCategoryModal close={()=>setAddCategory(false)} submit={createCategory}/>} {toast&&<div className="toast-v2"><span><Check/></span>{toast}</div>}</div>
 }
