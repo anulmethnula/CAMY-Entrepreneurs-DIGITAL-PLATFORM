@@ -52,6 +52,7 @@ jobs:
           php -l api/storage.php
           php -l api/catalogue.php
           php -l api/profiles.php
+          php -l api/returns.php
           php -l scripts/setup-local-db.php
           php -l scripts/test-dropship-payout.php
 
