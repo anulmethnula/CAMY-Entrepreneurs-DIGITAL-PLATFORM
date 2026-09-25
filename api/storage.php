@@ -27,7 +27,7 @@ function storage_read(PDO $pdo): ?array {
         foreach($pdo->query("SELECT * FROM $table WHERE record_json IS NOT NULL ORDER BY created_at DESC,id")->fetchAll() as $row){
             $record=storage_decode($row['record_json']);$record['status']=$row['status'];
             if($key==='requests'){$record['total']=(float)$row['total'];if($row['receipt_path'])$record['receiptPath']=$row['receipt_path'];}
-            if($key==='orders')$record['amount']=(float)$row['total'];
+            if($key==='orders'){$record['amount']=(float)$row['total'];if(!empty($row['delivered_at']))$record['deliveredAt']=date(DATE_ATOM,strtotime((string)$row['delivered_at']));}
             if($key==='settlements')$record['amount']=(float)$row['amount'];
             $state[$key][]=$record;
         }
@@ -60,11 +60,12 @@ function storage_write(PDO $pdo,array $state): void {
         foreach($request['items'] as $item)$requestItem->execute([$request['id'],$products[(string)$item['productId']] ?? (string)$item['productId'],$item['qty'],$item['price']]);
     }
     $groupWrite=$pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?) ON DUPLICATE KEY UPDATE customer_name=VALUES(customer_name),customer_phone=VALUES(customer_phone),district=VALUES(district),delivery_address=VALUES(delivery_address)');
-    $orderWrite=$pdo->prepare('INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status,record_json) VALUES(?,?,?,?,?,?) ON DUPLICATE KEY UPDATE total=VALUES(total),status=VALUES(status),record_json=VALUES(record_json)');
+    $orderWrite=$pdo->prepare('INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status,delivered_at,record_json) VALUES(?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE total=VALUES(total),status=VALUES(status),delivered_at=COALESCE(VALUES(delivered_at),delivered_at),record_json=VALUES(record_json)');
     $orderItem=$pdo->prepare('INSERT INTO shop_order_items(order_id,product_code,quantity,sell_price) VALUES(?,?,?,?)');
     foreach($state['orders'] ?? [] as $order){
         $groupId=$order['groupId'] ?? $order['id'];$groupWrite->execute([$groupId,$order['customer'] ?? '',$order['phone'] ?? '',$order['district'] ?? '',$order['address'] ?? '']);
-        $orderWrite->execute([$order['id'],$groupId,$order['entrepreneurId'],$order['amount'],$order['status'],storage_json($order)]);
+        $deliveredAt=!empty($order['deliveredAt'])?date('Y-m-d H:i:s',strtotime((string)$order['deliveredAt'])):null;
+        $orderWrite->execute([$order['id'],$groupId,$order['entrepreneurId'],$order['amount'],$order['status'],$deliveredAt,storage_json($order)]);
         $pdo->prepare('DELETE FROM shop_order_items WHERE order_id=?')->execute([$order['id']]);
         foreach($order['items'] ?? [] as $item)$orderItem->execute([$order['id'],$products[(string)($item['id'] ?? $item['productId'])] ?? (string)($item['id'] ?? $item['productId']),$item['qty'],$item['price']]);
     }
