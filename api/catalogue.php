@@ -41,7 +41,7 @@ function catalogue_tiers(array $tiers): array {
 }
 function catalogue_credit(array &$state): void {
     foreach($state['entrepreneurs'] as &$person){
-        $sales=0;foreach($state['orders'] as $order)if((string)$order['entrepreneurId']===(string)$person['id']&&$order['status']==='Delivered')$sales+=(float)$order['amount'];
+        $sales=0;foreach($state['orders'] as $order)if((string)$order['entrepreneurId']===(string)$person['id']&&$order['status']==='Delivered')$sales+=(float)($order['camyCost'] ?? $order['amount']);
         $credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales)$credit=max($credit,(float)$tier['credit']);
         $person['sales']=round($sales,2);$person['credit']=$credit;
         if(($person['stage'] ?? '')!=='Departed')$person['stage']=$credit>0?'Credit eligible':'Trial seller';
