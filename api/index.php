@@ -57,25 +57,51 @@ function member_id(PDO $pdo): string {
     return 'CE-' . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
 }
 function valid_registration(array $data): array {
+    $business=strtolower(trim((string)($data['hasOnlineBusiness'] ?? 'no')));
+    $marketing=strtolower(trim((string)($data['facebookMarketing'] ?? 'no')));
+    $followers=$data['followersCount'] ?? null;
     $clean = [
         'full_name' => trim((string) ($data['fullName'] ?? $data['name'] ?? '')),
         'email' => strtolower(trim((string) ($data['email'] ?? ''))),
         'password' => (string) ($data['password'] ?? ''),
         'phone' => trim((string) ($data['phone'] ?? '')),
         'nic' => trim((string) ($data['nic'] ?? '')),
+        'address' => trim((string) ($data['address'] ?? '')),
         'city' => trim((string) ($data['city'] ?? '')),
+        'occupation' => trim((string) ($data['occupation'] ?? '')),
+        'has_online_business' => $business,
+        'online_business_products' => trim((string) ($data['onlineBusinessProducts'] ?? '')),
+        'online_business_duration' => trim((string) ($data['onlineBusinessDuration'] ?? '')),
+        'monthly_income' => trim((string) ($data['monthlyIncome'] ?? '')),
+        'social_media_url' => trim((string) ($data['socialMediaUrl'] ?? '')),
+        'followers_count' => ($followers === '' || $followers === null) ? null : filter_var($followers,FILTER_VALIDATE_INT,['options'=>['min_range'=>0]]),
+        'facebook_marketing' => $marketing,
+        'join_reason' => trim((string) ($data['joinReason'] ?? '')),
+        'agreement_accepted' => !empty($data['agreementAccepted']),
     ];
-    if (!$clean['full_name'] || !filter_var($clean['email'], FILTER_VALIDATE_EMAIL) || !$clean['phone'] || !$clean['nic'] || !$clean['city']) response(['message' => 'Complete all required account details.'], 422);
+    if (!$clean['full_name'] || !filter_var($clean['email'], FILTER_VALIDATE_EMAIL) || !$clean['phone'] || !$clean['nic'] || !$clean['address'] || !$clean['city'] || !$clean['occupation']) {
+        response(['message' => 'Complete your name, NIC, address, city, WhatsApp number, email and occupation.'], 422);
+    }
+    if (!in_array($business,['yes','no'],true)) response(['message'=>'Choose whether you currently run an online business.'],422);
+    if ($business==='yes' && (!$clean['online_business_products'] || !$clean['online_business_duration'] || !$clean['monthly_income'])) {
+        response(['message'=>'Tell CAMY what you sell, how long you have sold online and your average monthly online income.'],422);
+    }
+    if ($clean['social_media_url'] !== '' && !filter_var($clean['social_media_url'],FILTER_VALIDATE_URL)) response(['message'=>'Enter a valid Facebook, Instagram or TikTok page link, including https://'],422);
+    if ($followers !== '' && $followers !== null && $clean['followers_count'] === false) response(['message'=>'Enter followers as a number, or 0 if you do not have followers yet.'],422);
+    if (!in_array($marketing,['yes','a_little','no'],true)) response(['message'=>'Choose your Facebook marketing experience.'],422);
+    if (mb_strlen($clean['join_reason']) < 5) response(['message'=>'Tell us briefly why you want to join CAMY.'],422);
+    if (!$clean['agreement_accepted']) response(['message'=>'Please confirm that your information is correct and CAMY can review the application.'],422);
     if (strlen($clean['password']) < 8 || !preg_match('/[A-Za-z]/', $clean['password']) || !preg_match('/\d/', $clean['password'])) response(['message' => 'Password must contain at least 8 characters, including letters and numbers.'], 422);
     return $clean;
 }
-function save_nic_image(string $image): string {
+function save_nic_image(string $image, string $side = 'nic'): string {
     if (!preg_match('#^data:image/(jpeg|png|webp);base64,(.+)$#s', $image, $matches)) response(['message'=>'Take or upload a JPG, PNG or WebP photo of your NIC.'],422);
     $bytes=base64_decode($matches[2],true);
     if ($bytes===false || strlen($bytes)>5*1024*1024 || !getimagesizefromstring($bytes)) response(['message'=>'The NIC image is not a valid photo.'],422);
     $directory=__DIR__.'/../private/nic';
     if(!is_dir($directory) && !mkdir($directory,0700,true)) throw new RuntimeException('Could not store NIC image.');
-    $name=bin2hex(random_bytes(16)).'.'.$matches[1];
+    $safeSide=in_array($side,['front','back','nic'],true)?$side:'nic';
+    $name=$safeSide.'-'.bin2hex(random_bytes(16)).'.'.$matches[1];
     if(file_put_contents($directory.'/'.$name,$bytes)===false) throw new RuntimeException('Could not store NIC image.');
     return $name;
 }
@@ -133,14 +159,17 @@ try {
     }
     if ($path === '/auth/register' && $method === 'POST') {
         $payload=input();$data = valid_registration($payload);
-        if(empty($payload['nicImage'])) response(['message'=>'Upload or take a photo of your NIC before registering.'],422);
+        $front=(string)($payload['nicFrontImage'] ?? $payload['nicImage'] ?? '');
+        $back=(string)($payload['nicBackImage'] ?? '');
+        if($front==='' || $back==='') response(['message'=>'Upload clear photos of both the front and back of your NIC.'],422);
         $duplicate = $pdo->prepare("SELECT (SELECT COUNT(*) FROM users WHERE email = ?) + (SELECT COUNT(*) FROM entrepreneurs WHERE nic = ?) + (SELECT COUNT(*) FROM registration_requests WHERE (email = ? OR nic = ?) AND status = 'pending')");
         $duplicate->execute([$data['email'], $data['nic'], $data['email'], $data['nic']]);
         if ((int) $duplicate->fetchColumn() > 0) response(['message' => 'An account or pending request already exists for this email or NIC.'], 409);
-        $imagePath=save_nic_image((string)$payload['nicImage']);
-        $insert = $pdo->prepare('INSERT INTO registration_requests (full_name,email,password_hash,phone,nic,city,nic_image_path) VALUES (?,?,?,?,?,?,?)');
-        $insert->execute([$data['full_name'],$data['email'],password_hash($data['password'], PASSWORD_DEFAULT),$data['phone'],$data['nic'],$data['city'],$imagePath]);
-        response(['message' => 'Registration sent. CAMY Admin must approve your account before you can sign in.'], 201);
+        $frontPath=save_nic_image($front,'front');
+        $backPath=save_nic_image($back,'back');
+        $insert = $pdo->prepare('INSERT INTO registration_requests (full_name,email,password_hash,phone,nic,address,city,occupation,has_online_business,online_business_products,online_business_duration,monthly_income,social_media_url,followers_count,facebook_marketing,join_reason,agreement_accepted,nic_image_path,nic_front_path,nic_back_path) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+        $insert->execute([$data['full_name'],$data['email'],password_hash($data['password'], PASSWORD_DEFAULT),$data['phone'],$data['nic'],$data['address'],$data['city'],$data['occupation'],$data['has_online_business'],$data['online_business_products'] ?: null,$data['online_business_duration'] ?: null,$data['monthly_income'] ?: null,$data['social_media_url'] ?: null,$data['followers_count'] === false ? null : $data['followers_count'],$data['facebook_marketing'],$data['join_reason'],1,$frontPath,$frontPath,$backPath]);
+        response(['message' => 'Application sent successfully. CAMY Admin will review it. Keep the email and password you created; you can sign in after CAMY approves your account.'], 201);
     }
     if ($path === '/auth/logout' && $method === 'POST') {
         $_SESSION = [];
@@ -171,11 +200,12 @@ try {
     }
     if ($path === '/admin/registrations' && $method === 'GET') {
         require_admin($pdo);
-        $rows = $pdo->query("SELECT id,full_name,email,phone,nic,city,status,created_at,nic_image_path FROM registration_requests WHERE status = 'pending' ORDER BY created_at ASC")->fetchAll();
+        $rows = $pdo->query("SELECT id,full_name,email,phone,nic,address,city,occupation,has_online_business,online_business_products,online_business_duration,monthly_income,social_media_url,followers_count,facebook_marketing,join_reason,agreement_accepted,nic_image_path,nic_front_path,nic_back_path,status,admin_note,created_at,reviewed_at FROM registration_requests ORDER BY FIELD(status,'pending','approved','rejected'), created_at DESC")->fetchAll();
         response(['registrations' => $rows]);
     }
-    if (preg_match('#^/admin/registrations/(\d+)/nic$#',$path,$matches) && $method==='GET') {
-        require_admin($pdo);$query=$pdo->prepare('SELECT nic_image_path FROM registration_requests WHERE id=?');$query->execute([(int)$matches[1]]);$name=$query->fetchColumn();
+    if (preg_match('#^/admin/registrations/(\d+)/nic(?:/(front|back))?$#',$path,$matches) && $method==='GET') {
+        require_admin($pdo);$side=$matches[2] ?? 'front';$column=$side==='back'?'nic_back_path':'nic_front_path';
+        $query=$pdo->prepare("SELECT COALESCE($column,nic_image_path) FROM registration_requests WHERE id=?");$query->execute([(int)$matches[1]]);$name=$query->fetchColumn();
         if(!$name) response(['message'=>'NIC image not found.'],404);
         $file=__DIR__.'/../private/nic/'.basename((string)$name);if(!is_file($file)) response(['message'=>'NIC image not found.'],404);
         header('Content-Type: '.(mime_content_type($file) ?: 'image/jpeg'));header('Content-Length: '.filesize($file));readfile($file);exit;
@@ -187,22 +217,25 @@ try {
         header('Content-Type: '.(mime_content_type($file) ?: 'image/jpeg'));header('Content-Length: '.filesize($file));readfile($file);exit;
     }
     if (preg_match('#^/admin/registrations/(\d+)/(approve|reject)$#', $path, $matches) && $method === 'POST') {
-        $admin = require_admin($pdo); $id = (int) $matches[1]; $decision = $matches[2];
+        $admin = require_admin($pdo); $id = (int) $matches[1]; $decision = $matches[2]; $review=input(); $note=trim((string)($review['note'] ?? ''));
         $pdo->beginTransaction();
         $query = $pdo->prepare("SELECT * FROM registration_requests WHERE id = ? AND status = 'pending' FOR UPDATE"); $query->execute([$id]); $request = $query->fetch();
         if (!$request) { $pdo->rollBack(); response(['message' => 'This registration was already reviewed or does not exist.'], 404); }
         if ($decision === 'reject') {
-            $pdo->prepare("UPDATE registration_requests SET status='rejected',reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$admin['id'],$id]); $pdo->commit(); response(['message' => 'Registration rejected.']);
+            if(mb_strlen($note)<3){$pdo->rollBack();response(['message'=>'Add a short rejection reason so the decision is recorded clearly.'],422);}
+            $pdo->prepare("UPDATE registration_requests SET status='rejected',admin_note=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$note,$admin['id'],$id]); $pdo->commit(); response(['message' => 'Application rejected and kept in the registration history.']);
         }
         $check = $pdo->prepare('SELECT COUNT(*) FROM users WHERE email = ?'); $check->execute([$request['email']]);
         if ((int)$check->fetchColumn()) { $pdo->rollBack(); response(['message' => 'A user already exists with this email.'], 409); }
         $memberId = member_id($pdo);
         $userInsert = $pdo->prepare("INSERT INTO users(member_id,full_name,email,password_hash,role,status) VALUES(?,?,?,?, 'entrepreneur','active')");
         $userInsert->execute([$memberId,$request['full_name'],$request['email'],$request['password_hash']]); $userId=(int)$pdo->lastInsertId();
-        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,nic,nic_image_path,phone,city,joined_date) VALUES(?,?,?,?,?,?,CURDATE())');
-        $entrepreneurInsert->execute([$userId,$memberId,$request['nic'],$request['nic_image_path'],$request['phone'],$request['city']]);
-        $pdo->prepare("UPDATE registration_requests SET status='approved',reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$admin['id'],$id]);
-        $pdo->commit(); response(['message'=>'Registration approved. The entrepreneur can now sign in.','memberId'=>$memberId]);
+        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,nic,nic_image_path,phone,address,city,joined_date) VALUES(?,?,?,?,?,?,?,CURDATE())');
+        $entrepreneurInsert->execute([$userId,$memberId,$request['nic'],$request['nic_front_path'] ?: $request['nic_image_path'],$request['phone'],$request['address'],$request['city']]);
+        $pdo->prepare("UPDATE registration_requests SET status='approved',admin_note=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$note ?: null,$admin['id'],$id]);
+        $pdo->commit();
+        $activationMessage="Hello {$request['full_name']}, your CAMY entrepreneur account has been approved. Your username is {$request['email']}. Please use the password you created during registration to sign in. Member ID: $memberId.";
+        response(['message'=>'Registration approved. The entrepreneur can now sign in.','memberId'=>$memberId,'phone'=>$request['phone'],'activationMessage'=>$activationMessage]);
     }
     if ($path === '/admin/entrepreneurs' && $method === 'POST') {
         require_admin($pdo); $data=valid_registration(input());
