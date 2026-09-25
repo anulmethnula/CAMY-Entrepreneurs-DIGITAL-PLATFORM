@@ -1951,3 +1951,50 @@ input:focus, select:focus, textarea:focus {
   .payout-history > div:last-child > article { grid-template-columns: 38px 1fr; }
   .payout-history time,.payout-history-actions { grid-column: 2; }
 }
+
+
+/* COD-only dropship and optional Phase 2 credit stock */
+.cod-only-notice,.credit-safe-note{margin:13px 0;padding:13px 14px;border:1px solid #cfe4d8;border-radius:13px;background:#f3faf6;color:#285b44;display:flex;align-items:flex-start;gap:10px}
+.cod-only-notice svg,.credit-safe-note svg{width:20px;flex:0 0 auto}
+.cod-only-notice strong{display:block;margin-bottom:3px;font-size:12px}
+.cod-only-notice p{margin:0;color:#607b6e;font-size:10px;line-height:1.5}
+.phase-choice-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.credit-stock-hero{background:linear-gradient(135deg,#f8fbff,#eff8f4)}
+.credit-stock-lock{margin:18px 0;padding:28px;border:1px solid #d8e3ec;border-radius:18px;background:#fff;display:flex;align-items:center;gap:18px}
+.credit-stock-lock>svg{width:38px;height:38px;padding:9px;border-radius:12px;background:#eef4f8;color:#5f7890}
+.credit-stock-lock h2{margin:0 0 6px;color:#1c415f}
+.credit-stock-lock p{margin:0;color:#708497;line-height:1.55}
+.credit-inventory-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%}
+.credit-inventory-grid article{padding:14px;border:1px solid #dfe8ef;border-radius:12px;background:#fff;display:flex;flex-direction:column;gap:5px}
+.credit-inventory-grid article strong{color:#204461}
+.credit-inventory-grid article span{color:#20774f;font-weight:800}
+.credit-inventory-grid article small{color:#7c8d9c}
+.credit-stock-admin-filters{display:grid;grid-template-columns:1fr 190px;gap:10px;margin:16px 0}
+.credit-stock-admin-filters input,.credit-stock-admin-filters select{min-height:44px;padding:0 12px;border:1px solid #d2e0ea;border-radius:11px;background:#fff;color:#294b65;font:inherit}
+.credit-stock-admin-list{display:grid;gap:14px}
+.credit-stock-admin-card{padding:18px}
+.credit-stock-admin-card>header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.credit-stock-admin-card>header small{color:#668198;font-weight:800;letter-spacing:.05em}
+.credit-stock-admin-card>header h3{margin:4px 0;color:#1b405f}
+.credit-stock-admin-card>header p{margin:0;color:#75899b;font-size:11px}
+.credit-stock-admin-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:14px 0}
+.credit-stock-admin-metrics span{padding:11px;border:1px solid #e0e9ef;border-radius:10px;background:#f9fbfd}
+.credit-stock-admin-metrics small{display:block;color:#7b8e9e;font-size:9px;font-weight:850;letter-spacing:.06em}
+.credit-stock-admin-metrics strong{display:block;margin-top:4px;color:#1d4664}
+.credit-stock-admin-items{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0}
+.credit-stock-admin-items>span{padding:7px 9px;border-radius:9px;background:#f0f5f8;color:#536e82;font-size:10px}
+.credit-stock-admin-items b{color:#274c68}
+.credit-stock-admin-card>footer{display:flex;align-items:center;gap:9px;margin-top:10px;padding-top:12px;border-top:1px solid #e6edf2}
+.credit-stock-admin-card>footer button{min-height:39px;padding:0 13px;border:1px solid #d2dfe8;border-radius:9px;background:#fff;color:#47657c;font-weight:750;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.credit-stock-admin-card>footer button.market-primary{border:0;color:#fff}
+.credit-stock-admin-card>footer button svg{width:15px}
+.credit-stock-admin-card>footer>span{color:#60788b;font-size:11px;display:flex;align-items:center;gap:7px}
+@media(max-width:1100px){
+  .phase-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .credit-stock-admin-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  .phase-choice-grid,.credit-stock-admin-filters,.credit-inventory-grid,.credit-stock-admin-metrics{grid-template-columns:1fr}
+  .credit-stock-lock{align-items:flex-start}
+  .credit-stock-admin-card>header,.credit-stock-admin-card>footer{flex-direction:column}
+}
