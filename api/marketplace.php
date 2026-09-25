@@ -17,6 +17,28 @@ function market_state(PDO $pdo, bool $lock = false): array {
     $changed=$stored===null;
     if(!is_array($state)){$state=['products'=>[], 'entrepreneurs'=>[], 'tiers'=>[], 'requests'=>[], 'inventory'=>[], 'orders'=>[], 'settlements'=>[]];$changed=true;}
     if(!isset($state['settlements'])||!is_array($state['settlements'])){$state['settlements']=[];$changed=true;}
+    // Keep a relational money ledger for every dropship order, including orders created
+    // before the payout feature was added.
+    foreach($state['orders'] ?? [] as &$ledgerOrder){
+        if(($ledgerOrder['orderMode'] ?? '')!=='dropship')continue;
+        $clientTotal=round((float)($ledgerOrder['amount'] ?? 0),2);
+        $camyCost=round((float)($ledgerOrder['camyCost'] ?? $clientTotal),2);
+        $margin=round((float)($ledgerOrder['entrepreneurMargin'] ?? max(0,$clientTotal-$camyCost)),2);
+        $method=in_array(($ledgerOrder['clientPaymentMethod'] ?? ''),['cod','bank'],true)?$ledgerOrder['clientPaymentMethod']:'cod';
+        $delivered=($ledgerOrder['status'] ?? '')==='Delivered';
+        $defaultPayout=$delivered?($margin>0?'pending_transfer':'cancelled'):'pending_delivery';
+        $pdo->prepare("INSERT IGNORE INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount,collection_status,payout_status,collected_at) VALUES(?,?,?,?,?,?,?, ?, ?)")->execute([
+            $ledgerOrder['id'],$ledgerOrder['entrepreneurId'],$method,$clientTotal,$camyCost,$margin,$delivered?'collected':'pending',$defaultPayout,$delivered?date('Y-m-d H:i:s',strtotime((string)($ledgerOrder['deliveredAt'] ?? 'now'))):null
+        ]);
+        $ledger=$pdo->prepare("SELECT payout_status,payout_reference,payout_receipt_path,paid_at,collection_status FROM entrepreneur_payouts WHERE order_id=?");$ledger->execute([$ledgerOrder['id']]);$ledgerRow=$ledger->fetch();
+        if($ledgerRow){
+            $ledgerOrder['payoutAmount']=$margin;$ledgerOrder['payoutStatus']=$ledgerRow['payout_status']==='cancelled'&&$margin<=0?'not_required':$ledgerRow['payout_status'];
+            $ledgerOrder['clientPaymentStatus']=$ledgerRow['collection_status']==='collected'?'Collected by CAMY':($method==='cod'?'Collect on delivery':'Receipt uploaded');
+            if($ledgerRow['payout_reference'])$ledgerOrder['payoutReference']=$ledgerRow['payout_reference'];
+            if($ledgerRow['payout_receipt_path'])$ledgerOrder['payoutReceipt']='/api/marketplace/orders/'.$ledgerOrder['id'].'/payout-receipt';
+            if($ledgerRow['paid_at'])$ledgerOrder['payoutPaidAt']=date(DATE_ATOM,strtotime((string)$ledgerRow['paid_at']));
+        }
+    }unset($ledgerOrder);
     if(empty($state['products'])&&empty($state['catalogue_seeded'])){
         $rows=$pdo->query("SELECT id,code,name,category,description,price,stock,image FROM products WHERE status='active' ORDER BY id")->fetchAll();
         if($rows){$state['products']=array_map(static fn($row)=>['id'=>(int)$row['id'],'code'=>$row['code'],'name'=>$row['name'],'category'=>$row['category'],'description'=>$row['description'],'price'=>(float)$row['price'],'stock'=>(int)$row['stock'],'image'=>$row['image'] ?: '/products/classic-set.png','specs'=>[]],$rows);$state['catalogue_live']=true;}
