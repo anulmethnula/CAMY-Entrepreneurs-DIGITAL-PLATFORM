@@ -29,7 +29,7 @@ export function phpCandidates() {
 
       try {
         for (const entry of readdirSync(drive, { withFileTypes: true })) {
-          if (!entry.isDirectory() || !/^xam{1,2}p/i.test(entry.name)) continue
+          if (!entry.isDirectory() || !/^xam{1,2}p{1,2}/i.test(entry.name)) continue
           addCandidate(candidates, path.join(drive, entry.name, 'php', 'php.exe'))
         }
       } catch {
