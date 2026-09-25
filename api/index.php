@@ -147,7 +147,15 @@ try {
         $valid = $user && password_verify($password, $user['password_hash']);
         $resetRequired = $user && !empty($user['must_change_password']);
         $pdo->prepare('INSERT INTO login_attempts (email, ip_address, succeeded) VALUES (?, ?, ?)')->execute([$email, $ip, $valid ? 1 : 0]);
-        if (!$valid) response(['message' => 'Incorrect email or password.'], 401);
+        if (!$valid) {
+            $applicationQuery=$pdo->prepare("SELECT status,password_hash,admin_note FROM registration_requests WHERE email=? ORDER BY id DESC LIMIT 1");
+            $applicationQuery->execute([$email]);$application=$applicationQuery->fetch();
+            if($application && password_verify($password,(string)$application['password_hash'])){
+                if($application['status']==='pending')response(['message'=>'Your CAMY application is still waiting for admin approval. You can sign in with this email and password after approval.'],403);
+                if($application['status']==='rejected')response(['message'=>'This application was not approved. Contact CAMY Admin if you need the decision reviewed.'],403);
+            }
+            response(['message' => 'Incorrect email or password.'], 401);
+        }
         if ($user['status'] !== 'active') response(['message' => 'This account is not active. Contact CAMY Admin.'], 403);
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
@@ -200,7 +208,7 @@ try {
     }
     if ($path === '/admin/registrations' && $method === 'GET') {
         require_admin($pdo);
-        $rows = $pdo->query("SELECT id,full_name,email,phone,nic,address,city,occupation,has_online_business,online_business_products,online_business_duration,monthly_income,social_media_url,followers_count,facebook_marketing,join_reason,agreement_accepted,nic_image_path,nic_front_path,nic_back_path,status,admin_note,created_at,reviewed_at FROM registration_requests ORDER BY FIELD(status,'pending','approved','rejected'), created_at DESC")->fetchAll();
+        $rows = $pdo->query("SELECT r.id,r.full_name,r.email,r.phone,r.nic,r.address,r.city,r.occupation,r.has_online_business,r.online_business_products,r.online_business_duration,r.monthly_income,r.social_media_url,r.followers_count,r.facebook_marketing,r.join_reason,r.agreement_accepted,r.nic_image_path,r.nic_front_path,r.nic_back_path,r.status,r.admin_note,r.created_at,r.reviewed_at,u.member_id FROM registration_requests r LEFT JOIN users u ON u.email=r.email AND u.role='entrepreneur' ORDER BY FIELD(r.status,'pending','approved','rejected'), r.created_at DESC")->fetchAll();
         response(['registrations' => $rows]);
     }
     if (preg_match('#^/admin/registrations/(\d+)/nic(?:/(front|back))?$#',$path,$matches) && $method==='GET') {
