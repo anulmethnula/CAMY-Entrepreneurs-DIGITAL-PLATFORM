@@ -1,55 +1,83 @@
 # CAMY Entrepreneurs Digital Platform
 
-React/Vite portal with a PHP/MySQL API for CAMY-managed dropshipping, private entrepreneur shops, customer orders, commission settlement, and performance-based credit.
+React/Vite portal with a PHP/MySQL API for CAMY-managed entrepreneur sales, client-order fulfilment, delivery tracking, commission settlement, and performance-based credit.
 
-## Business model
+## Active business model
 
-CAMY owns and stores the products. Entrepreneurs do not need a physical shop or their own stock for the normal selling flow.
+The customer is **not a system user** in the current process. The active application is for CAMY Entrepreneurs and CAMY Admin / Operations.
 
-1. CAMY activates products with a protected CAMY base price and warehouse quantity.
-2. Every approved entrepreneur receives a private storefront link: `/shops?shop=MEMBER-ID`.
-3. The entrepreneur chooses which CAMY products to show and sets each customer selling price.
-4. A customer using that link sees only that entrepreneur's shop. The application does not expose a directory of competing entrepreneurs.
-5. The customer submits one order linked to that entrepreneur and chooses bank transfer to CAMY or cash on delivery.
-6. CAMY reserves warehouse stock, approves the order, collects or verifies the customer payment outside the system, dispatches the parcel, and manages returns.
-7. The system keeps CAMY's base amount separate from the entrepreneur margin on every item and order.
-8. Positive margin becomes payable to the entrepreneur after CAMY records the customer money as collected. Its due date is seven days later.
-9. CAMY records the external bank payout and reference. The platform does not transfer money itself.
-10. If an entrepreneur sells below CAMY's base price, the shortfall becomes an entrepreneur contribution/outstanding balance so CAMY's amount remains protected.
+1. CAMY manages the product catalogue, protected CAMY base prices, and warehouse quantities.
+2. An approved entrepreneur finds clients outside the platform through WhatsApp, phone, social media, in-person selling, or another channel.
+3. The entrepreneur opens **Client orders** and records the client's name, mobile number, district, delivery address, products, quantities, selling prices, source, reference, and delivery notes.
+4. Submitting the order immediately creates a CAMY Operations order and reserves the required CAMY warehouse stock.
+5. CAMY Admin can see the full entrepreneur, client, product, price, margin, notes, and fulfilment information.
+6. CAMY Admin confirms the order and prepares the products. The order moves from **Pending** to **Processing**.
+7. CAMY dispatches the parcel directly to the entrepreneur's client. A courier tracking number is required before the order can become **Dispatched**.
+8. The entrepreneur sees the order status, courier, tracking number, and update history in the portal. The Client Orders page auto-refreshes every 20 seconds while visible.
+9. CAMY marks successful fulfilment as **Delivered**. Delivered order value counts toward verified sales and CAMY credit-tier eligibility.
+10. Rejected or returned orders restore reserved CAMY warehouse stock according to the existing workflow.
 
-For example, if the CAMY base price is Rs. 80,000 and the entrepreneur price is Rs. 90,000, CAMY retains Rs. 80,000 and the commission is Rs. 10,000. If the entrepreneur price is Rs. 75,000, the customer pays Rs. 75,000 and the Rs. 5,000 shortfall is recorded against the entrepreneur.
+The 20-second refresh is polling-based live status, not a WebSocket connection.
 
-## Payment and fulfilment states
+## Order states
 
-Bank transfer:
+Current entrepreneur-entered client-order flow:
 
-`Pending -> Awaiting payment -> Payment review -> Processing -> Dispatched -> Delivered`
+`Pending -> Processing -> Dispatched -> Delivered`
 
-Cash on delivery:
+Other existing terminal/exception states remain available where applicable:
 
-`Pending -> Processing -> Dispatched -> Delivered -> COD collected`
+- `Rejected`
+- `Returned`
 
-Only CAMY Admin or Operations staff can approve payment, dispatch orders, confirm COD collection, manage returns, and record commission payouts. Entrepreneurs can see their own orders, prices, performance, payout status, and credit position but cannot confirm customer money themselves.
+Only CAMY Admin / Operations controls confirmation, dispatch, delivery completion, COD collection, returns, and financial settlement.
 
-Customer payment is external. There is no payment gateway or bank integration. Bank-transfer customers receive only the configured CAMY bank account. COD commission does not become payable until CAMY records the courier/cash remittance reference.
+## Order economics
 
-## Credit model
+Every direct client order stores:
 
-The existing credit module remains available as the post-trial facility described in the project brief:
+- Client selling total
+- Protected CAMY base amount
+- Entrepreneur margin or below-base contribution
+- Payment / COD status
+- Commission status and settlement information
+- Courier and tracking information
+- Status update history
 
-- Verified delivered sales determine eligibility.
-- CAMY Admin configures sales thresholds and credit limits; values are not hardcoded.
-- The system tracks issued credit, settlements, and outstanding balances.
-- A below-base sale or recovery of an already-paid commission after a return can add to the entrepreneur's outstanding balance.
-- Stock-on-credit requests remain a separate optional post-trial facility; they are not required for ordinary dropshipping sales.
-- For an approved credit-stock issue, CAMY Admin sets a return deadline (1–365 days) and may edit it later. Physically returned unsold stock is restored to CAMY and reduces the entrepreneur's outstanding balance. Damaged, lost, or non-returned stock remains payable by the entrepreneur and is recorded with an inspection note.
+The customer does not log in to CAMY and does not place an order through a CAMY storefront.
+
+## Credit model and Credit Sensor
+
+Delivered sales continue to drive configurable CAMY credit tiers.
+
+The entrepreneur's **Credit Sensor** shows:
+
+- **Limit** — approved CAMY credit limit
+- **Used** — current used/outstanding credit
+- **Available** — limit minus used
+- **Building eligibility** — no approved limit yet
+- **Healthy** — under 60% usage
+- **Watch usage** — 60% to under 90%
+- **High usage** — 90% or more
+
+CAMY Admin still controls credit thresholds, limits, settlements, and the optional stock-on-credit workflow. Credit-stock return deadlines remain configurable, and damaged/lost/non-returned stock can remain payable.
 
 ## Roles
 
-- Super Admin: full products, entrepreneurs, rules, orders, finances, and reports access.
-- Operations Admin: customer payment review, COD collection, dispatch, returns, and commission settlement.
-- Entrepreneur: private shop prices and visibility, own orders, sales, commission, credit, and settlement account.
-- Customer: private shop purchase, external payment proof, order tracking, delivery confirmation, returns, favourites, and reviews.
+- **Super Admin** — full access to entrepreneurs, client orders, products, stock requests, credit, users, and reports.
+- **Operations / permitted staff** — access according to assigned permissions, including fulfilment and delivery management.
+- **Entrepreneur** — creates client orders, monitors CAMY fulfilment/tracking, sees growth, credit, and profile information.
+- **Customer** — no CAMY account or active customer-facing portal in the current process.
+
+Historical customer components/tables are retained in the repository/database to avoid destructive migrations, but customer account/storefront routes are retired from the active workflow.
+
+## Key current files
+
+- `src/DirectOrders.jsx` — entrepreneur Client Orders workspace, order entry, tracking list, Credit Sensor.
+- `src/direct-orders.css` — Client Orders responsive UI.
+- `api/marketplace.php` — direct-order API, stock reservation, order state/history integration.
+- `src/Workflow.jsx` — CAMY fulfilment controls and courier tracking.
+- `CURRENT-PROCESS.md` — current process and old-vs-new comparison.
 
 ## Local setup
 
@@ -60,30 +88,32 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-The web app runs at `http://127.0.0.1:8080`; the PHP API runs at `http://127.0.0.1:8000`. Ports 8000 and 8080 must be available.
+The project is configured for the Vite frontend and PHP API used by this repository. Make sure MySQL is running before testing authenticated workflows.
 
-The API creates missing tables from `database/schema.sql` and adds the current order-economics columns to older installations. Private NIC images, receipts, sessions, and bootstrap credentials live under `private/` and must never be published.
+## Useful scripts
 
-Configure production with `CAMY_DB_HOST`, `CAMY_DB_PORT`, `CAMY_DB_NAME`, `CAMY_DB_USER`, and `CAMY_DB_PASSWORD`. `CAMY_ENV=production` requires a dedicated database user and a non-empty password. Use HTTPS.
+- `npm run dev` — `node scripts/dev.mjs`
+- `npm run web` — `vite`
+- `npm run api` — `C:\xampp\php\php.exe -S 127.0.0.1:8000 -t api api/index.php`
+- `npm run build` — `vite build`
+- `npm run preview` — `vite preview`
 
-## Verification
+For the PHP/API checks already included in the repository, also use the scripts under `scripts/` with your XAMPP PHP executable as documented in the project.
+
+## Branch workflow
+
+The current process is implemented on:
+
+`feature/camy-dropshipping-flow`
+
+To update an existing local clone:
 
 ```powershell
-npm.cmd run build
-C:\xampp\php\php.exe scripts\test-workflow.php
-C:\xampp\php\php.exe scripts\test-workflow-api.php
-C:\xampp\php\php.exe scripts\test-staff-auth.php
-C:\xampp\php\php.exe scripts\check-database.php
-node scripts\test-reports.mjs
+git fetch origin
+git switch feature/camy-dropshipping-flow
+git pull origin feature/camy-dropshipping-flow
+npm.cmd install
+npm.cmd run dev
 ```
 
-The API integration test creates and removes an isolated temporary MySQL database.
-
-## Security and reliability notes
-
-- Stock reservation, price validation, shop ownership, payment state changes, and payout eligibility are enforced by the PHP API.
-- Checkout uses an idempotency key so a network retry does not duplicate an order.
-- Customer, entrepreneur, and staff sessions remain separated.
-- Private receipts are served only after ownership or staff authorization checks.
-- Administrative writes are audited, sign-in attempts are rate-limited, and staff sessions expire.
-- Returns restore CAMY warehouse stock once. A return cancels unpaid commission; if commission was already paid, the recovery is recorded against the entrepreneur.
+Review and test this branch before merging it into `main`.

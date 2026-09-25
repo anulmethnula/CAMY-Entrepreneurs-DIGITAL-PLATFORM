@@ -321,7 +321,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
         response(['message'=>'Client order sent to CAMY Operations.','order'=>$order,'orders'=>array_values(array_filter($state['orders'],static fn($entry)=>(string)$entry['entrepreneurId']===$member))],201);
     }
 
-    if ($path === '/marketplace/orders' && $method === 'POST' && !empty(current_user($pdo))) {
+    if ($path === '/marketplace/orders' && $method === 'POST') {
         response(['message'=>'Customer ordering has been retired. Entrepreneurs now submit client orders from the CAMY portal.'],410);
     }
 
