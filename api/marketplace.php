@@ -212,7 +212,9 @@ function market_route(PDO $pdo, string $path, string $method): void {
     if (preg_match('#^/marketplace/orders/([^/]+)/status$#',$path,$matches) && $method==='POST') {
         $user=current_user($pdo);if(!$user)response(['message'=>'Authentication required.'],401);$data=input();$status=(string)($data['status'] ?? '');
         $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;foreach($state['orders'] as $key=>$order)if($order['id']===$matches[1]){$index=$key;break;}if($index===null){$pdo->rollBack();response(['message'=>'Shop order not found.'],404);}
-        $order=$state['orders'][$index];workflow_owner($user,(string)$order['entrepreneurId']);if($status==='Returned'&&!empty($order['return']))response(['message'=>'Complete the return review and receipt flow first.'],409);
+        $order=$state['orders'][$index];
+        if(($order['orderMode'] ?? '')==='dropship'&&!in_array($user['role'],['admin','manager'],true))response(['message'=>'CAMY Admin controls dropship fulfilment updates.'],403);
+        workflow_owner($user,(string)$order['entrepreneurId']);if($status==='Returned'&&!empty($order['return']))response(['message'=>'Complete the return review and receipt flow first.'],409);
         if(!($status==='Delivered'&&$order['status']==='Delivered'))workflow_transition($order['status'],$status,false);
         if($status==='Delivered'&&empty($order['deliveryConfirmations']['seller']))$state['orders'][$index]['deliveryConfirmations']['seller']=['id'=>(int)$user['id'],'name'=>$user['full_name'],'at'=>date(DATE_ATOM)];
         if($status==='Dispatched'){
@@ -224,7 +226,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
             $state['orders'][$index]['dispatchedAt']=date(DATE_ATOM);
         }
         if($status==='Awaiting payment'){$bank=[];foreach($state['entrepreneurs'] as $person)if((string)$person['id']===(string)$order['entrepreneurId'])$bank=$person['bankDetails'] ?? [];workflow_bank_required($bank);if($order['status']==='Pending'){workflow_reserve($state,$order['items'],(string)$order['entrepreneurId']);$state['orders'][$index]['reserved']=true;$state['orders'][$index]['bankDetails']=$bank;}}
-        if(in_array($status,['Rejected','Returned'],true)&&($order['reserved'] ?? true)){workflow_release($state,$order['items'],(string)$order['entrepreneurId']);$state['orders'][$index]['reserved']=false;}
+        if(in_array($status,['Rejected','Returned'],true)&&($order['reserved'] ?? true)){$releaseShop=(($order['orderMode'] ?? '')==='dropship')?null:(string)$order['entrepreneurId'];workflow_release($state,$order['items'],$releaseShop);$state['orders'][$index]['reserved']=false;}
         if($order['status']==='Payment review'&&$status==='Awaiting payment'){$reason=trim((string)($data['reason'] ?? ''));if(!$reason)response(['message'=>'Explain why the receipt was rejected.'],422);$state['orders'][$index]['paymentNote']=$reason;}
         $state['orders'][$index]['updatedAt']=date(DATE_ATOM);
         $state['orders'][$index]['status']=$status;$pdo->prepare('UPDATE shop_orders SET status=? WHERE id=?')->execute([$status,$matches[1]]);$shop=$state['orders'][$index]['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)$entry['amount'];$credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales&&$tier['credit']>$credit)$credit=(float)$tier['credit'];foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
