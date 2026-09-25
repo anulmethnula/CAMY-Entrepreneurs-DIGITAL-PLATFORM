@@ -1874,3 +1874,80 @@ input:focus, select:focus, textarea:focus {
   .admin-danger-zone { align-items: stretch; flex-direction: column; }
   .admin-danger-zone .btn { width: 100%; }
 }
+
+
+/* Dropship money collection, entrepreneur payout, and phase progression */
+.phase-value { font-size: 18px!important; line-height: 1.25; }
+.dropship-payment-choice { margin: 16px 0; padding: 15px; border: 1px solid #d7e5f2; border-radius: 14px; background: #f8fbfe; }
+.dropship-payment-choice h3 { margin: 0 0 10px; color: #244967; font-size: 13px; }
+.dropship-payment-choice > div:first-of-type { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.dropship-payment-choice button { min-height: 76px; padding: 12px; border: 1px solid #cfdeea; border-radius: 12px; color: #31536e; background: #fff; display: flex; align-items: flex-start; gap: 10px; text-align: left; cursor: pointer; }
+.dropship-payment-choice button.active { border-color: #4e91c7; background: #edf7ff; box-shadow: 0 0 0 3px rgba(64,137,194,.1); }
+.dropship-payment-choice button svg { width: 20px; flex: 0 0 auto; color: #2d77b1; }
+.dropship-payment-choice button strong,.dropship-payment-choice button small { display: block; }
+.dropship-payment-choice button small { margin-top: 3px; color: #71879a; font-size: 10px; line-height: 1.4; }
+.dropship-bank-proof { margin-top: 11px; padding-top: 8px; border-top: 1px solid #dde8f1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dropship-bank-proof label { margin: 0; }
+.dropship-bank-proof label small { display: block; margin-top: 5px; color: #75899b; font-size: 10px; font-weight: 600; overflow-wrap: anywhere; }
+.dropship-money-rule { margin: 13px 0; padding: 13px 14px; border: 1px solid #cfe4d8; border-radius: 13px; color: #295b45; background: #f1faf5; display: flex; gap: 10px; }
+.dropship-money-rule > svg { width: 21px; flex: 0 0 auto; }
+.dropship-money-rule strong { display: block; margin-bottom: 3px; font-size: 12px; }
+.dropship-money-rule p { margin: 0; color: #567365; font-size: 10px; line-height: 1.55; }
+.dropship-money-entry { align-items: flex-start!important; }
+.order-money-mini { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 7px; }
+.order-money-mini span,.order-money-mini a { padding: 7px 9px; border: 1px solid #dfe8ef; border-radius: 9px; color: #62778a; background: #f8fafc; font-size: 10px; text-decoration: none; }
+.order-money-mini span b { color: #214766; }
+.order-money-mini a { color: #176baa; display: inline-flex; align-items: center; gap: 5px; font-weight: 750; }
+.order-money-mini a svg { width: 13px; }
+.payout-home-stats article:nth-child(2) { border-color: #cce4d6; background: #f5fbf7; }
+.payout-home-stats article:nth-child(3) { border-color: #eedfc2; background: #fffaf0; }
+
+.dropship-admin-money { margin: 19px 0; padding: 18px; border: 1px solid #d4e4f0; border-radius: 16px; background: linear-gradient(145deg,#fbfdff,#f5f9fc); }
+.dropship-admin-money-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; }
+.dropship-admin-money-grid > span { padding: 12px; border: 1px solid #e1e9ef; border-radius: 11px; background: #fff; }
+.dropship-admin-money-grid small { display: block; color: #7a8c9e; font-size: 9px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.dropship-admin-money-grid strong { display: block; margin-top: 5px; color: #1b405f; font-size: 12px; overflow-wrap: anywhere; }
+.money-receipt-row { margin-top: 10px; padding: 12px 13px; border: 1px solid #dce7ef; border-radius: 11px; background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.money-receipt-row.paid { border-color: #cbe3d5; background: #f4fbf7; }
+.money-receipt-row span strong,.money-receipt-row span small { display: block; }
+.money-receipt-row span small { margin-top: 3px; color: #74889a; }
+.dropship-transfer-form { margin-top: 12px; padding: 15px; border: 1px solid #cfe1ee; border-radius: 13px; background: #fff; display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; align-items: end; gap: 10px; }
+.dropship-transfer-form > div strong { color: #214766; font-size: 12px; }
+.dropship-transfer-form > div p { margin: 4px 0 0; color: #73889b; font-size: 10px; line-height: 1.5; }
+.dropship-transfer-form label { color: #415f76; font-size: 10px; font-weight: 750; }
+.dropship-transfer-form input { width: 100%; min-height: 40px; margin-top: 5px; padding: 0 10px; border: 1px solid #ccdce8; border-radius: 9px; font: inherit; font-size: 11px; }
+.dropship-transfer-form input[type="file"] { padding: 7px; }
+.dropship-transfer-form label small { display: block; margin-top: 4px; color: #7c8fa1; font-size: 9px; font-weight: 600; }
+.dropship-transfer-form .market-error { grid-column: 1 / -1; }
+.dropship-payout-note { margin: 10px 0 0; color: #7c6a45; font-size: 11px; }
+
+.phase-banner { margin-bottom: 16px; padding: 19px 22px; border-color: #d3e3ef; background: linear-gradient(135deg,#f9fcff,#f1f7fc); display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.phase-banner > div > span { color: #2e75aa; font-size: 9px; font-weight: 850; letter-spacing: .1em; }
+.phase-banner h2 { margin: 5px 0; color: #183f61; font-size: 21px; }
+.phase-banner p { margin: 0; color: #6b8092; font-size: 11px; line-height: 1.55; }
+.phase-banner > svg { width: 32px; height: 32px; color: #2d7aa9; }
+.earnings-overview { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin: 16px 0; }
+.earnings-overview article { padding: 18px; border: 1px solid #d9e5ee; border-radius: 15px; background: #fff; }
+.earnings-overview small { color: #72869a; font-size: 9px; font-weight: 850; letter-spacing: .07em; }
+.earnings-overview strong { display: block; margin: 6px 0; color: #173e5f; font-size: 23px; }
+.earnings-overview p { margin: 0; color: #76899a; font-size: 10px; line-height: 1.45; }
+.payout-history > div:last-child > article { display: grid; grid-template-columns: 38px 1fr auto auto; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #e7edf2; }
+.payout-history > div:last-child > article > span:first-child { width: 36px; height: 36px; border-radius: 10px; color: #2877aa; background: #eaf5fc; display: grid; place-items: center; }
+.payout-history > div:last-child > article > span:first-child svg { width: 17px; }
+.payout-history article div strong,.payout-history article div small { display: block; }
+.payout-history article div small { margin-top: 3px; color: #7a8c9c; font-size: 10px; }
+.payout-history time { color: #718495; font-size: 10px; }
+.payout-history-actions { display: flex; align-items: center; gap: 8px; }
+.payout-history-actions a { color: #1a6ca8; font-size: 10px; font-weight: 750; text-decoration: none; }
+
+@media (max-width: 1050px) {
+  .dropship-transfer-form { grid-template-columns: 1fr 1fr; }
+  .dropship-transfer-form > div { grid-column: 1 / -1; }
+  .dropship-admin-money-grid,.earnings-overview { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 650px) {
+  .dropship-payment-choice > div:first-of-type,.dropship-bank-proof,.dropship-admin-money-grid,.earnings-overview,.dropship-transfer-form { grid-template-columns: 1fr; }
+  .money-receipt-row,.phase-banner { align-items: stretch; flex-direction: column; }
+  .payout-history > div:last-child > article { grid-template-columns: 38px 1fr; }
+  .payout-history time,.payout-history-actions { grid-column: 2; }
+}
