@@ -1,100 +1,145 @@
-# CAMY Current Dropship Process
+# CAMY Current Entrepreneur Flow
 
 Updated: 25 September 2026
 
 ## System scope
 
-CAMY now has two application roles only:
+The active CAMY application has two business sides:
 
-1. Entrepreneur
-2. CAMY Admin / authorized staff
+1. **Entrepreneur Portal**
+2. **CAMY Admin / authorized staff**
 
-There is no customer-facing shopping portal in the active application flow. Entrepreneurs find and communicate with their own clients outside CAMY, then enter confirmed client orders into the CAMY Entrepreneur Panel.
+There is no active customer account or customer shopping portal. Entrepreneurs find and communicate with their own clients, then enter confirmed client orders into CAMY.
 
-## Entrepreneur flow
+## Phase 1 — Trial drop-shipping
 
-1. Sign in to the CAMY Entrepreneur Panel.
-2. Open **Products**.
-3. Browse the CAMY catalogue.
-4. Add the product(s) requested by the entrepreneur's client.
-5. Enter the entrepreneur's client selling price for each product.
-6. Enter the client's:
-   - full name
-   - Sri Lankan mobile number
-   - district
-   - delivery address
-   - optional order/delivery note
-7. Review:
-   - CAMY product cost
-   - client order total
-   - estimated entrepreneur margin
-8. Select **Place order with CAMY**.
-9. CAMY records the order as **Processing** and reserves the required CAMY warehouse stock.
-10. The entrepreneur can watch order status and delivery information from the panel. The order tracker refreshes automatically every 10 seconds while the order workspace is open.
-11. When CAMY marks the order **Delivered**, the order value becomes verified sales for the entrepreneur and the existing credit-tier engine recalculates credit eligibility.
+1. The entrepreneur registers and CAMY Admin approves the account.
+2. The entrepreneur browses the CAMY catalogue and takes an order from their own client.
+3. The entrepreneur chooses the client selling price. The selling price must cover the CAMY product price.
+4. CAMY records three separate money values:
+   - **CAMY product value** — what CAMY must keep for the product.
+   - **Client total** — what the client will pay.
+   - **Entrepreneur margin** — client total minus CAMY product value.
+5. The entrepreneur enters the client's name, phone, district, address and optional note.
+6. The entrepreneur chooses how the client will pay CAMY:
+   - **Cash on delivery** — CAMY / delivery collects the full client amount after successful delivery.
+   - **Bank transfer to CAMY** — the entrepreneur uploads the client's bank payment receipt and reference with the order.
+7. CAMY reserves warehouse stock and processes the order.
+8. Admin adds courier information and dispatches it.
+9. After successful delivery, the system marks the client money as collected by CAMY.
+10. The entrepreneur margin enters **Pending transfer**.
+11. CAMY transfers only the entrepreneur margin to the entrepreneur's saved bank account.
+12. Admin records the bank transfer reference and uploads the CAMY-to-entrepreneur transfer receipt.
+13. The entrepreneur can see the payout status and receipt in the portal.
 
-## CAMY Admin flow
+Example:
 
-1. Sign in to the CAMY Admin Panel.
-2. Open **Orders**.
-3. View orders submitted by entrepreneurs, including:
-   - entrepreneur
-   - client name and phone
-   - client delivery address
-   - products and quantities
-   - selling/order total
-   - current fulfilment status
-4. Prepare the order at CAMY.
-5. When dispatching, enter:
-   - courier tracking number (required)
-   - courier company (optional)
-6. Change status from **Processing** to **Dispatched**.
-7. The entrepreneur receives the updated status/tracking information through the Entrepreneur Panel.
-8. Mark the order **Delivered** when delivery is completed.
-9. Delivered sales feed the entrepreneur sales/credit calculation.
+- CAMY product price: Rs. 10,000
+- Entrepreneur sells to client for: Rs. 12,500
+- CAMY keeps: Rs. 10,000
+- Entrepreneur margin: Rs. 2,500
+- After delivery and collection, CAMY transfers Rs. 2,500 to the entrepreneur.
 
-## Order status flow
+If a successfully paid order is later returned, the system marks the payout as **Reversal required** so Finance/Admin can reconcile it instead of silently losing the money trail.
+
+## Verified sales and trial completion
+
+For credit-tier calculations, **verified sales use the CAMY product value of successfully delivered orders**, not the entrepreneur's markup. This prevents an entrepreneur from unlocking extra credit only by setting an unusually high client selling price.
+
+The system uses the first admin-configured sales/credit tier as the trial-completion milestone:
+
+- Below the first tier: **Phase 1 · Trial drop-shipping**
+- Once a configured credit tier is reached: **Phase 2 · Credit-based stock / Credit eligible**
+- Credit use and repayments are tracked in the existing **Credit & Settlement** module.
+
+The requirements brief does not define a fixed number of trial days, so the transition is controlled by CAMY's configurable sales-tier rules instead of a hardcoded duration.
+
+## CAMY Admin order flow
+
+Admin can see for each dropship order:
+
+- entrepreneur
+- client details
+- products and quantities
+- CAMY price per product
+- entrepreneur client selling price
+- client total
+- CAMY product value
+- entrepreneur margin
+- client payment method
+- client bank receipt/reference where applicable
+- fulfilment and courier status
+- payout status
+- CAMY-to-entrepreneur transfer reference and receipt
+
+Order fulfilment remains:
 
 ```
-Entrepreneur confirms client order
+Entrepreneur submits client order
           |
           v
       Processing
           |
-          | CAMY packs order
           v
       Dispatched
           |
-          | tracking number visible to entrepreneur
           v
        Delivered
           |
+          +--> client money collected by CAMY
+          |
+          +--> entrepreneur margin pending transfer
+          |
           v
-Verified sales + credit-tier recalculation
+ CAMY transfers margin
+          |
+          v
+ Payout receipt recorded
 ```
 
-## Credit sensor
+## Credit management
 
-The existing CAMY credit-tier configuration is retained.
+Credit tiers remain configurable by CAMY Admin.
 
-The Entrepreneur Panel shows:
+The platform displays:
 
-- verified delivered sales
+- verified CAMY sales
+- current program phase
 - current credit limit
-- remaining verified sales needed to reach the next configured credit tier
+- next sales milestone
+- credit in use
+- available credit
+- credit settlement history
+- entrepreneur margin earned
+- margin waiting for CAMY transfer
+- completed CAMY margin payouts
 
-Only successfully delivered orders count as verified sales.
+## Record keeping
 
-## Customer portal
+Financial payout records are stored separately in the `entrepreneur_payouts` ledger. Order records also retain the money-flow status for the UI and reporting.
 
-The previous public `/shops` customer entry point is no longer part of the active application process. Requests to the old customer-facing route are returned to the main CAMY application.
+The payout ledger records:
 
-The former marketplace implementation is preserved internally in `src/MarketplaceLegacy.jsx` as a migration backup and is not used for the active entrepreneur product/order screen.
+- order ID
+- entrepreneur member ID
+- client payment method
+- client total
+- CAMY product value
+- entrepreneur payout amount
+- client bank reference/receipt when applicable
+- collection status
+- payout status
+- CAMY transfer reference/receipt
+- collection date
+- payout date
+- admin who recorded the payout
 
 ## Active implementation files
 
-- `src/DropshipMarketplace.jsx` — entrepreneur dropship ordering, credit sensor and live order updates
-- `src/Marketplace.jsx` — routes existing App imports to the new dropship components
-- `src/MarketplaceLegacy.jsx` — preserved previous marketplace code
-- `src/main.jsx` — removes the public customer entry route
-- `api/workflow.php` — saves entrepreneur-submitted dropship orders
+- `src/DropshipMarketplace.jsx` — client-order entry, custom selling prices, client payment method, entrepreneur earnings and payout history
+- `src/App.jsx` — admin order finance/payout controls, entrepreneur Credit & Earnings view
+- `api/workflow.php` — dropship order creation, client payment proof and post-delivery payout recording
+- `api/marketplace.php` — fulfilment status, collection state, payout state and credit recalculation
+- `api/catalogue.php` — verified CAMY-sales based credit calculation
+- `database/schema.sql` — relational entrepreneur payout ledger
+- `src/MarketplaceLegacy.jsx` — preserved old marketplace implementation only; not active
