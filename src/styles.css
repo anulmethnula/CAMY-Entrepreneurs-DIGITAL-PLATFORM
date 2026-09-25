@@ -1748,7 +1748,8 @@ input:focus, select:focus, textarea:focus {
 .application-kpis > span { padding: 16px 18px; border: 1px solid #dce6ef; border-radius: 14px; background: #f8fafc; }
 .application-kpis small { display: block; color: #738599; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
 .application-kpis strong { display: block; margin-top: 4px; color: #173c60; font-size: 24px; }
-.application-filters { display: grid; grid-template-columns: minmax(260px,1fr) 190px 190px; gap: 10px; margin-bottom: 14px; }
+.application-filters { display: grid; grid-template-columns: minmax(250px,1fr) 175px 175px auto; gap: 10px; margin-bottom: 14px; align-items: center; }
+.application-filters > .btn { min-height: 46px; white-space: nowrap; }
 .application-filters label { min-height: 46px; padding: 0 13px; border: 1px solid #d7e3ed; border-radius: 12px; background: #fff; display: flex; align-items: center; gap: 9px; }
 .application-filters label svg { width: 17px; color: #71869a; }
 .application-filters input,
