@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "db:setup": "node scripts/run-php.mjs scripts/setup-local-db.php",
     "db:reset": "node scripts/run-php.mjs scripts/setup-local-db.php --reset",
-    "php:version": "node scripts/run-php.mjs -v"
+    "php:version": "node scripts/run-php.mjs -v",
+    "db:check": "node scripts/run-php.mjs scripts/check-local-db.php"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
