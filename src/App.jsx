@@ -466,8 +466,139 @@ function LegacyEntrepreneurModal({ person, orders, close, setEntrepreneurs, noti
 }
 
 function EntrepreneurModal({ person, orders, setOrders, close, setEntrepreneurs, notify, readOnly=false }) {
-  const [editing,setEditing]=useState(false); const [draft,setDraft]=useState({...person,bank:person.bank||'',branch:person.branch||'',accountName:person.accountName||person.name,accountNumber:person.accountNumber||''}); const memberOrders=orders.filter(order=>order.entrepreneur===person.name); const delivered=memberOrders.filter(order=>order.status==='Delivered').length; const active=memberOrders.filter(order=>!['Delivered','Returned'].includes(order.status)).length; const totalUnits=memberOrders.reduce((sum,order)=>sum+Number(order.qty||0),0); const update=(key,value)=>{setDraft(old=>({...old,[key]:value}));}; const save=async()=>{try{const result=await api('/admin/entrepreneurs/'+encodeURIComponent(person.id),{method:'PATCH',body:JSON.stringify(draft)});setDraft(result.person);setEntrepreneurs(old=>old.map(item=>item.id===person.id?result.person:item));setEditing(false);notify('Entrepreneur profile saved to MySQL')}catch(reason){notify(reason.message)}}; const changeStage=()=>notify('Credit eligibility is calculated from verified delivered orders and saved tier rules'); const reviewExit=async decision=>{try{const result=await api('/admin/entrepreneurs/'+encodeURIComponent(person.id)+'/exit/'+(decision==='Approved'?'approve':'reject'),{method:'POST',body:'{}'});setDraft(result.person);setEntrepreneurs(old=>old.map(item=>item.id===person.id?result.person:item));notify('Closure request '+decision.toLowerCase())}catch(reason){notify(reason.message)}}
-  return <Modal onClose={close} wide><div className="detail-modal entrepreneur-record"><header className="entrepreneur-record-head"><div className="editable-avatar"><img src={draft.avatar||avatarFor(draft)} alt={draft.name} /><label title="Change profile photo"><Pencil /><input type="file" accept="image/*" onChange={event=>readImageFile(event,update)} /></label></div><div><span className="modal-kicker">MEMBER PROFILE · {draft.id}</span>{editing?<input className="member-name-input" value={draft.name} onChange={event=>update('name',event.target.value)} />:<h2>{draft.name}</h2>}<Status value={draft.stage}/></div><div className="record-head-actions">{editing?<><Button icon={Check} onClick={save}>Save profile</Button><button onClick={()=>{setDraft({...person,bank:person.bank||'',branch:person.branch||'',accountName:person.accountName||person.name,accountNumber:person.accountNumber||''});setEditing(false)}}>Cancel</button></>:<Button variant="secondary" icon={Pencil} onClick={()=>setEditing(true)}>Edit profile</Button>}</div></header><section className="member-contact editable-details">{[['nic','NIC number'],['phone','Contact number'],['city','Location'],['joined','Joined date']].map(([key,label])=><label key={key}><small>{label}</small>{editing?<input type={key==='joined'?'date':'text'} value={draft[key]||''} onChange={event=>update(key,event.target.value)} />:<strong>{key==='joined'?displayDate(draft[key]):draft[key]}</strong>}</label>)}</section><section className="member-summary"><div><small>Total sales</small><strong>{money(draft.sales)}</strong><span>Lifetime sales</span></div><div><small>Credit limit</small><strong>{money(draft.credit)}</strong><span>Approved limit</span></div><div><small>Outstanding</small><strong className={draft.used?'danger':''}>{money(draft.used)}</strong><span>Current balance</span></div><div><small>Orders / stock</small><strong>{memberOrders.length} / {totalUnits}</strong><span>{active} active orders</span></div></section><section className="bank-record"><div className="member-section-title"><div><span>BANKING DETAILS</span><h3>Settlement account</h3></div><BadgeCheck /></div><div>{[['bank','Bank name'],['branch','Branch'],['accountName','Account holder'],['accountNumber','Account number']].map(([key,label])=><label key={key}><small>{label}</small>{editing?<input value={draft[key]} onChange={event=>update(key,event.target.value)} placeholder={`Enter ${label.toLowerCase()}`} />:<strong>{draft[key]||'Not provided'}</strong>}</label>)}</div></section><section className="purchase-history"><div className="member-section-title"><div><span>COMPLETE HISTORY</span><h3>Orders and stock purchased</h3></div><b>{delivered} delivered · {totalUnits} units</b></div>{memberOrders.length?<div className="purchase-table"><div className="purchase-row head"><span>Date / aging</span><span>Order</span><span>Products purchased</span><span>Qty</span><span>Amount</span><span>Status</span></div>{memberOrders.map(order=>{const days=Math.max(0,Math.floor((Date.now()-new Date(order.date).getTime())/86400000));return <div className="purchase-row" key={order.id}><span><strong>{displayDate(order.date)}</strong><small>{days} days ago</small></span><span><strong>{order.id}</strong><small>{order.customer}</small></span><span><strong>{order.product}</strong><small>{order.items?.map(item=>`${item.name} × ${item.qty}`).join(', ')||'Single catalogue item'}</small></span><span><strong>{order.qty}</strong></span><span><strong>{money(order.amount)}</strong></span><Status value={order.status}/></div>})}</div>:<Empty icon={PackageSearch} title="No purchase history" text="Orders placed by this entrepreneur will appear here with dates and stock quantities." />}</section>{!readOnly&&<div className="member-detail-actions"><Button variant="secondary" icon={Settings} onClick={changeStage}>{draft.stage==='Trial seller'?'Approve credit eligibility':'Move to trial stage'}</Button></div>}</div></Modal>
+  const baseDraft=value=>({...value,bank:value.bank||value.bankDetails?.bank||'',branch:value.branch||value.bankDetails?.branch||'',accountName:value.accountName||value.bankDetails?.holder||value.name||'',accountNumber:value.accountNumber||value.bankDetails?.account||''})
+  const [editing,setEditing]=useState(false)
+  const [draft,setDraft]=useState(()=>baseDraft(person))
+  const [application,setApplication]=useState(null)
+  const [summary,setSummary]=useState(null)
+  const [loading,setLoading]=useState(true)
+  const [resetOpen,setResetOpen]=useState(false)
+  const [tempPassword,setTempPassword]=useState('')
+  const [busy,setBusy]=useState(false)
+  const memberOrders=orders.filter(order=>String(order.entrepreneurId)===String(person.id))
+  const delivered=memberOrders.filter(order=>order.status==='Delivered').length
+  const active=memberOrders.filter(order=>!['Delivered','Returned','Rejected'].includes(order.status)).length
+  const totalUnits=memberOrders.reduce((sum,order)=>sum+Number(order.qty||0),0)
+  const update=(key,value)=>setDraft(old=>({...old,[key]:value}))
+
+  useEffect(()=>{
+    let live=true
+    api('/admin/entrepreneurs/'+encodeURIComponent(person.id)).then(result=>{
+      if(!live)return
+      const next=baseDraft({...person,...result.person})
+      setDraft(next);setApplication(result.application||null);setSummary(result.summary||null)
+      setEntrepreneurs(old=>old.map(item=>item.id===person.id?{...item,...result.person}:item))
+    }).catch(reason=>notify(reason.message)).finally(()=>{if(live)setLoading(false)})
+    return()=>{live=false}
+  },[person.id])
+
+  const save=async()=>{
+    setBusy(true)
+    try{
+      const result=await api('/admin/entrepreneurs/'+encodeURIComponent(person.id),{method:'PATCH',body:JSON.stringify(draft)})
+      const next=baseDraft({...draft,...result.person})
+      setDraft(next);setEntrepreneurs(old=>old.map(item=>item.id===person.id?{...item,...result.person}:item));setEditing(false)
+      notify('Entrepreneur account details saved.')
+    }catch(reason){notify(reason.message)}finally{setBusy(false)}
+  }
+  const remove=async()=>{
+    if(!window.confirm(`Remove ${draft.name} from the active CAMY system? Their login will be disabled. Order and application history will be retained for records.`))return
+    setBusy(true)
+    try{
+      const result=await api('/admin/entrepreneurs/'+encodeURIComponent(person.id),{method:'DELETE',body:'{}'})
+      setEntrepreneurs(old=>old.map(item=>item.id===person.id?{...item,...result.person,active:false}:item))
+      notify('Entrepreneur removed from the active system. Login access is disabled.')
+      close()
+    }catch(reason){notify(reason.message)}finally{setBusy(false)}
+  }
+  const reactivate=async()=>{
+    setBusy(true)
+    try{
+      const result=await api('/admin/entrepreneurs/'+encodeURIComponent(person.id)+'/reactivate',{method:'POST',body:'{}'})
+      const next=baseDraft({...draft,...result.person,accountStatus:'active',active:true})
+      setDraft(next);setEntrepreneurs(old=>old.map(item=>item.id===person.id?{...item,...result.person,active:true}:item));notify(result.message)
+    }catch(reason){notify(reason.message)}finally{setBusy(false)}
+  }
+  const resetPassword=async event=>{
+    event.preventDefault()
+    if(tempPassword.length<8||!/[A-Za-z]/.test(tempPassword)||!/\d/.test(tempPassword)){notify('Temporary password needs at least 8 characters with letters and numbers.');return}
+    setBusy(true)
+    try{
+      const result=await api('/admin/entrepreneurs/'+encodeURIComponent(person.id)+'/reset-password',{method:'POST',body:JSON.stringify({password:tempPassword})})
+      setTempPassword('');setResetOpen(false);notify(result.message)
+    }catch(reason){notify(reason.message)}finally{setBusy(false)}
+  }
+  const appValue=value=>value===null||value===undefined||value===''?'Not provided':value
+  const marketing={yes:'Yes',a_little:'A little',no:'No'}[application?.facebook_marketing]||application?.facebook_marketing
+  const accountActive=draft.active!==false&&draft.accountStatus!=='inactive'&&draft.accountStatus!=='suspended'&&draft.stage!=='Departed'
+
+  return <Modal onClose={close} wide><div className="detail-modal entrepreneur-record admin-entrepreneur-record">
+    <header className="entrepreneur-record-head">
+      <div className="editable-avatar"><img src={draft.image||avatarFor(draft)} alt={draft.name}/>{editing&&<label title="Change profile photo"><Pencil/><input type="file" accept="image/png,image/jpeg,image/webp" onChange={event=>readImageFile(event,update)}/></label>}</div>
+      <div><span className="modal-kicker">MEMBER PROFILE · {draft.id}</span>{editing?<input className="member-name-input" value={draft.name||''} onChange={event=>update('name',event.target.value)}/>:<h2>{draft.name}</h2>}<div className="member-status-line"><Status value={draft.stage||'Trial seller'}/><span className={accountActive?'account-state active':'account-state inactive'}>{accountActive?'Login active':'Login disabled'}</span></div></div>
+      <div className="record-head-actions">{editing?<><Button icon={Check} disabled={busy} onClick={save}>{busy?'Saving…':'Save all changes'}</Button><button disabled={busy} onClick={()=>{setDraft(baseDraft(person));setEditing(false)}}>Cancel</button></>:<Button variant="secondary" icon={Pencil} onClick={()=>setEditing(true)}>Edit all details</Button>}</div>
+    </header>
+
+    {loading&&<div className="admin-record-loading">Loading complete entrepreneur record…</div>}
+
+    <section className="admin-account-section">
+      <div className="member-section-title"><div><span>PERSONAL & ACCOUNT</span><h3>Identity, contact and membership</h3></div><UserRound/></div>
+      <div className="admin-profile-grid">
+        {[
+          ['email','Login email','email'],
+          ['nic','NIC number','text'],
+          ['phone','WhatsApp / contact','text'],
+          ['city','City / district','text'],
+          ['joined','Joined date','date'],
+        ].map(([key,label,type])=><label key={key}><small>{label}</small>{editing?<input type={type} value={draft[key]||''} onChange={event=>update(key,event.target.value)}/>:<strong>{key==='joined'?displayDate(draft[key]):appValue(draft[key])}</strong>}</label>)}
+        <label className="wide"><small>Home address</small>{editing?<textarea rows="2" value={draft.address||''} onChange={event=>update('address',event.target.value)}/>:<strong>{appValue(draft.address)}</strong>}</label>
+      </div>
+      <div className="account-audit-grid">
+        <span><small>Account created</small><strong>{displayDate(draft.accountCreated)}</strong></span>
+        <span><small>Last login</small><strong>{draft.lastLogin?displayDate(draft.lastLogin):'Never signed in'}</strong></span>
+        <span><small>Account status</small><strong>{draft.accountStatus|| (accountActive?'active':'inactive')}</strong></span>
+        <span><small>90-day sale rule</small><strong>{summary?.lastDeliveredAt?`Last delivered ${displayDate(summary.lastDeliveredAt)}`:'No delivered sale recorded'}</strong></span>
+      </div>
+      <div className="account-access-actions">
+        {resetOpen?<form className="inline-password-reset" onSubmit={resetPassword}><label>New temporary password<input autoFocus type="password" minLength="8" value={tempPassword} onChange={event=>setTempPassword(event.target.value)} placeholder="8+ characters, letters & numbers"/></label><Button type="submit" disabled={busy}>Set temporary password</Button><Button type="button" variant="soft" onClick={()=>{setResetOpen(false);setTempPassword('')}}>Cancel</Button></form>:<Button variant="soft" icon={Settings} onClick={()=>setResetOpen(true)}>Reset login password</Button>}
+        {application?.id&&<><a className="btn secondary" href={`/api/admin/registrations/${application.id}/nic/front`} target="_blank" rel="noreferrer">NIC front</a><a className="btn secondary" href={`/api/admin/registrations/${application.id}/nic/back`} target="_blank" rel="noreferrer">NIC back</a></>}
+        {!application?.id&&draft.nic&&<a className="btn secondary" href={`/api/admin/entrepreneurs/${draft.id}/nic`} target="_blank" rel="noreferrer">View NIC</a>}
+      </div>
+    </section>
+
+    <section className="member-summary">
+      <div><small>Total verified sales</small><strong>{money(draft.sales)}</strong><span>Delivered orders only</span></div>
+      <div><small>Credit limit</small><strong>{money(draft.credit)}</strong><span>Rule-based limit</span></div>
+      <div><small>Outstanding</small><strong className={draft.used?'danger':''}>{money(draft.used)}</strong><span>Current balance</span></div>
+      <div><small>Orders / units</small><strong>{memberOrders.length} / {totalUnits}</strong><span>{active} active · {delivered} delivered</span></div>
+    </section>
+
+    {application&&<section className="admin-application-history">
+      <div className="member-section-title"><div><span>ORIGINAL APPLICATION</span><h3>Entrepreneur registration answers</h3></div><FileText/></div>
+      <div className="application-history-grid">
+        <span><small>Occupation</small><strong>{appValue(application.occupation)}</strong></span>
+        <span><small>Online business</small><strong>{application.has_online_business==='yes'?'Yes':'No'}</strong></span>
+        <span><small>What they sell</small><strong>{appValue(application.online_business_products)}</strong></span>
+        <span><small>Business duration</small><strong>{appValue(application.online_business_duration)}</strong></span>
+        <span><small>Average monthly income</small><strong>{appValue(application.monthly_income)}</strong></span>
+        <span><small>Followers</small><strong>{appValue(application.followers_count)}</strong></span>
+        <span><small>Facebook marketing</small><strong>{appValue(marketing)}</strong></span>
+        <span><small>Applied</small><strong>{displayDate(application.created_at)}</strong></span>
+        <span className="wide"><small>Social-media page</small><strong>{application.social_media_url?<a href={application.social_media_url} target="_blank" rel="noreferrer">{application.social_media_url}</a>:'Not provided'}</strong></span>
+        <span className="wide"><small>Why they joined CAMY</small><strong>{appValue(application.join_reason)}</strong></span>
+        {application.admin_note&&<span className="wide"><small>Admin approval / rejection note</small><strong>{application.admin_note}</strong></span>}
+      </div>
+    </section>}
+
+    <section className="bank-record"><div className="member-section-title"><div><span>BANKING DETAILS</span><h3>Settlement account</h3></div><BadgeCheck/></div><div>{[['bank','Bank name'],['branch','Branch'],['accountName','Account holder'],['accountNumber','Account number']].map(([key,label])=><label key={key}><small>{label}</small>{editing?<input value={draft[key]||''} onChange={event=>update(key,event.target.value)} placeholder={`Enter ${label.toLowerCase()}`}/>:<strong>{draft[key]||'Not provided'}</strong>}</label>)}</div></section>
+
+    <section className="purchase-history"><div className="member-section-title"><div><span>COMPLETE ORDER HISTORY</span><h3>Orders handled by this entrepreneur</h3></div><b>{delivered} delivered · {totalUnits} units</b></div>{memberOrders.length?<div className="purchase-table"><div className="purchase-row head"><span>Date / aging</span><span>Order</span><span>Products</span><span>Qty</span><span>Amount</span><span>Status</span></div>{memberOrders.map(order=>{const days=Math.max(0,Math.floor((Date.now()-new Date(order.date).getTime())/86400000));return <div className="purchase-row" key={order.id}><span><strong>{displayDate(order.date)}</strong><small>{days} days ago</small></span><span><strong>{order.id}</strong><small>{order.customer}</small></span><span><strong>{order.product}</strong><small>{order.items?.map(item=>`${item.name} × ${item.qty}`).join(', ')||'Catalogue item'}</small></span><span><strong>{order.qty}</strong></span><span><strong>{money(order.amount)}</strong></span><Status value={order.status}/></div>})}</div>:<Empty icon={PackageSearch} title="No order history" text="Client orders placed by this entrepreneur will appear here."/ >}</section>
+
+    <section className="admin-danger-zone">
+      <div><span>ACCOUNT CONTROL</span><h3>{accountActive?'Remove entrepreneur from active CAMY':'Entrepreneur is currently inactive'}</h3><p>{accountActive?'This disables the entrepreneur login and removes them from the active entrepreneur list. Historical orders, application records and audit information stay available.':'You can reactivate the login if CAMY wants this entrepreneur to return.'}</p>{summary&&!summary.canRemove&&accountActive&&<small>Removal is locked until active orders, stock requests and outstanding credit are cleared.</small>}</div>
+      {accountActive?<Button variant="secondary" icon={Trash2} disabled={busy||summary?.canRemove===false} onClick={remove}>Remove from system</Button>:<Button icon={Check} disabled={busy} onClick={reactivate}>Reactivate account</Button>}
+    </section>
+  </div></Modal>
 }
 
 function AddProductModal({ close, submit }) { const [mediaBusy,setMediaBusy]=useState(false); const [categories,setCategories]=useState(()=>JSON.parse(localStorage.getItem('camy-product-categories-v2')||'[]')); const [form,setForm]=useState({name:'',category:categories[0]||'Cookware',price:'',stock:'',code:'',image:'',tag:'',rating:'5',description:'',specs:'',warranty:'1 year'}); useEffect(()=>{const refresh=()=>setCategories(JSON.parse(localStorage.getItem('camy-product-categories-v2')||'[]'));window.addEventListener('camy-categories-updated',refresh);return()=>window.removeEventListener('camy-categories-updated',refresh)},[]); const update=(key,value)=>setForm(old=>({...old,[key]:value})); return <Modal onClose={close} wide><form className="form-modal add-product-form" onSubmit={e=>{e.preventDefault();if(mediaBusy)return;submit({...form,price:Number(form.price),stock:Number(form.stock),rating:Number(form.rating),image:form.image||'/products/classic-set.png',specs:form.specs.split(',').map(s=>s.trim()).filter(Boolean)});close()}}><span className="modal-kicker">CATALOGUE</span><h2>Add a product</h2><p>Create a complete customer-ready item and place it in the right category.</p><label>Product name<input required value={form.name} onChange={e=>update('name',e.target.value)} placeholder="e.g. 24cm Non-stick Fry Pan" /></label><div className="two-fields"><label>Category<select value={form.category} onChange={e=>update('category',e.target.value)}>{categories.map(category=><option key={category}>{category}</option>)}</select></label><label>Model / code<input required value={form.code} onChange={e=>update('code',e.target.value)} placeholder="FP024" /></label></div><div className="two-fields"><label>Price<input required min="0" type="number" value={form.price} onChange={e=>update('price',e.target.value)} /></label><label>Opening stock<input required min="0" type="number" value={form.stock} onChange={e=>update('stock',e.target.value)} /></label></div><div className="two-fields"><label>Tag<input value={form.tag} onChange={e=>update('tag',e.target.value)} placeholder="New or Best seller" /></label><label>Rating<input min="0" max="5" step="0.1" type="number" value={form.rating} onChange={e=>update('rating',e.target.value)} /></label></div><ProductMediaEditor onBusyChange={setMediaBusy} product={form} onChange={changes=>setForm(old=>({...old,...changes}))}/><label>Description<textarea rows="3" value={form.description} onChange={e=>update('description',e.target.value)} placeholder="Describe the product for customers" /></label><label>Specifications <small>Separate each item with a comma</small><textarea rows="3" value={form.specs} onChange={e=>update('specs',e.target.value)} placeholder="Durable finish, Easy to clean" /></label><label>Warranty<input value={form.warranty} onChange={e=>update('warranty',e.target.value)} /></label><Button type="submit" disabled={mediaBusy} icon={Plus}>Add product</Button></form></Modal> }
