@@ -146,6 +146,7 @@ CREATE TABLE IF NOT EXISTS shop_orders (
   entrepreneur_member_id VARCHAR(30) NOT NULL,
   total DECIMAL(14,2) NOT NULL,
   status VARCHAR(40) NOT NULL DEFAULT 'Pending',
+  delivered_at DATETIME NULL,
   record_json LONGTEXT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (group_id) REFERENCES customer_order_groups(id)
