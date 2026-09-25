@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 define('DB_HOST',getenv('CAMY_DB_HOST') ?: '127.0.0.1');
 define('DB_PORT',(int)(getenv('CAMY_DB_PORT') ?: 3306));
-define('DB_NAME',getenv('CAMY_DB_NAME') ?: 'camy_entrepreneurs');
+define('DB_NAME',getenv('CAMY_DB_NAME') ?: 'camy_new');
 define('DB_USER',getenv('CAMY_DB_USER') ?: 'root');
 define('DB_PASS',getenv('CAMY_DB_PASSWORD') ?: '');
 
