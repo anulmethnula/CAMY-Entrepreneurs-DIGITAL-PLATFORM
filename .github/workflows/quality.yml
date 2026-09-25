@@ -1,0 +1,73 @@
+name: CAMY Quality Check
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-schema:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pdo_mysql
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build React application
+        run: npm run build
+
+      - name: Lint PHP entry points
+        run: |
+          php -l api/index.php
+          php -l api/config.php
+          php -l api/marketplace.php
+          php -l api/workflow.php
+          php -l api/storage.php
+          php -l api/catalogue.php
+          php -l scripts/setup-local-db.php
+
+      - name: Create clean database and apply schema
+        env:
+          CAMY_DB_HOST: 127.0.0.1
+          CAMY_DB_PORT: "3306"
+          CAMY_DB_NAME: camy_new
+          CAMY_DB_USER: root
+          CAMY_DB_PASSWORD: ""
+          CAMY_BOOTSTRAP_PASSWORD: "CAMY-CI-Temporary-123"
+        run: php scripts/setup-local-db.php --reset
+
+      - name: Confirm API database bootstrap
+        env:
+          CAMY_DB_HOST: 127.0.0.1
+          CAMY_DB_PORT: "3306"
+          CAMY_DB_NAME: camy_new
+          CAMY_DB_USER: root
+          CAMY_DB_PASSWORD: ""
+          CAMY_BOOTSTRAP_PASSWORD: "CAMY-CI-Temporary-123"
+        run: php -r "require 'api/config.php'; \$pdo=database(); echo DB_NAME . ' tables=' . count(\$pdo->query('SHOW TABLES')->fetchAll()) . PHP_EOL;"
