@@ -161,7 +161,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
 export function CreditStockPage({ products = [], person, requests = [], inventory = [], submit, notify, catalogueLive }) {
   const [cart,setCart]=useState([])
   const [busy,setBusy]=useState(false)
-  const mine=requests.filter(request=>String(request.entrepreneurId)===String(person?.id) && (request.creditMode ?? true))
+  const mine=requests.filter(request=>String(request.entrepreneurId)===String(person?.id) && request.creditMode===true)
   const eligible=Number(person?.credit||0)>0 && person?.stage!=='Departed'
   const used=Number(person?.used||0)
   const activeCommitment=mine.filter(request=>['Pending','Approved'].includes(request.status)).reduce((sum,request)=>sum+Number(request.total||0),0)
@@ -209,7 +209,7 @@ export function AdminCreditStockPage({ requests = [], products = [], entrepreneu
   const [filter,setFilter]=useState('Active')
   const [query,setQuery]=useState('')
   const [busyId,setBusyId]=useState('')
-  const creditRequests=requests.filter(request=>request.creditMode ?? true)
+  const creditRequests=requests.filter(request=>request.creditMode===true)
   const visible=creditRequests.filter(request=>{
     const person=entrepreneurs.find(person=>String(person.id)===String(request.entrepreneurId))
     const text=`${request.id} ${person?.name||''} ${request.entrepreneurId||''}`.toLowerCase()
@@ -229,7 +229,8 @@ export function AdminCreditStockPage({ requests = [], products = [], entrepreneu
     <div className="credit-stock-admin-filters"><input placeholder="Search request, entrepreneur or member ID" value={query} onChange={event=>setQuery(event.target.value)}/><select value={filter} onChange={event=>setFilter(event.target.value)}><option>Active</option><option>Pending</option><option>Approved</option><option>Dispatched</option><option>Rejected</option><option>All</option></select></div>
     <section className="credit-stock-admin-list">{visible.length?visible.map(request=>{
       const person=entrepreneurs.find(person=>String(person.id)===String(request.entrepreneurId))
-      const available=Math.max(0,Number(person?.credit||0)-Number(person?.used||0))
+      const committed=creditRequests.filter(entry=>entry.id!==request.id&&String(entry.entrepreneurId)===String(request.entrepreneurId)&&['Pending','Approved'].includes(entry.status)).reduce((sum,entry)=>sum+Number(entry.total||0),0)
+      const available=Math.max(0,Number(person?.credit||0)-Number(person?.used||0)-committed)
       const items=request.items||[]
       return <article className="card credit-stock-admin-card" key={request.id}><header><div><small>{request.id}</small><h3>{person?.name||request.entrepreneurName||request.entrepreneurId}</h3><p>{request.entrepreneurId} · {person?.stage||'Unknown stage'}</p></div><span className={`market-status ${String(request.status).toLowerCase()}`}>{request.status}</span></header><div className="credit-stock-admin-metrics"><span><small>REQUEST</small><strong>{money(request.total)}</strong></span><span><small>CREDIT LIMIT</small><strong>{money(person?.credit)}</strong></span><span><small>OUTSTANDING</small><strong>{money(person?.used)}</strong></span><span><small>CURRENT AVAILABLE</small><strong>{money(available)}</strong></span></div><div className="credit-stock-admin-items">{items.map((item,index)=>{const product=products.find(product=>String(product.id)===String(item.productId));return <span key={item.productId||index}><b>{product?.name||item.productId}</b> × {item.qty} <small>{money(item.price)}</small></span>})}</div><footer>{request.status==='Pending'&&<><button className="market-primary" disabled={busyId===request.id} onClick={()=>act(request.id,'Approved')}><CheckCircle2/> Approve & reserve stock</button><button disabled={busyId===request.id} onClick={()=>act(request.id,'Rejected')}>Reject</button></>}{request.status==='Approved'&&<><button className="market-primary" disabled={busyId===request.id} onClick={()=>act(request.id,'Dispatched')}><Truck/> Dispatch & issue credit</button><button disabled={busyId===request.id} onClick={()=>act(request.id,'Rejected')}>Cancel approval</button></>}{request.status==='Dispatched'&&<span><CheckCircle2/> Credit stock issued and recorded in entrepreneur inventory.</span>}{request.status==='Rejected'&&<span>Request closed without using credit.</span>}</footer></article>
     }):<div className="market-empty"><PackageOpen/><h2>No matching credit requests</h2><p>New Phase 2 requests will appear here.</p></div>}</section>
