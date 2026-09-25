@@ -161,6 +161,31 @@ CREATE TABLE IF NOT EXISTS shop_order_items (
   FOREIGN KEY (order_id) REFERENCES shop_orders(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS entrepreneur_payouts (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  order_id VARCHAR(32) NOT NULL UNIQUE,
+  entrepreneur_member_id VARCHAR(30) NOT NULL,
+  client_payment_method ENUM('cod','bank') NOT NULL DEFAULT 'cod',
+  client_total DECIMAL(14,2) NOT NULL,
+  camy_cost DECIMAL(14,2) NOT NULL,
+  payout_amount DECIMAL(14,2) NOT NULL,
+  client_payment_reference VARCHAR(120) NULL,
+  client_payment_receipt_path VARCHAR(255) NULL,
+  collection_status ENUM('pending','collected','failed') NOT NULL DEFAULT 'pending',
+  payout_status ENUM('pending_delivery','pending_transfer','paid','reversal_required','cancelled') NOT NULL DEFAULT 'pending_delivery',
+  payout_reference VARCHAR(120) NULL,
+  payout_receipt_path VARCHAR(255) NULL,
+  collected_at DATETIME NULL,
+  paid_at DATETIME NULL,
+  recorded_by BIGINT UNSIGNED NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX payout_member_status (entrepreneur_member_id,payout_status),
+  INDEX payout_paid_at (paid_at),
+  FOREIGN KEY (order_id) REFERENCES shop_orders(id) ON DELETE CASCADE,
+  FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS credit_tiers (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(80) NOT NULL,
