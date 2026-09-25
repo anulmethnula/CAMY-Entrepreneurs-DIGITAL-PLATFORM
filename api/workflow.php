@@ -5,7 +5,7 @@ function workflow_owner(array $user, string $member): void {
     if(!in_array($user['role'],['admin','manager'],true)&&($user['role']!=='entrepreneur'||(string)$user['member_id']!==$member))response(['message'=>'You cannot review another shop order.'],403);
 }
 function workflow_transition(string $old,string $next,bool $supply): void {
-    $allowed=['Pending'=>['Awaiting payment','Rejected'],'Awaiting payment'=>['Rejected'],'Payment review'=>['Processing','Awaiting payment'],'Processing'=>['Dispatched'],'Dispatched'=>['Delivered','Returned'],'Delivered'=>['Returned']];
+    $allowed=['Pending'=>['Awaiting payment','Rejected'],'Awaiting payment'=>['Rejected'],'Payment review'=>['Processing','Awaiting payment'],'Processing'=>['Dispatched','Rejected'],'Dispatched'=>['Delivered','Returned'],'Delivered'=>['Returned']];
     if($supply){$allowed['Payment review']=['Approved','Awaiting payment'];$allowed['Approved']=['Dispatched'];}
     if(!in_array($next,$allowed[$old] ?? [],true))response(['message'=>'This action is not available at the current stage.'],409);
 }
@@ -64,7 +64,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
         $id='CMY-'.bin2hex(random_bytes(5));$token=bin2hex(random_bytes(24));
         $entrepreneurName=(string)$user['full_name'];
-        $order=['id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,'amount'=>round($clientTotal,2),'camyCost'=>round($camyCost,2),'entrepreneurMargin'=>round($clientTotal-$camyCost,2),'date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>false,'entrepreneur'=>$entrepreneurName,'entrepreneurId'=>(string)$user['member_id'],'source'=>'shop','orderMode'=>'dropship','createdBy'=>'Entrepreneur'];
+        $order=['id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,'amount'=>round($clientTotal,2),'camyCost'=>round($camyCost,2),'entrepreneurMargin'=>round($clientTotal-$camyCost,2),'date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>true,'entrepreneur'=>$entrepreneurName,'entrepreneurId'=>(string)$user['member_id'],'source'=>'shop','orderMode'=>'dropship','createdBy'=>'Entrepreneur'];
         $state['orders'][]=$order;
         $pdo->prepare("INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status) VALUES(?,?,?,?, 'Processing')")->execute([$id,$groupId,$user['member_id'],round($clientTotal,2)]);
         foreach($selected as $item){$code='';foreach($state['products'] as $product)if((string)$product['id']===(string)$item['id']){$code=(string)($product['code']??$product['id']);break;}$pdo->prepare('INSERT INTO shop_order_items(order_id,product_code,quantity,sell_price) VALUES(?,?,?,?)')->execute([$id,$code,$item['qty'],$item['price']]);}
