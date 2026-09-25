@@ -1814,3 +1814,6 @@ input:focus, select:focus, textarea:focus {
   .application-detail-head { padding-right: 35px; flex-direction: column; }
   .application-detail-actions,.application-detail-actions .btn,.application-detail-actions a { width: 100%; }
 }
+
+.page-title-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:9px; }
+@media (max-width:620px) { .page-title-actions,.page-title-actions .btn { width:100%; } }
