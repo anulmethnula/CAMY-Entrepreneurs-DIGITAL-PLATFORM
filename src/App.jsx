@@ -63,14 +63,15 @@ const entrepreneurNav = [
 const adminNav = [
   ['overview', 'Overview', LayoutDashboard], ['entrepreneurs', 'Entrepreneurs', UsersRound],
   ['admin-orders', 'Orders', ClipboardList], ['admin-products', 'Products', PackageOpen],
+  ['payouts', 'Commission payouts', Banknote],
   ['stock-supply', 'Credit stock', PackageCheck], ['credit-control', 'Credit control', CreditCard],
   ['reports', 'Reports', FileBarChart], ['user-access', 'Users & access', Settings],
 ]
 
 const initialSystemUsers = [
-  { id:'USR-001', name:'CAMY Admin', email:'admin@camy.lk', role:'Super Admin', active:true, lastAccess:'Today, 3:05 PM', permissions:['overview','entrepreneurs','admin-orders','admin-products','credit-control','reports','user-access'] },
+  { id:'USR-001', name:'CAMY Admin', email:'admin@camy.lk', role:'Super Admin', active:true, lastAccess:'Today, 3:05 PM', permissions:['overview','entrepreneurs','admin-orders','admin-products','payouts','credit-control','reports','user-access'] },
   { id:'USR-002', name:'Operations Manager', email:'operations@camy.lk', role:'Operations', active:true, lastAccess:'Today, 1:42 PM', permissions:['overview','entrepreneurs','admin-orders','admin-products','reports'] },
-  { id:'USR-003', name:'Accounts Officer', email:'accounts@camy.lk', role:'Finance', active:true, lastAccess:'Yesterday, 4:18 PM', permissions:['overview','credit-control','reports'] },
+  { id:'USR-003', name:'Accounts Officer', email:'accounts@camy.lk', role:'Finance', active:true, lastAccess:'Yesterday, 4:18 PM', permissions:['overview','payouts','credit-control','reports'] },
 ]
 
 function Sidebar({ mode, setMode, page, setPage, open, setOpen, notify, onLogout, onChangePassword, user }) {
@@ -511,7 +512,7 @@ function EnhancedCreditControl({ entrepreneurs, setEntrepreneurs, tiers, setTier
 }
 
 function UserAccessPage({ users, setUsers, notify, currentUser }) {
-  const permissionOptions=adminNav.map(([id,label])=>({id,label})); const templates={Viewer:['overview','reports'],Operations:['overview','entrepreneurs','admin-orders','admin-products','stock-supply','reports'],Finance:['overview','credit-control','reports'],'Super Admin':permissionOptions.map(item=>item.id)}
+  const permissionOptions=adminNav.map(([id,label])=>({id,label})); const templates={Viewer:['overview','reports'],Operations:['overview','entrepreneurs','admin-orders','admin-products','stock-supply','reports'],Finance:['overview','payouts','credit-control','reports'],'Super Admin':permissionOptions.map(item=>item.id)}
   const [selectedId,setSelectedId]=useState(users[0]?.id||''); const [search,setSearch]=useState(''); const [adding,setAdding]=useState(false); const [form,setForm]=useState({name:'',email:'',role:'Viewer'}); const selected=users.find(user=>user.id===selectedId)||users[0]
   const [busy,setBusy]=useState(false)
   const [credentials,setCredentials]=useState(null)
@@ -526,6 +527,41 @@ function UserAccessPage({ users, setUsers, notify, currentUser }) {
   const protectedUser=selected?.role==='Super Admin' && selected?.id===users.find(user=>user.role==='Super Admin')?.id || String(selected?.id)===String(currentUser?.id)
   const visible=users.filter(user=>`${user.name} ${user.email} ${user.role}`.toLowerCase().includes(search.toLowerCase()))
   return <div className="content-page"><PageTitle eyebrow="SECURITY & ACCESS" title="Users and permissions" text="Give each staff member only the access needed for their work."><div className="page-title-actions"><Button variant="secondary" icon={Settings} onClick={()=>window.dispatchEvent(new Event('camy-change-password'))}>Change my password</Button><Button icon={UserPlus} onClick={()=>setAdding(!adding)}>Add system user</Button></div></PageTitle><section className="access-overview"><article><span><UsersRound /></span><div><small>TOTAL USERS</small><strong>{users.length}</strong></div></article><article><span><BadgeCheck /></span><div><small>ACTIVE USERS</small><strong>{users.filter(user=>user.active).length}</strong></div></article><article><span><Settings /></span><div><small>ACCESS ROLES</small><strong>{new Set(users.map(user=>user.role)).size}</strong></div></article></section>{error&&<div className="market-error" role="alert">{error}</div>}{credentials&&<section className="card staff-credentials"><h2>Staff account ready</h2><p>Share these sign-in details with the staff member. The temporary password is shown once and must be changed after signing in.</p><label>Email address<input readOnly value={credentials.email}/></label><label>Temporary password<input readOnly value={credentials.password} autoComplete="off"/></label><Button variant="secondary" onClick={()=>setCredentials(null)}>Dismiss credentials</Button></section>}{adding&&<form className="card add-access-user" onSubmit={createUser}><div><span>NEW SYSTEM USER</span><h2>Create staff access</h2></div><label>Full name<input required value={form.name} onChange={event=>setForm({...form,name:event.target.value})} /></label><label>Email address<input required type="email" value={form.email} onChange={event=>setForm({...form,email:event.target.value})} /></label><label>Starting role<select value={form.role} onChange={event=>setForm({...form,role:event.target.value})}>{Object.keys(templates).map(role=><option key={role}>{role}</option>)}</select></label><Button type="submit" icon={Check} disabled={busy}>{busy?'Creating...':'Create user and temporary password'}</Button><button type="button" onClick={()=>setAdding(false)}>Cancel</button></form>}<section className="access-layout"><article className="card access-users"><div className="card-head"><div><span>TEAM DIRECTORY</span><h2>System users</h2></div></div><label className="access-search"><Search /><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search users" /></label>{visible.map(user=><button className={selected?.id===user.id?'selected':''} key={user.id} onClick={()=>setSelectedId(user.id)}><i>{user.name.split(' ').map(word=>word[0]).slice(0,2).join('')}</i><span><strong>{user.name}</strong><small>{user.email}</small></span><em className={user.active?'active':''}>{user.active?'Active':'Suspended'}</em></button>)}</article>{selected&&<article className="card permission-panel"><header><div><span>ACCESS PROFILE · {selected.id}</span><h2>{selected.name}</h2>{selected.passwordChangeRequired&&<p>Temporary password issued. Must change password after signing in.</p>}<p>{selected.email} · Last access: {selected.lastAccess}</p></div><label className="access-status"><input type="checkbox" checked={selected.active} disabled={protectedUser||busy} onChange={event=>updateUser({active:event.target.checked})} /><span>{selected.active?'Access enabled':'Access suspended'}</span></label></header><section className="role-selector"><div><small>ASSIGNED ROLE</small><strong>Choose a role template</strong></div><select value={selected.role} disabled={protectedUser||busy} onChange={event=>changeRole(event.target.value)}>{Object.keys(templates).map(role=><option key={role}>{role}</option>)}</select></section><div className="permission-title"><div><span>PAGE PERMISSIONS</span><h3>What this user can view and manage</h3></div><b>{selected.permissions.length}/{permissionOptions.length} enabled</b></div><div className="permission-grid">{permissionOptions.map(item=><label className={selected.permissions.includes(item.id)?'enabled':''} key={item.id}><span><strong>{item.label}</strong><small>{selected.permissions.includes(item.id)?'Access allowed':'No access'}</small></span><input type="checkbox" checked={selected.permissions.includes(item.id)} disabled={protectedUser||busy||selected.role==='Super Admin'} onChange={()=>togglePermission(item.id)} /><i /></label>)}</div><footer><p><BadgeCheck /> Permission changes save to the server.</p><Button variant="secondary" disabled={protectedUser||busy} onClick={resetPassword}>Issue new temporary password</Button><button disabled={protectedUser||busy} onClick={removeUser}><Trash2 /> Remove user</button></footer></article>}</section></div>
+}
+
+function CommissionPayouts({ orders, openOrder }) {
+  const [filter,setFilter]=useState('Ready to pay')
+  const [search,setSearch]=useState('')
+  const payoutOrders=orders.filter(order=>order.orderMode==='dropship'&&Number(order.entrepreneurMargin||0)>0)
+  const ready=payoutOrders.filter(order=>order.status==='Delivered'&&order.payoutStatus==='pending_transfer')
+  const waiting=payoutOrders.filter(order=>!['Delivered','Returned','Rejected','Cancelled'].includes(order.status)&&order.payoutStatus==='pending_delivery')
+  const paid=payoutOrders.filter(order=>order.payoutStatus==='paid')
+  const review=payoutOrders.filter(order=>order.payoutStatus==='reversal_required')
+  const matchesStatus=order=>filter==='All'||(filter==='Ready to pay'&&ready.includes(order))||(filter==='Waiting for delivery'&&waiting.includes(order))||(filter==='Paid'&&paid.includes(order))||(filter==='Needs review'&&review.includes(order))
+  const visible=payoutOrders.filter(order=>matchesStatus(order)&&`${order.id} ${order.entrepreneur} ${order.entrepreneurId} ${order.customer} ${order.phone}`.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>String(b.deliveredAt||b.updatedAt||b.date).localeCompare(String(a.deliveredAt||a.updatedAt||a.date)))
+  const statusFor=order=>order.payoutStatus==='paid'?'Paid':order.payoutStatus==='reversal_required'?'Needs review':order.payoutStatus==='pending_transfer'?'Ready to pay':'Waiting for delivery'
+  return <div className="content-page commission-page">
+    <PageTitle eyebrow="FINANCE WORKSPACE" title="Commission payouts" text="Transfer entrepreneur earnings after CAMY collects the client payment, with every payout linked to its original order."><Button variant="secondary" icon={Download} onClick={()=>exportReport('camy-commission-payouts.xlsx',visible)}>Export payout list</Button></PageTitle>
+    <section className="commission-kpis">
+      <article className="ready"><span><Banknote/></span><div><small>READY TO TRANSFER</small><strong>{money(ready.reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0))}</strong><p>{ready.length} payout{ready.length===1?'':'s'} waiting</p></div></article>
+      <article><span><Truck/></span><div><small>WAITING FOR DELIVERY</small><strong>{money(waiting.reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0))}</strong><p>{waiting.length} upcoming payout{waiting.length===1?'':'s'}</p></div></article>
+      <article className="paid"><span><BadgeCheck/></span><div><small>TRANSFERRED</small><strong>{money(paid.reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0))}</strong><p>{paid.length} completed payout{paid.length===1?'':'s'}</p></div></article>
+      <article className="review"><span><ReceiptText/></span><div><small>NEEDS REVIEW</small><strong>{review.length}</strong><p>Returned after payout</p></div></article>
+    </section>
+    {ready.length>0&&<section className="commission-alert"><span><WalletCards/></span><div><small>ACTION REQUIRED</small><strong>{ready.length} entrepreneur commission{ready.length===1?' is':'s are'} ready to transfer</strong><p>Open each order, verify the collected COD amount, transfer the commission, and upload the bank receipt.</p></div><button type="button" onClick={()=>setFilter('Ready to pay')}>Show payouts <ArrowRight/></button></section>}
+    <article className="card commission-workspace">
+      <header><label><Search/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search order, entrepreneur, customer, or phone"/></label><div>{['Ready to pay','Waiting for delivery','Paid','Needs review','All'].map(item=><button type="button" className={filter===item?'active':''} key={item} onClick={()=>setFilter(item)}>{item}<b>{item==='Ready to pay'?ready.length:item==='Waiting for delivery'?waiting.length:item==='Paid'?paid.length:item==='Needs review'?review.length:payoutOrders.length}</b></button>)}</div></header>
+      <div className="commission-list">{visible.map(order=><article className={`commission-row ${statusFor(order).toLowerCase().replaceAll(' ','-')}`} key={order.id}>
+        <div className="commission-order"><span><ReceiptText/></span><div><small>ORDER</small><strong>{order.id}</strong><p>{displayDate(order.deliveredAt||order.date)} · {order.product}</p></div></div>
+        <div><small>ENTREPRENEUR</small><strong>{order.entrepreneur}</strong><p>{order.entrepreneurId}</p></div>
+        <div><small>CLIENT PAYMENT</small><strong>{money(order.amount)}</strong><p>{order.clientPaymentStatus||'Cash on delivery'}</p></div>
+        <div><small>CAMY VALUE</small><strong>{money(order.camyCost)}</strong><p>Product cost</p></div>
+        <div className="commission-amount"><small>COMMISSION</small><strong>{money(order.entrepreneurMargin)}</strong><Status value={statusFor(order)}/></div>
+        <button type="button" className="commission-open" onClick={()=>openOrder(order)}><span>{order.payoutStatus==='pending_transfer'?'Pay commission':'View order'}</span><ArrowRight/></button>
+      </article>)}</div>
+      {!visible.length&&<Empty icon={Banknote} title={payoutOrders.length?'No payouts match this view':'No commission records yet'} text={payoutOrders.length?'Choose another status or clear the search.':'Delivered COD orders with entrepreneur commission will appear here automatically.'}/>}
+    </article>
+  </div>
 }
 
 function ReportsPage({ entrepreneurs, orders, products }) {
@@ -566,7 +602,7 @@ function NotificationsDrawer({ notifications, setNotifications, close }) {
   return <div className="drawer-layer" onMouseDown={close}><aside className="drawer notifications" onMouseDown={e=>e.stopPropagation()}><header><div><small>YOUR UPDATES</small><h2>Notifications <span>{notifications.filter(n=>!n.read).length}</span></h2></div><button className="icon-btn" onClick={close}><X /></button></header><div>{notifications.map(n=>{const Icon=icons[n.type]||Bell;return <article className={!n.read?'unread':''} key={n.id}><span><Icon /></span><div><strong>{n.title}</strong><p>{n.body}</p><small>{n.time}</small></div></article>})}</div><Button variant="secondary" icon={Check} onClick={()=>setNotifications(old=>old.map(n=>({...n,read:true})))}>Mark all as read</Button></aside></div>
 }
 
-function DropshipPayoutPanel({ order, admin, onDone }) {
+function LegacyDropshipPayoutPanel({ order, admin, onDone }) {
   const [reference,setReference]=useState(order.payoutReference||'')
   const [file,setFile]=useState(null)
   const [busy,setBusy]=useState(false)
@@ -603,7 +639,7 @@ function DropshipPayoutPanel({ order, admin, onDone }) {
   </section>
 }
 
-function OrderModal({ order, products = [], admin = false, openEntrepreneur, close, onUpdated }) {
+function LegacyOrderModal({ order, products = [], admin = false, openEntrepreneur, close, onUpdated }) {
   const items=order.items?.length?order.items:[{name:order.product,qty:order.qty,price:order.qty?Number(order.amount)/Number(order.qty):Number(order.amount)}]
   const progress=['Pending','Awaiting payment','Payment review','Processing','Dispatched','Delivered'], current=progress.indexOf(order.status)
   const dropship=order.orderMode==='dropship'
@@ -611,6 +647,55 @@ function OrderModal({ order, products = [], admin = false, openEntrepreneur, clo
 }
 
 function SettlementModal({ close, submit }) { const [amount,setAmount]=useState(''); const [reference,setReference]=useState(''); const [busy,setBusy]=useState(false); const save=async e=>{e.preventDefault();setBusy(true);try{if(await submit(Number(amount),reference))close()}finally{setBusy(false)}}; return <Modal onClose={close}><form className="form-modal" onSubmit={save}><span className="modal-kicker">CREDIT SETTLEMENT</span><h2>Submit a settlement</h2><p>Enter the payment made to CAMY. Your balance changes only after CAMY verifies the payment reference.</p><label>Settlement amount<input required min="1" type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="e.g. 5000" /></label><label>Payment reference<input required maxLength="100" value={reference} onChange={e=>setReference(e.target.value)} placeholder="Bank slip or reference number" /></label><Button type="submit" disabled={busy||!amount||!reference} icon={Check}>{busy?'Submitting…':'Submit for verification'}</Button></form></Modal> }
+
+function DropshipPayoutPanel({ order, admin, onDone }) {
+  const [reference,setReference]=useState(order.payoutReference||'')
+  const [file,setFile]=useState(null)
+  const [busy,setBusy]=useState(false)
+  const [error,setError]=useState('')
+  const margin=Number(order.entrepreneurMargin||0)
+  const camyCost=Number(order.camyCost??order.amount)
+  const clientTotal=Number(order.amount||0)
+  const canTransfer=admin&&order.status==='Delivered'&&margin>0&&order.payoutStatus!=='paid'&&order.payoutStatus!=='reversal_required'
+  const payoutLabel=order.payoutStatus==='paid'?'Paid':order.payoutStatus==='pending_transfer'?'Ready to transfer':order.payoutStatus==='reversal_required'?'Reversal required':order.payoutStatus==='not_required'?'No payout due':'Waiting for delivery'
+  const upload=async event=>{
+    event.preventDefault()
+    if(!file||!reference.trim()||busy)return
+    if(!['image/jpeg','image/png','image/webp','application/pdf'].includes(file.type)||file.size>5*1024*1024){setError('Choose a JPG, PNG, WebP or PDF receipt up to 5 MB.');return}
+    setBusy(true);setError('')
+    try{const receipt=await readReceiptFile(file);const result=await api('/marketplace/orders/'+encodeURIComponent(order.id)+'/payout',{method:'POST',body:JSON.stringify({reference:reference.trim(),receipt})});onDone?.(result.order,result.message)}
+    catch(reason){setError(reason.message)}finally{setBusy(false)}
+  }
+  if(order.orderMode!=='dropship')return null
+  return <section className="payout-panel-v3">
+    <header><span><Banknote/></span><div><small>COD MONEY FLOW</small><h3>Collection and entrepreneur payout</h3><p>See exactly what CAMY keeps and what must be transferred to the entrepreneur.</p></div><Status value={payoutLabel}/></header>
+    <div className="money-flow-v3"><article className="client"><small>Customer pays CAMY</small><strong>{money(clientTotal)}</strong><span>Cash on delivery</span></article><ArrowRight/><article className="camy"><small>CAMY product value</small><strong>{money(camyCost)}</strong><span>Company collection</span></article><b className="money-plus">+</b><article className="profit"><small>Entrepreneur earns</small><strong>{money(margin)}</strong><span>{payoutLabel}</span></article></div>
+    <div className="collection-state-v3"><span><Check/> Client collection</span><strong>{order.clientPaymentStatus||(order.status==='Delivered'?'Collected by CAMY':'Collect on delivery')}</strong></div>
+    {order.payoutStatus==='paid'&&<div className="payout-complete-v3"><span><BadgeCheck/></span><div><strong>Entrepreneur payout recorded</strong><small>Reference {order.payoutReference||'Recorded'} · {displayDate(order.payoutPaidAt)}</small></div>{order.payoutReceipt&&<a className="btn secondary" href={order.payoutReceipt} target="_blank" rel="noreferrer"><FileText/> View receipt</a>}</div>}
+    {order.payoutStatus==='reversal_required'&&<div className="login-error">This order was returned after the margin was transferred. Finance reconciliation is required.</div>}
+    {canTransfer&&<form className="payout-form-v3" onSubmit={upload}><div className="payout-form-copy"><span><WalletCards/></span><div><small>FINAL FINANCE STEP</small><h4>Transfer {money(margin)}</h4><p>Send the margin to the entrepreneur’s saved bank account, then attach proof below.</p></div></div><div className="payout-form-fields"><label>Bank transfer reference<input required maxLength="120" value={reference} onChange={event=>setReference(event.target.value)} placeholder="Example: TXN-2026-001"/></label><label className={`receipt-upload-v3 ${file?'selected':''}`}><input required type="file" accept="image/png,image/jpeg,image/webp,application/pdf" onChange={event=>setFile(event.target.files?.[0]||null)}/><FileText/><span><strong>{file?'Receipt selected':'Choose transfer receipt'}</strong><small>{file?file.name:'JPG, PNG, WebP or PDF · maximum 5 MB'}</small></span></label></div>{error&&<p className="market-error">{error}</p>}<Button type="submit" disabled={busy||!file||!reference.trim()} icon={Banknote}>{busy?'Saving payout…':'Confirm payout and save proof'}</Button></form>}
+    {admin&&order.status!=='Delivered'&&margin>0&&<div className="payout-locked-v3"><Truck/><span><strong>Payout is locked</strong><small>It becomes available after this order is marked delivered.</small></span></div>}
+  </section>
+}
+
+function OrderModal({ order, products = [], admin = false, openEntrepreneur, close, onUpdated }) {
+  const items=order.items?.length?order.items:[{name:order.product,qty:order.qty,price:order.qty?Number(order.amount)/Number(order.qty):Number(order.amount)}]
+  const dropship=order.orderMode==='dropship'
+  const camyCost=Number(order.camyCost??order.amount)
+  const margin=Number(order.entrepreneurMargin||0)
+  const progress=['Processing','Dispatched','Delivered']
+  const current=progress.indexOf(order.status)
+  return <Modal onClose={close} wide className="order-detail-shell"><div className="detail-modal order-detail-v3">
+    <header className="order-hero-v3"><div><span className="modal-kicker">{dropship?'CAMY COD ORDER':'CUSTOMER ORDER'}</span><h2>{order.id}</h2><p>Placed {displayDate(order.date)} · {items.length} product{items.length===1?'':'s'} · {Number(order.qty||0)} unit{Number(order.qty||0)===1?'':'s'}</p></div><Status value={order.status}/></header>
+    <section className="order-glance-v3"><article><span><UserRound/></span><div><small>Customer</small><strong>{order.customer||'Not provided'}</strong><a href={order.phone?`tel:${order.phone}`:undefined}>{order.phone||'No phone number'}</a></div></article><article><span><MapPin/></span><div><small>Delivery address</small><strong>{order.address||'Not provided'}</strong></div></article><article><span><Store/></span><div><small>Entrepreneur</small><strong>{order.entrepreneur||'Not assigned'}</strong><p>{order.entrepreneurId||'No member ID'}</p>{admin&&<button type="button" onClick={openEntrepreneur}>Open profile <ArrowRight/></button>}</div></article></section>
+    <section className="ordered-products-v3"><header><div><small>ORDER BASKET</small><h3>Products in this order</h3></div><b>{items.length} item{items.length===1?'':'s'}</b></header><div>{items.map((item,index)=>{const product=products.find(entry=>String(entry.id)===String(item.id||item.productId));const base=Number(item.camyPrice??product?.price??item.price);const sell=Number(item.price);const qty=Number(item.qty||0);return <article key={item.id||item.productId||index}><div className="product-main-v3">{product?.image?<img src={product.image} alt=""/>:<span><PackageOpen/></span>}<div><small>{product?.code||item.category||'CAMY PRODUCT'}</small><strong>{item.name||product?.name||'CAMY product'}</strong></div></div>{dropship&&<dl><div><dt>CAMY price</dt><dd>{money(base)}</dd></div><div><dt>Client price</dt><dd>{money(sell)}</dd></div><div><dt>Quantity</dt><dd>{qty}</dd></div><div><dt>Margin</dt><dd className="positive">{money((sell-base)*qty)}</dd></div></dl>}<strong className="line-total-v3"><small>Line total</small>{money(sell*qty)}</strong></article>})}</div></section>
+    <section className="order-total-v3"><div><small>CLIENT ORDER TOTAL</small><strong>{money(order.amount)}</strong></div>{dropship&&<><span><small>CAMY value</small><strong>{money(camyCost)}</strong></span><span className="profit"><small>Entrepreneur margin</small><strong>{money(margin)}</strong></span></>}</section>
+    {!dropship&&<section className="supply-payment"><h3>Payment information</h3><p>Payment reference: <strong>{order.reference||'Not submitted'}</strong></p>{order.bankDetails&&<BankDetails bank={order.bankDetails}/>} {!order.receipt&&<p>No payment receipt submitted yet.</p>}</section>}
+    {dropship&&<DropshipPayoutPanel order={order} admin={admin} onDone={(updated,message)=>{message&&window.dispatchEvent(new CustomEvent('camy-finance-message',{detail:message}));onUpdated?.(updated);close()}}/>}
+    <section className="fulfilment-panel-v3"><header><div><small>FULFILMENT</small><h3>Next order action</h3></div><div className="mini-progress-v3">{progress.map((step,index)=><span className={current>=index?'done':''} key={step}><i>{current>index?<Check/>:index+1}</i>{step}</span>)}</div></header><OrderReview key={order.id+order.status} order={order} onDone={()=>{onUpdated?.();close()}}/></section>
+    {['Rejected','Returned','Cancelled'].includes(order.status)&&<div className="order-terminal-v3">This order is {order.status.toLowerCase()}. Reserved warehouse stock has been restored.</div>}
+  </div></Modal>
+}
 
 function AddEntrepreneurModal({ close, submit }) {
   const [form,setForm]=useState({name:'',email:'',password:'',phone:'',nic:'',address:'',city:'',joined:new Date().toISOString().slice(0,10)})
@@ -939,6 +1024,7 @@ export default function App() {
   const liveOrders=orders.filter(order=>order.source==='shop');const myOrders=liveOrders.filter(order=>String(order.entrepreneurId)===String(currentEntrepreneur?.id||profile.id))
   const customerPages={home:<ShopHome person={currentEntrepreneur} inventory={shopInventory} products={products} requests={stockRequests} orders={myOrders} tiers={tiers} setPage={setPage}/>,products:<StockSupplyPage products={products} person={currentEntrepreneur} orders={myOrders} tiers={tiers} notify={notify} catalogueLive={catalogueLive}/>, 'credit-stock':<CreditStockPage products={products} person={currentEntrepreneur} requests={stockRequests} inventory={shopInventory} submit={submitStockRequest} notify={notify} catalogueLive={catalogueLive}/>,orders:<OrdersPage orders={myOrders} setOrders={setOrders} openOrder={setOrderModal} setPage={setPage}/>,growth:<GrowthPage entrepreneurs={entrepreneurs} person={currentEntrepreneur} orders={myOrders} tiers={tiers}/>,credit:<CreditPage tiers={tiers} settlements={settlements} person={currentEntrepreneur} orders={myOrders} onSettlement={()=>setSettlementModal(true)}/>,profile:<ProfilePage profile={profile} setProfile={updateBusinessProfile} person={currentEntrepreneur} orders={myOrders} entrepreneurs={entrepreneurs} notify={notify}/>}
   const adminPages={overview:<AdminOverview entrepreneurs={entrepreneurs} orders={liveOrders} products={products} tiers={tiers} requests={stockRequests} setPage={setPage} openEntrepreneur={person=>setPersonModal({person,readOnly:true})}/>,entrepreneurs:<AdminEntrepreneurs entrepreneurs={entrepreneurs} orders={liveOrders} setEntrepreneurs={setEntrepreneurs} openEntrepreneur={person=>setPersonModal({person,readOnly:false})} openAdd={()=>setAddEntrepreneur(true)} notify={notify}/>, 'admin-orders':<AdminOrders orders={orders} setOrders={setOrders} products={products} entrepreneurs={entrepreneurs} onManualOrder={placeManualOrder} onUpdateStatus={updateOrderStatus} openOrder={setOrderModal}/>, 'admin-products':<>{!catalogueLive&&<div className="market-warning">Sample catalogue: verify real CAMY prices and warehouse stock before activating orders. <button className="market-primary" onClick={activateCatalogue}>Verify and activate catalogue</button></div>}<div className="catalogue-save-bar"><p>Save your catalogue changes to make them available to entrepreneurs.</p><Button disabled={savingCatalogue} onClick={saveCatalogue}>{savingCatalogue?'Saving...':'Save catalogue changes'}</Button></div><AdminProducts products={products} setProducts={editProducts} openProduct={setProductModal} openAdd={()=>setAddProduct(true)} openAddCategory={()=>setAddCategory(true)} notify={notify}/></>, 'stock-supply':<AdminCreditStockPage requests={stockRequests} products={products} entrepreneurs={entrepreneurs} inventory={shopInventory} review={reviewStockRequest} catalogueLive={catalogueLive}/>, 'credit-control':<CreditControl entrepreneurs={entrepreneurs} setEntrepreneurs={setEntrepreneurs} tiers={tiers} setTiers={editTiers} settlements={settlements} reviewSettlement={reviewSettlement} notify={notify} onSave={saveCreditRules}/>,reports:<ReportsPage entrepreneurs={entrepreneurs} orders={liveOrders} products={products}/>, 'user-access':<UserAccessPage users={systemUsers} setUsers={setSystemUsers} notify={notify} currentUser={authUser}/>}
+  adminPages.payouts=<CommissionPayouts orders={liveOrders} openOrder={setOrderModal}/>
   if(authLoading)return <div className="auth-loading"><span></span><strong>Opening CAMY securely…</strong></div>
   if(!authUser)return <LoginScreen onLogin={login}/>
   if(passwordResetRequired||passwordModal)return <ChangePasswordModal required={passwordResetRequired} close={()=>setPasswordModal(false)} done={message=>{setPasswordResetRequired(false);setPasswordModal(false);notify(message)}}/>

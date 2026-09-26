@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 function staff_templates(): array {
-    return ['Viewer'=>['overview','reports'],'Operations'=>['overview','entrepreneurs','admin-orders','admin-products','stock-supply','reports'],'Finance'=>['overview','credit-control','reports'],'Super Admin'=>['overview','entrepreneurs','admin-orders','admin-products','stock-supply','credit-control','reports','user-access']];
+    return ['Viewer'=>['overview','reports'],'Operations'=>['overview','entrepreneurs','admin-orders','admin-products','stock-supply','reports'],'Finance'=>['overview','payouts','credit-control','reports'],'Super Admin'=>['overview','entrepreneurs','admin-orders','admin-products','payouts','stock-supply','credit-control','reports','user-access']];
 }
 function staff_record(array $row): array {
     $role=$row['access_role'] ?: ($row['role']==='admin'?'Super Admin':($row['role']==='manager'?'Operations':'Viewer'));

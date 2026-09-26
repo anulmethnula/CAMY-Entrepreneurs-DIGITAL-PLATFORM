@@ -127,6 +127,7 @@ try {
         elseif(str_starts_with($path,'/admin/registrations') || str_starts_with($path,'/admin/entrepreneurs'))$required='entrepreneurs';
         elseif(str_starts_with($path,'/marketplace/credit/') || in_array($path,['/admin/credit-tiers','/admin/credit-settlements'],true))$required='credit-control';
         elseif(str_starts_with($path,'/marketplace/requests/'))$required='stock-supply';
+        elseif(preg_match('#^/marketplace/orders/[^/]+/payout(?:-receipt)?$#',$path))$required='payouts';
         elseif(str_starts_with($path,'/marketplace/orders/'))$required='admin-orders';
         elseif(in_array($path,['/marketplace/catalog','/marketplace/activate-catalogue'],true))$required='admin-products';
         elseif($path==='/marketplace/bank')$required='stock-supply';
