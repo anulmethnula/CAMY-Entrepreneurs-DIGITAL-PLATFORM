@@ -291,7 +291,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
             $state['orders'][$index]['dispatchedAt']=date(DATE_ATOM);
         }
         if($status==='Awaiting payment'){$bank=[];foreach($state['entrepreneurs'] as $person)if((string)$person['id']===(string)$order['entrepreneurId'])$bank=$person['bankDetails'] ?? [];workflow_bank_required($bank);if($order['status']==='Pending'){workflow_reserve($state,$order['items'],(string)$order['entrepreneurId']);$state['orders'][$index]['reserved']=true;$state['orders'][$index]['bankDetails']=$bank;}}
-        if(in_array($status,['Rejected','Returned'],true)&&($order['reserved'] ?? true)){$releaseShop=(($order['orderMode'] ?? '')==='dropship')?null:(string)$order['entrepreneurId'];workflow_release($state,$order['items'],$releaseShop);$state['orders'][$index]['reserved']=false;}
+        if(in_array($status,['Rejected','Returned','Cancelled'],true)&&($order['reserved'] ?? true)){$releaseShop=(($order['orderMode'] ?? '')==='dropship')?null:(string)$order['entrepreneurId'];workflow_release($state,$order['items'],$releaseShop);$state['orders'][$index]['reserved']=false;}
         if($order['status']==='Payment review'&&$status==='Awaiting payment'){$reason=trim((string)($data['reason'] ?? ''));if(!$reason)response(['message'=>'Explain why the receipt was rejected.'],422);$state['orders'][$index]['paymentNote']=$reason;}
         $state['orders'][$index]['updatedAt']=date(DATE_ATOM);
         if($status==='Delivered'&&empty($state['orders'][$index]['deliveredAt']))$state['orders'][$index]['deliveredAt']=date(DATE_ATOM);
@@ -303,11 +303,12 @@ function market_route(PDO $pdo, string $path, string $method): void {
                 $state['orders'][$index]['clientPaymentStatus']='Collected by CAMY';
                 $state['orders'][$index]['payoutStatus']=$margin>0?'pending_transfer':'not_required';
                 $pdo->prepare("UPDATE entrepreneur_payouts SET collection_status='collected',collected_at=COALESCE(collected_at,NOW()),payout_status=IF(payout_amount>0 AND payout_status<>'paid','pending_transfer',IF(payout_status='paid','paid','cancelled')) WHERE order_id=?")->execute([$matches[1]]);
-            }elseif(in_array($status,['Returned','Rejected'],true)){
+            }elseif(in_array($status,['Returned','Rejected','Cancelled'],true)){
                 $paid=$pdo->prepare("SELECT payout_status FROM entrepreneur_payouts WHERE order_id=?");$paid->execute([$matches[1]]);$paidStatus=(string)($paid->fetchColumn() ?: '');
                 $nextPayout=$paidStatus==='paid'?'reversal_required':'cancelled';
                 $state['orders'][$index]['payoutStatus']=$nextPayout;
                 $pdo->prepare("UPDATE entrepreneur_payouts SET payout_status=? WHERE order_id=?")->execute([$nextPayout,$matches[1]]);
+                if($status==='Cancelled')$state['orders'][$index]['clientPaymentStatus']='Cancelled before delivery';
             }
         }
         $shop=$state['orders'][$index]['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)($entry['camyCost'] ?? $entry['amount']);$credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales&&$tier['credit']>$credit)$credit=(float)$tier['credit'];foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
