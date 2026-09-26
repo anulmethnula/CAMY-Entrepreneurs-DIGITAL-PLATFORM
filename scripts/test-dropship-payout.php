@@ -119,7 +119,20 @@ try {
     ],201)['order'];
     if(($secondDropship['orderMode']??'')!=='dropship'||($secondDropship['clientPaymentMethod']??'')!=='cod')throw new RuntimeException('Credit-eligible entrepreneur could not continue dropshipping.');
 
-    echo "CAMY flow integration passed: COD-only client orders, entrepreneur margin payout, trial-to-credit transition, optional Phase 2 credit stock, credit-limit protection, issued inventory, settlement verification, and continued dropshipping.\n";
+    // Admin-managed return/refund: customer portal is retired, so CAMY records the
+    // client's return request and controls the entire return lifecycle.
+    $GLOBALS['actor']=$admin;
+    endpoint($pdo,"/marketplace/orders/{$secondDropship['id']}/status",'POST',['status'=>'Dispatched','courier'=>'QA Courier','trackingNumber'=>'QA-RETURN-1']);
+    endpoint($pdo,"/marketplace/orders/{$secondDropship['id']}/status",'POST',['status'=>'Delivered']);
+    endpoint($pdo,"/marketplace/orders/{$secondDropship['id']}/return/request",'POST',['reason'=>'Client requested a return after delivery.']);
+    endpoint($pdo,"/marketplace/orders/{$secondDropship['id']}/return/approve",'POST',['instructions'=>'Send the complete parcel back to CAMY warehouse.']);
+    endpoint($pdo,"/marketplace/orders/{$secondDropship['id']}/return/ship",'POST',['courier'=>'QA Return Courier','trackingNumber'=>'RET-1001']);
+    $received=endpoint($pdo,"/marketplace/orders/{$secondDropship['id']}/return/receive",'POST')['order'];
+    if(($received['status']??'')!=='Returned'||($received['payoutStatus']??'')!=='cancelled'||($received['return']['refundStatus']??'')!=='Pending')throw new RuntimeException('Admin return receipt did not restore the active COD return state.');
+    $refunded=endpoint($pdo,"/marketplace/orders/{$secondDropship['id']}/return/refund",'POST',['reference'=>'CLIENT-REFUND-001'])['order'];
+    if(($refunded['return']['refundStatus']??'')!=='Refunded'||($refunded['return']['refundReference']??'')!=='CLIENT-REFUND-001')throw new RuntimeException('Client refund record was not completed.');
+
+    echo "CAMY flow integration passed: registration-ready database, COD-only client orders, admin fulfilment, entrepreneur margin payout, trial-to-credit transition, optional Phase 2 credit stock, credit-limit protection, issued inventory, settlement verification, continued dropshipping, and admin-managed returns/refunds.\n";
 } finally {
     foreach($receiptFiles as $name){$file=__DIR__.'/../private/receipts/'.basename($name);if(is_file($file))unlink($file);}
     if(isset($server))$server->exec("DROP DATABASE IF EXISTS `$db`");
