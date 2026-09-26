@@ -45,7 +45,7 @@ try {
       'tiers'=>[['id'=>'tier-1','name'=>'Tier 1','sales'=>200.0,'credit'=>250.0]],
       'requests'=>[],'inventory'=>[],'orders'=>[],'settlements'=>[],'catalogue_live'=>true,'catalogue_seeded'=>true
     ];
-    $pdo->exec("INSERT INTO marketplace_state(id,state_json) VALUES(1,'{}')");market_save($pdo,$state);
+    market_save($pdo,$state);
 
     $seller=['id'=>1,'role'=>'entrepreneur','member_id'=>'CE-PAYOUT','full_name'=>'Payout Seller'];
     $admin=['id'=>2,'role'=>'admin','member_id'=>null,'full_name'=>'CAMY Admin'];
