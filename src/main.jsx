@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './styles.css'
 import './shop.css'
+import './polish.css'
 
 class AppBoundary extends React.Component {
   state = { failed: false }
