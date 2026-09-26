@@ -4,18 +4,27 @@ declare(strict_types=1);
 function return_route(PDO $pdo,string $path,string $method): void {
     if(!preg_match('#^/marketplace/orders/([^/]+)/return/(request|approve|reject|ship|receive|refund)$#',$path,$match)||$method!=='POST')return;
     $action=$match[2];$data=input();
-    $customer=in_array($action,['request','ship'],true)?customer_required($pdo):null;
-    $user=$customer?null:current_user($pdo);
-    if(!$customer&&!$user)response(['message'=>'Seller login required.'],401);
     $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
     foreach($state['orders'] as $key=>$entry)if($entry['id']===$match[1]){$index=$key;break;}
     if($index===null)response(['message'=>'Order not found.'],404);
     $order=&$state['orders'][$index];
-    if($customer&&(int)($order['customerId']??0)!==(int)$customer['id'])response(['message'=>'This order belongs to another customer.'],403);
-    if($user)workflow_owner($user,(string)$order['entrepreneurId']);
     $dropship=($order['orderMode'] ?? '')==='dropship';
-    if($dropship && $customer)response(['message'=>'The retired customer portal cannot manage CAMY dropship returns. Contact CAMY Admin.'],410);
-    if($dropship && $user && !in_array($user['role'],['admin','manager'],true))response(['message'=>'CAMY Admin controls returns for dropship orders.'],403);
+
+    // Active CAMY dropship returns are fully managed by CAMY staff because the
+    // public customer portal is retired. Legacy marketplace orders keep their
+    // previous customer/admin authorization behaviour.
+    $customer=null;$user=null;
+    if($dropship){
+        $user=current_user($pdo);
+        if(!$user)response(['message'=>'CAMY staff login is required.'],401);
+        if(!in_array($user['role'],['admin','manager'],true))response(['message'=>'CAMY Admin controls returns for dropship orders.'],403);
+    }else{
+        $customer=in_array($action,['request','ship'],true)?customer_required($pdo):null;
+        $user=$customer?null:current_user($pdo);
+        if(!$customer&&!$user)response(['message'=>'Seller login required.'],401);
+        if($customer&&(int)($order['customerId']??0)!==(int)$customer['id'])response(['message'=>'This order belongs to another customer.'],403);
+        if($user)workflow_owner($user,(string)$order['entrepreneurId']);
+    }
     $return=$order['return']??[];$stage=$return['status']??'';
     $text=static function(string $key,int $min,int $max)use($data):string{$value=trim((string)($data[$key]??''));if(strlen($value)<$min||strlen($value)>$max||preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f]/',$value))response(['message'=>'Enter valid '.str_replace('_',' ',$key).' ('.$min.'–'.$max.' characters).'],422);return $value;};
     if($action==='request'){
