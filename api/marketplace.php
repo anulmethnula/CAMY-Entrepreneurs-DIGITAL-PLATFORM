@@ -87,7 +87,8 @@ function market_public(array $state): array {
     $realEntrepreneurs=array_values(array_filter($state['entrepreneurs'] ?? [],static fn($person)=>($person['active'] ?? true) && !str_starts_with((string)($person['id'] ?? ''),'DEMO-')&&!str_contains(strtolower((string)($person['name'] ?? '')),'(demo)')));
     $realIds=array_map(static fn($person)=>(string)$person['id'],$realEntrepreneurs);
     $publicInventory=array_values(array_filter($state['inventory'] ?? [],static fn($item)=>($item['visible'] ?? true)===true&&in_array((string)$item['entrepreneurId'],$realIds,true)));
-    return ['products'=>array_map(static fn($product)=>array_merge($product,['stock'=>($product['stock'] ?? 0)>0?1:0]),$state['products'] ?? []), 'entrepreneurs'=>array_map(static fn($person)=>['id'=>$person['id'],'name'=>$person['name'],'city'=>$person['city'] ?? 'Sri Lanka','stage'=>$person['stage'] ?? 'Trial seller'], $realEntrepreneurs), 'inventory'=>array_map(static fn($item)=>['entrepreneurId'=>$item['entrepreneurId'],'productId'=>$item['productId'],'qty'=>$item['qty']>0?999999:0,'price'=>$item['price'] ?? null],$publicInventory)];
+    $publishedProducts=array_values(array_filter($state['products'] ?? [],static fn($product)=>($product['published'] ?? true)===true));
+    return ['products'=>array_map(static fn($product)=>array_merge($product,['stock'=>($product['stock'] ?? 0)>0?1:0]),$publishedProducts), 'entrepreneurs'=>array_map(static fn($person)=>['id'=>$person['id'],'name'=>$person['name'],'city'=>$person['city'] ?? 'Sri Lanka','stage'=>$person['stage'] ?? 'Trial seller'], $realEntrepreneurs), 'inventory'=>array_map(static fn($item)=>['entrepreneurId'=>$item['entrepreneurId'],'productId'=>$item['productId'],'qty'=>$item['qty']>0?999999:0,'price'=>$item['price'] ?? null],$publicInventory)];
 }
 require_once __DIR__.'/workflow.php';
 function market_route(PDO $pdo, string $path, string $method): void {
@@ -126,7 +127,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
         $self=null;foreach($state['entrepreneurs'] ?? [] as $person)if((string)$person['id']===$member){$self=$person;break;}
         // Entrepreneurs receive the complete CAMY product information, but never the
         // warehouse quantity. `stock` is deliberately reduced to an availability flag.
-        $entrepreneurProducts=array_map(static fn($product)=>array_merge($product,['stock'=>(($product['stock'] ?? 0)>0?1:0)]),$state['products'] ?? []);
+        $entrepreneurProducts=array_map(static fn($product)=>array_merge($product,['stock'=>(($product['stock'] ?? 0)>0?1:0)]),array_values(array_filter($state['products'] ?? [],static fn($product)=>($product['published'] ?? true)===true)));
         response(['products'=>$entrepreneurProducts,'catalogue_live'=>$state['catalogue_live'] ?? false,'entrepreneurs'=>market_public($state)['entrepreneurs'],'self'=>$self,'tiers'=>$state['tiers'] ?? [],'inventory'=>array_values(array_filter($state['inventory'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'requests'=>array_values(array_filter($state['requests'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'orders'=>array_values(array_filter($state['orders'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'settlements'=>array_values(array_filter($state['settlements'] ?? [],static fn($item)=>(string)$item['entrepreneurId']===$member))]);
     }
     if (preg_match('#^/marketplace/requests/([^/]+)/receipt$#',$path,$matches) && $method==='GET') {
@@ -186,7 +187,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
         foreach($items as $item){
             $product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($item['productId'] ?? '')){$product=$candidate;break;}
             $qty=(int)($item['qty'] ?? 0);
-            if(!$product||$qty<1||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A requested product is unavailable in the requested quantity.'],409);}
+            if(!$product||($product['published'] ?? true)!==true||$qty<1||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A requested product is hidden or unavailable in the requested quantity.'],409);}
             $price=round((float)$product['price'],2);$clean[]=['productId'=>$product['id'],'qty'=>$qty,'price'=>$price];$total+=$price*$qty;
         }
         $total=round($total,2);$committed=0;
@@ -209,7 +210,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
         $clean=[];$total=0;
         foreach($items as $item){
             $product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)$item['productId']){$product=$candidate;break;}
-            if(!$product||$item['qty']>(int)$product['stock']){$pdo->rollBack();response(['message'=>'Use currently available CAMY warehouse quantities.'],422);}
+            if(!$product||($product['published'] ?? true)!==true||$item['qty']>(int)$product['stock']){$pdo->rollBack();response(['message'=>'Use currently live CAMY products and available warehouse quantities.'],422);}
             $price=round((float)$product['price'],2);$clean[]=['productId'=>$product['id'],'qty'=>$item['qty'],'price'=>$price];$total+=$price*$item['qty'];
         }
         $person=null;foreach($state['entrepreneurs'] as $candidate)if((string)$candidate['id']===(string)$request['entrepreneurId']){$person=$candidate;break;}
@@ -310,6 +311,9 @@ function market_route(PDO $pdo, string $path, string $method): void {
             }
         }
         $shop=$state['orders'][$index]['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)($entry['camyCost'] ?? $entry['amount']);$credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales&&$tier['credit']>$credit)$credit=(float)$tier['credit'];foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
-        market_save($pdo,$state);$pdo->commit();response(['orders'=>array_values(array_filter($state['orders'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['entrepreneurId']===(string)$user['member_id'])),'inventory'=>array_values(array_filter($state['inventory'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['entrepreneurId']===(string)$user['member_id'])),'entrepreneurs'=>array_values(array_filter($state['entrepreneurs'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['id']===(string)$user['member_id']))]);
+        market_save($pdo,$state);
+        $management=in_array($user['role'],['admin','manager'],true);
+        $responseProducts=$management?$state['products']:array_map(static fn($product)=>array_merge($product,['stock'=>(($product['stock'] ?? 0)>0?1:0)]),$state['products']);
+        $pdo->commit();response(['orders'=>array_values(array_filter($state['orders'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['entrepreneurId']===(string)$user['member_id'])),'inventory'=>array_values(array_filter($state['inventory'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['entrepreneurId']===(string)$user['member_id'])),'entrepreneurs'=>array_values(array_filter($state['entrepreneurs'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['id']===(string)$user['member_id'])),'products'=>$responseProducts,'revision'=>$state['revision']]);
     }
 }

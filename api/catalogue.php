@@ -14,7 +14,7 @@ function catalogue_products(array $products): array {
         $image=(string)($product['image'] ?? '');
         if($image&&!preg_match('#^(?:https://|/[^/]|data:image/(?:jpeg|png|webp);base64,)#',$image))response(['message'=>'Use a valid product image.'],422);
         if(strlen($image)>2800000||strlen((string)($product['description'] ?? ''))>10000)response(['message'=>'Product image or description is too large.'],422);
-        $product['code']=$code;$product['name']=$name;$product['category']=$category;$product['price']=round($price,2);$product['stock']=$stock;
+        $product['code']=$code;$product['name']=$name;$product['category']=$category;$product['price']=round($price,2);$product['stock']=$stock;$product['published']=($product['published'] ?? true)===true;
         if(isset($product['media'])){
             if(!is_array($product['media'])||count($product['media'])>12)response(['message'=>'Use up to 12 media files per product.'],422);
             foreach($product['media'] as $entry){

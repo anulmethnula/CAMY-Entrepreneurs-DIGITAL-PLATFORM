@@ -4,15 +4,18 @@ function response(array $data,int $status=200): never {throw new RuntimeExceptio
 require __DIR__.'/../api/workflow.php';
 function check(bool $condition,string $label): void {if(!$condition)throw new RuntimeException($label);}
 function blocked(callable $fn,int $code): void {try{$fn();}catch(RuntimeException $e){check($e->getCode()===$code,'Unexpected rejection: '.$e->getMessage());return;}throw new RuntimeException('Invalid action was accepted.');}
-foreach([false,true] as $supply){
-    workflow_transition('Pending','Awaiting payment',$supply);
-    blocked(fn()=>workflow_transition('Pending','Dispatched',$supply),409);
-    blocked(fn()=>workflow_transition('Awaiting payment',$supply?'Approved':'Processing',$supply),409);
-    workflow_transition('Payment review',$supply?'Approved':'Processing',$supply);
-    workflow_transition('Payment review','Awaiting payment',$supply);
-    workflow_transition($supply?'Approved':'Processing','Dispatched',$supply);
-    blocked(fn()=>workflow_transition('Rejected','Awaiting payment',$supply),409);
-}
+workflow_transition('Pending','Awaiting payment',false);
+blocked(fn()=>workflow_transition('Pending','Dispatched',false),409);
+blocked(fn()=>workflow_transition('Awaiting payment','Processing',false),409);
+workflow_transition('Payment review','Processing',false);
+workflow_transition('Payment review','Awaiting payment',false);
+workflow_transition('Processing','Dispatched',false);
+blocked(fn()=>workflow_transition('Rejected','Awaiting payment',false),409);
+workflow_transition('Pending','Approved',true);
+blocked(fn()=>workflow_transition('Pending','Dispatched',true),409);
+workflow_transition('Approved','Dispatched',true);
+workflow_transition('Approved','Rejected',true);
+blocked(fn()=>workflow_transition('Dispatched','Rejected',true),409);
 $state=['products'=>[['id'=>1,'stock'=>5]],'inventory'=>[['entrepreneurId'=>'CE-1','productId'=>1,'qty'=>4]]];
 $items=workflow_items([['productId'=>1,'qty'=>2],['productId'=>1,'qty'=>1]]);check(count($items)===1&&$items[0]['qty']===3,'Duplicate items must merge.');
 workflow_reserve($state,$items,null);check($state['products'][0]['stock']===2,'Approval must reserve stock.');

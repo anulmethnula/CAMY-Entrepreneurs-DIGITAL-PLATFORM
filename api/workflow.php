@@ -58,7 +58,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         foreach($items as $item){
             $product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($item['productId']??'')){$product=$candidate;break;}
             $qty=(int)($item['qty']??0);$sell=filter_var($item['sellPrice']??null,FILTER_VALIDATE_FLOAT);
-            if(!$product||$qty<1||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A selected CAMY product is unavailable in the requested quantity.'],409);}
+            if(!$product||($product['published'] ?? true)!==true||$qty<1||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A selected CAMY product is hidden or unavailable in the requested quantity.'],409);}
             if($sell===false||!is_finite($sell)||$sell<(float)$product['price']||$sell>100000000){$pdo->rollBack();response(['message'=>'Your client price can be any amount at or above the CAMY product price.'],422);}
             $sell=round((float)$sell,2);$base=round((float)$product['price'],2);
             $selected[]=['id'=>$product['id'],'productId'=>$product['id'],'name'=>$product['name'],'qty'=>$qty,'price'=>$sell,'camyPrice'=>$base,'image'=>$product['image']??'','category'=>$product['category']??'Other'];
