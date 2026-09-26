@@ -95,6 +95,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
     if(str_starts_with($path,'/customer/')||in_array($path,['/marketplace/public','/marketplace/preview'],true)||($path==='/marketplace/orders'&&$method==='POST')) {
         response(['message'=>'The customer portal has been retired. Orders are now entered by CAMY entrepreneurs.'],410);
     }
+    return_route($pdo,$path,$method);
     workflow_route($pdo,$path,$method);
     if($path==='/marketplace/preview' && $method==='GET'){
         $catalogue=json_decode((string)file_get_contents(__DIR__.'/../database/demo_catalog.json'),true,64,JSON_THROW_ON_ERROR);
