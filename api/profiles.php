@@ -14,7 +14,7 @@ function profile_clean(array $data): array {
 }
 function profile_has_obligations(array $state,string $id): bool {
     foreach($state['entrepreneurs'] as $person)if((string)$person['id']===$id && (float)($person['used'] ?? 0)>0)return true;
-    foreach($state['orders'] as $order)if((string)$order['entrepreneurId']===$id && (!in_array($order['status'],['Delivered','Returned','Rejected'],true)||in_array($order['return']['status']??'', ['Requested','Approved','Shipped'],true)||(($order['return']['refundStatus']??'')==='Pending')))return true;
+    foreach($state['orders'] as $order)if((string)$order['entrepreneurId']===$id && (!in_array($order['status'],['Delivered','Returned','Rejected','Cancelled'],true)||in_array($order['return']['status']??'', ['Requested','Approved','Shipped','Received'],true)||(($order['return']['refundStatus']??'')==='Pending')))return true;
     foreach($state['requests'] as $request)if((string)$request['entrepreneurId']===$id && !in_array($request['status'],['Dispatched','Rejected'],true))return true;
     return false;
 }
