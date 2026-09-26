@@ -40,6 +40,29 @@ function workflow_receipt(array $data,string $id): string {
     if(file_put_contents($dir.'/'.$file,$bytes)===false)throw new RuntimeException('Could not save receipt.');return $file;
 }
 function workflow_route(PDO $pdo,string $path,string $method): void {
+    if($path==='/admin/manual-order'&&$method==='POST'){
+        $admin=require_admin($pdo);$data=input();
+        $member=trim((string)($data['entrepreneurId']??''));$productId=(string)($data['productId']??'');$qty=filter_var($data['qty']??null,FILTER_VALIDATE_INT);$sell=filter_var($data['unitPrice']??null,FILTER_VALIDATE_FLOAT);
+        $name=trim((string)($data['customer']??''));$phone=preg_replace('/[\s-]/','',(string)($data['phone']??''));$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
+        if(!$member||!$productId||$qty===false||$qty<1||$sell===false||!is_finite($sell)||!$name||strlen($name)>150||!preg_match('/^(?:\+94|0)7\d{8}$/',$phone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Choose an entrepreneur and product, then enter valid client delivery and pricing details.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$entrepreneur=null;$product=null;
+        foreach($state['entrepreneurs'] as $candidate)if((string)$candidate['id']===$member&&($candidate['active']??true)&&($candidate['stage']??'')!=='Departed'){$entrepreneur=$candidate;break;}
+        foreach($state['products'] as $candidate)if((string)$candidate['id']===$productId){$product=$candidate;break;}
+        if(!$entrepreneur){$pdo->rollBack();response(['message'=>'Choose an active CAMY entrepreneur.'],422);}
+        if(!$product||($product['published']??true)!==true||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'This CAMY product is hidden or does not have enough warehouse stock.'],409);}
+        $base=round((float)$product['price'],2);$sell=round((float)$sell,2);
+        if($sell<$base||$sell>100000000){$pdo->rollBack();response(['message'=>'The client price must be at least the CAMY product price.'],422);}
+        $item=['id'=>$product['id'],'productId'=>$product['id'],'name'=>$product['name'],'qty'=>$qty,'price'=>$sell,'camyPrice'=>$base,'image'=>$product['image']??'','category'=>$product['category']??'Other'];
+        $clientTotal=round($sell*$qty,2);$camyCost=round($base*$qty,2);$margin=round($clientTotal-$camyCost,2);
+        workflow_reserve($state,[$item],null);$groupId='DROP-'.bin2hex(random_bytes(5));$id='CMY-'.bin2hex(random_bytes(5));$token=bin2hex(random_bytes(24));
+        $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
+        $order=['id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,'product'=>$product['name'],'items'=>[$item],'qty'=>$qty,'amount'=>$clientTotal,'camyCost'=>$camyCost,'entrepreneurMargin'=>$margin,'clientPaymentMethod'=>'cod','clientPaymentStatus'=>'Collect on delivery','payoutAmount'=>$margin,'payoutStatus'=>$margin>0?'pending_delivery':'not_required','date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>true,'entrepreneur'=>$entrepreneur['name'],'entrepreneurId'=>$member,'source'=>'shop','orderMode'=>'dropship','createdBy'=>'CAMY Admin','createdByUserId'=>$admin['id']];
+        $state['orders'][]=$order;
+        $pdo->prepare("INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status) VALUES(?,?,?,?, 'Processing')")->execute([$id,$groupId,$member,$clientTotal]);
+        $pdo->prepare("INSERT INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount) VALUES(?,?,?,?,?,?)")->execute([$id,$member,'cod',$clientTotal,$camyCost,$margin]);
+        $pdo->prepare('INSERT INTO shop_order_items(order_id,product_code,quantity,sell_price) VALUES(?,?,?,?)')->execute([$id,(string)($product['code']??$product['id']),$qty,$sell]);
+        market_save($pdo,$state);$pdo->commit();unset($order['trackingToken']);response(['order'=>$order,'state'=>$state],201);
+    }
     if($path==='/marketplace/dropship-orders'&&$method==='POST'){
         $user=current_user($pdo);
         if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);

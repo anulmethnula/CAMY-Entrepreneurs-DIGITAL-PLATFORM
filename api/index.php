@@ -121,7 +121,7 @@ try {
     if($sessionUser && $sessionUser['role']==='manager' && $sessionUser['permissions_json']!==null){
         $permissions=json_decode($sessionUser['permissions_json'],true) ?: [];
         $required=null;
-        if(str_starts_with($path,'/admin/customer-reviews'))$required='admin-orders';
+        if(str_starts_with($path,'/admin/customer-reviews')||$path==='/admin/manual-order')$required='admin-orders';
         elseif($path==='/admin/product-media')$required='admin-products';
         elseif(str_starts_with($path,'/admin/users'))$required='user-access';
         elseif(str_starts_with($path,'/admin/registrations') || str_starts_with($path,'/admin/entrepreneurs'))$required='entrepreneurs';
