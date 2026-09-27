@@ -401,3 +401,22 @@ input::placeholder,textarea::placeholder { color:#97a6b2; }
 .content-page { animation:camy-page-in .24s ease both; }.modal-v2 { animation:camy-modal-in .2s ease both; }
 .card,.stock-product-card,.metric-v2,.catalogue-category { transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease; }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
+
+/* Product detail completeness and small-screen visibility */
+.product-detail-meta,.shop-detail-meta { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin:18px 0; }
+.product-detail-meta span,.shop-detail-meta span { min-width:0; padding:11px 12px; border:1px solid #d8e5ee; border-radius:11px; color:#173f5f; background:#f7fafc; font-size:12px; overflow-wrap:anywhere; }
+.product-detail-meta b,.shop-detail-meta b { display:block; margin-bottom:4px; color:#6b8294; font-size:9px; letter-spacing:.06em; text-transform:uppercase; }
+.product-features-title { margin:18px 0 8px; color:#173f5f; font-size:14px; }
+.catalogue-detail-meta { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:16px 0; }
+.catalogue-detail-meta span { padding:10px 11px; border:1px solid #d8e6ee; border-radius:10px; color:#274f69; background:#f7fafc; font-size:12px; overflow-wrap:anywhere; }
+.catalogue-detail-meta span:last-child { grid-column:1/-1; }
+.catalogue-detail-meta b { display:block; margin-bottom:3px; color:#6b8798; font-size:9px; letter-spacing:.06em; text-transform:uppercase; }
+.catalogue-detail-layer h3 { margin:16px 0 0; color:#173f5f; font-size:14px; }
+
+@media (max-width:700px) {
+  .catalogue-detail-layer { padding:0; align-items:start; }
+  .catalogue-detail-layer > article { width:100%; max-height:100dvh; min-height:100dvh; grid-template-columns:1fr; gap:16px; padding:54px 20px 28px; border-radius:0; }
+  .catalogue-detail-layer img { height:190px; }
+  .catalogue-detail-close { position:fixed; top:10px; right:10px; }
+  .product-detail-meta,.shop-detail-meta { grid-template-columns:1fr; }
+}
