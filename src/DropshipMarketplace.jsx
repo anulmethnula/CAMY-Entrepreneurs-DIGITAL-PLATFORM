@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowRight, BadgeDollarSign, CheckCircle2, CircleDollarSign, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, ShieldCheck, ShoppingCart, Truck, X } from 'lucide-react'
+import { ArrowRight, BadgeDollarSign, CheckCircle2, CircleDollarSign, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Truck, X } from 'lucide-react'
 import { api } from './api'
 
 const money = value => `Rs. ${Number(value || 0).toLocaleString('en-LK', { maximumFractionDigits: 2 })}`
@@ -43,6 +43,12 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   const [client, setClient] = useState(blankClient)
   const [busy, setBusy] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [category, setCategory] = useState('All products')
+  const [catalogueQuery, setCatalogueQuery] = useState('')
+  const [detailProduct, setDetailProduct] = useState(null)
+
+  const categories = useMemo(() => ['All products', ...Array.from(new Set(products.map(product => product.category).filter(Boolean)))], [products])
+  const visibleProducts = useMemo(() => products.filter(product => (category === 'All products' || product.category === category) && `${product.name} ${product.code||''} ${product.category||''} ${product.description||''}`.toLowerCase().includes(catalogueQuery.trim().toLowerCase())), [products, category, catalogueQuery])
 
   const selected = useMemo(() => cart.map(item => {
     const product = products.find(product => String(product.id) === String(item.productId))
@@ -107,27 +113,28 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
 
     <div className="stock-buy-layout">
       <section>
-        <div className="stock-catalogue-title"><div><small>CAMY CATALOGUE</small><h2>Products you can sell</h2></div><span><PackageCheck size={16}/> {products.filter(product => Number(product.stock) > 0).length} available</span></div>
-        <div className="stock-product-grid">{products.map(product => {
+        <div className="stock-catalogue-title"><div><small>CAMY CATALOGUE</small><h2>Products you can sell</h2></div><span><PackageCheck size={16}/> {visibleProducts.filter(product => Number(product.stock) > 0).length} available</span></div>
+        <div className="catalogue-browser"><label><Search/><input value={catalogueQuery} onChange={event=>setCatalogueQuery(event.target.value)} placeholder="Search product, model or category"/></label><div>{categories.map(item=><button type="button" className={category===item?'active':''} onClick={()=>setCategory(item)} key={item}>{item}</button>)}</div></div>
+        <div className="stock-product-grid">{visibleProducts.map(product => {
           const inCart = cart.find(item => String(item.productId) === String(product.id))
           const available = Number(product.stock) > 0
           return <article className="stock-product-card" key={product.id}>
-            <button className="stock-product-image" type="button"><img src={product.image} alt={product.name}/><span>{product.category}</span></button>
+            <button className="stock-product-image" type="button" onClick={()=>setDetailProduct(product)}><img src={product.image} alt={product.name}/><span>{product.category}</span></button>
             <div className="stock-product-copy"><small>{product.code || product.category}</small><h3>{product.name}</h3><p>{product.description || 'CAMY product available for entrepreneur sales.'}</p>
               <div className="stock-product-meta"><span className={available ? 'available' : 'unavailable'}><i/> {available ? 'Available' : 'Unavailable'}</span><strong>{money(product.price)}</strong></div>
-              <button className="market-primary" disabled={!available} onClick={() => add(product)}>{inCart ? `Add another (${inCart.qty})` : 'Add to client order'} <ArrowRight size={15}/></button>
+              <div className="stock-product-actions"><button className="stock-details" type="button" onClick={()=>setDetailProduct(product)}>View details</button><button className="market-primary" disabled={!available} onClick={() => add(product)}>{inCart ? `Add another (${inCart.qty})` : 'Add to order'} <ArrowRight size={15}/></button></div>
             </div>
           </article>
-        })}</div>
+        })}</div>{!visibleProducts.length&&<div className="catalogue-no-results">No products found. Try another category or search term.</div>}
       </section>
 
       <aside className="market-checkout stock-request-card">
         <header><span><ShoppingCart size={19}/></span><div><small>COD CLIENT ORDER</small><h2>Order summary</h2></div></header>
-        {selected.length ? selected.map(item => <div className="market-line" key={item.productId}>
-          <span><strong>{item.product.name}</strong><small>CAMY: {money(item.product.price)}</small></span>
-          <input aria-label={`Quantity for ${item.product.name}`} type="number" min="1" value={item.qty} onChange={event => update(item.productId, { qty: Math.max(1, Number(event.target.value) || 1) })}/>
-          <button onClick={() => setCart(old => old.filter(entry => String(entry.productId) !== String(item.productId)))} aria-label="Remove"><X size={15}/></button>
-          <label style={{gridColumn:'1 / -1'}}>Your client selling price<input type="number" min={item.product.price} step="0.01" value={item.sellPrice} onChange={event => update(item.productId, { sellPrice: Number(event.target.value) || 0 })}/></label>
+        {selected.length ? selected.map(item => <div className="market-line dropship-order-line" key={item.productId}>
+          <div className="dropship-line-product"><strong>{item.product.name}</strong><small>CAMY cost: {money(item.product.price)} each</small></div>
+          <label className="dropship-quantity">Quantity<span className="dropship-stepper"><button type="button" aria-label={`Reduce quantity for ${item.product.name}`} disabled={Number(item.qty)<=1} onClick={()=>update(item.productId,{qty:Math.max(1,Number(item.qty)-1)})}>−</button><input aria-label={`Quantity for ${item.product.name}`} type="number" min="1" value={item.qty} onChange={event => update(item.productId, { qty: Math.max(1, Number(event.target.value) || 1) })}/><button type="button" aria-label={`Increase quantity for ${item.product.name}`} onClick={()=>update(item.productId,{qty:Number(item.qty)+1})}>+</button></span></label>
+          <label className="dropship-selling-price">Your client price per item<span className="dropship-price-input"><b>Rs.</b><input type="number" min={item.product.price} step="0.01" value={item.sellPrice} onChange={event => update(item.productId, { sellPrice: Number(event.target.value) || 0 })}/></span><small className="dropship-price-help">Your margin: <strong>{money(Math.max(0,(Number(item.sellPrice)-Number(item.product.price))*Number(item.qty)))}</strong></small></label>
+          <button className="dropship-remove" onClick={() => setCart(old => old.filter(entry => String(entry.productId) !== String(item.productId)))} aria-label={`Remove ${item.product.name}`}><X size={15}/><span>Remove</span></button>
         </div>) : <div className="stock-cart-empty"><ShoppingCart size={23}/><p>Add products for your client's order.</p></div>}
 
         <div className="customer-fields"><h3>Client delivery details</h3>
@@ -148,6 +155,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
       </aside>
     </div>
 
+    {detailProduct&&<div className="catalogue-detail-layer" onMouseDown={()=>setDetailProduct(null)}><article onMouseDown={event=>event.stopPropagation()}><button type="button" className="catalogue-detail-close" onClick={()=>setDetailProduct(null)} aria-label="Close product details"><X/></button><img src={detailProduct.image} alt={detailProduct.name}/><div><small>{detailProduct.category} · {detailProduct.code||'CAMY product'}</small><h2>{detailProduct.name}</h2><strong>{money(detailProduct.price)}</strong><p>{detailProduct.description||'CAMY product available for entrepreneur sales.'}</p><ul>{(detailProduct.specs||['CAMY quality assured','Available through CAMY']).map(spec=><li key={spec}>{spec}</li>)}</ul><button className="market-primary" disabled={Number(detailProduct.stock)<=0} onClick={()=>{add(detailProduct);setDetailProduct(null)}}>{Number(detailProduct.stock)>0?'Add to client order':'Currently unavailable'} <ArrowRight/></button></div></article></div>}
     <section className="market-history stock-request-history">
       <div><small>DELIVERY UPDATES</small><h2>My CAMY orders</h2><button className="market-primary" onClick={refresh} disabled={refreshing}><RefreshCw size={15}/> {refreshing ? 'Refreshing…' : 'Refresh'}</button></div>
       {orders.length ? [...orders].sort((a,b)=>String(b.createdAt||b.date).localeCompare(String(a.createdAt||a.date))).map(order => <article className="stock-tracker-entry dropship-money-entry" key={order.id}>

@@ -5,7 +5,7 @@ import { api } from './api'
 import { PortalOverlay } from './Dialog'
 import { CustomerAccount } from './CustomerAccount'
 import { CustomerTracker } from './Workflow'
-import camyLogo from '../camylogo.png'
+import camyLogo from '../camy-logo-official.png'
 import { accountTabs, CustomerAddressBook, CustomerFeedback, CustomerOverview, CustomerPurchaseHistory } from './CustomerFeatures'
 import { ProductReviews } from './ProductReviews'
 

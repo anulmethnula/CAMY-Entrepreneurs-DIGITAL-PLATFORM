@@ -63,6 +63,10 @@ function initialise_database(PDO $pdo): void
     foreach(['stock_supply_requests','shop_orders'] as $table){$column=$pdo->query("SHOW COLUMNS FROM $table LIKE 'status'")->fetch();if(!str_contains($column['Type'],'varchar'))$pdo->exec("ALTER TABLE $table MODIFY status VARCHAR(40) NOT NULL DEFAULT 'Pending'");}
     if(!$pdo->query("SHOW COLUMNS FROM shop_orders LIKE 'delivered_at'")->fetch())$pdo->exec('ALTER TABLE shop_orders ADD COLUMN delivered_at DATETIME NULL AFTER status');
     $pdo->exec("UPDATE shop_orders SET delivered_at=created_at WHERE status='Delivered' AND delivered_at IS NULL");
+    if(!$pdo->query("SHOW COLUMNS FROM entrepreneur_payouts LIKE 'payout_due_at'")->fetch())$pdo->exec('ALTER TABLE entrepreneur_payouts ADD COLUMN payout_due_at DATETIME NULL AFTER collected_at');
+    $payoutDueIndex=$pdo->prepare("SHOW INDEX FROM entrepreneur_payouts WHERE Key_name=?");$payoutDueIndex->execute(['payout_due_status']);
+    if(!$payoutDueIndex->fetch())$pdo->exec('ALTER TABLE entrepreneur_payouts ADD INDEX payout_due_status (payout_status,payout_due_at)');
+    $pdo->exec("UPDATE entrepreneur_payouts SET payout_due_at=DATE_ADD(COALESCE(collected_at,created_at),INTERVAL 7 DAY) WHERE payout_status='pending_transfer' AND payout_amount>0 AND payout_due_at IS NULL");
 
     // Operational indexes are also applied to existing local databases. These keep
     // entrepreneur/state refreshes and the 90-day activity check responsive as data grows.

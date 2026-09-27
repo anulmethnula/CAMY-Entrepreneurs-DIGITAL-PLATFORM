@@ -19,9 +19,9 @@ function market_state(PDO $pdo, bool $lock = false): array {
     if(!isset($state['settlements'])||!is_array($state['settlements'])){$state['settlements']=[];$changed=true;}
     // Hydrate the dropship payout ledger in bulk. This avoids the previous N+1
     // INSERT + SELECT pair for every order on every 10-second dashboard refresh.
-    $payoutRows=$pdo->query("SELECT order_id,client_payment_method,payout_status,payout_reference,payout_receipt_path,paid_at,collection_status FROM entrepreneur_payouts")->fetchAll();
+    $payoutRows=$pdo->query("SELECT order_id,client_payment_method,payout_status,payout_reference,payout_receipt_path,paid_at,payout_due_at,collection_status FROM entrepreneur_payouts")->fetchAll();
     $payoutByOrder=[];foreach($payoutRows as $row)$payoutByOrder[(string)$row['order_id']]=$row;
-    $insertPayout=$pdo->prepare("INSERT IGNORE INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount,collection_status,payout_status,collected_at) VALUES(?,?,?,?,?,?,?,?,?)");
+    $insertPayout=$pdo->prepare("INSERT IGNORE INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount,collection_status,payout_status,collected_at,payout_due_at) VALUES(?,?,?,?,?,?,?,?,?,?)");
     foreach($state['orders'] ?? [] as &$ledgerOrder){
         if(($ledgerOrder['orderMode'] ?? '')!=='dropship')continue;
         $orderId=(string)$ledgerOrder['id'];$clientTotal=round((float)($ledgerOrder['amount'] ?? 0),2);$camyCost=round((float)($ledgerOrder['camyCost'] ?? $clientTotal),2);$margin=round((float)($ledgerOrder['entrepreneurMargin'] ?? max(0,$clientTotal-$camyCost)),2);
@@ -30,14 +30,16 @@ function market_state(PDO $pdo, bool $lock = false): array {
             // New active orders are COD-only. A historical bank value is preserved only
             // when an older record already contains it.
             $method=(($ledgerOrder['clientPaymentMethod'] ?? 'cod')==='bank')?'bank':'cod';$defaultPayout=$delivered?($margin>0?'pending_transfer':'cancelled'):'pending_delivery';
-            $insertPayout->execute([$orderId,$ledgerOrder['entrepreneurId'],$method,$clientTotal,$camyCost,$margin,$delivered?'collected':'pending',$defaultPayout,$delivered?date('Y-m-d H:i:s',strtotime((string)($ledgerOrder['deliveredAt'] ?? 'now'))):null]);
-            $ledgerRow=['client_payment_method'=>$method,'payout_status'=>$defaultPayout,'payout_reference'=>null,'payout_receipt_path'=>null,'paid_at'=>null,'collection_status'=>$delivered?'collected':'pending'];$payoutByOrder[$orderId]=$ledgerRow;
+            $collectedAt=$delivered?date('Y-m-d H:i:s',strtotime((string)($ledgerOrder['deliveredAt'] ?? 'now'))):null;
+            $insertPayout->execute([$orderId,$ledgerOrder['entrepreneurId'],$method,$clientTotal,$camyCost,$margin,$delivered?'collected':'pending',$defaultPayout,$collectedAt,$delivered&&$margin>0?date('Y-m-d H:i:s',strtotime('+7 days',strtotime((string)($ledgerOrder['deliveredAt'] ?? 'now')))):null]);
+            $ledgerRow=['client_payment_method'=>$method,'payout_status'=>$defaultPayout,'payout_reference'=>null,'payout_receipt_path'=>null,'paid_at'=>null,'payout_due_at'=>$delivered?date('Y-m-d H:i:s',strtotime('+7 days',strtotime((string)($ledgerOrder['deliveredAt'] ?? 'now')))):null,'collection_status'=>$delivered?'collected':'pending'];$payoutByOrder[$orderId]=$ledgerRow;
         }
         $ledgerOrder['payoutAmount']=$margin;$ledgerOrder['payoutStatus']=$ledgerRow['payout_status']==='cancelled'&&$margin<=0?'not_required':$ledgerRow['payout_status'];
         $ledgerOrder['clientPaymentStatus']=$ledgerRow['collection_status']==='collected'?'Collected by CAMY':'Collect on delivery';
         if($ledgerRow['payout_reference'])$ledgerOrder['payoutReference']=$ledgerRow['payout_reference'];
         if($ledgerRow['payout_receipt_path'])$ledgerOrder['payoutReceipt']='/api/marketplace/orders/'.$orderId.'/payout-receipt';
         if($ledgerRow['paid_at'])$ledgerOrder['payoutPaidAt']=date(DATE_ATOM,strtotime((string)$ledgerRow['paid_at']));
+        if($ledgerRow['payout_due_at'])$ledgerOrder['payoutDueAt']=date(DATE_ATOM,strtotime((string)$ledgerRow['payout_due_at']));
     }unset($ledgerOrder);
     if(empty($state['products'])&&empty($state['catalogue_seeded'])){
         $rows=$pdo->query("SELECT id,code,name,category,description,price,stock,image FROM products WHERE status='active' ORDER BY id")->fetchAll();
@@ -303,7 +305,8 @@ function market_route(PDO $pdo, string $path, string $method): void {
                 $margin=round((float)($state['orders'][$index]['entrepreneurMargin'] ?? 0),2);
                 $state['orders'][$index]['clientPaymentStatus']='Collected by CAMY';
                 $state['orders'][$index]['payoutStatus']=$margin>0?'pending_transfer':'not_required';
-                $pdo->prepare("UPDATE entrepreneur_payouts SET collection_status='collected',collected_at=COALESCE(collected_at,NOW()),payout_status=IF(payout_amount>0 AND payout_status<>'paid','pending_transfer',IF(payout_status='paid','paid','cancelled')) WHERE order_id=?")->execute([$matches[1]]);
+                if($margin>0)$state['orders'][$index]['payoutDueAt']=date(DATE_ATOM,strtotime('+7 days'));
+                $pdo->prepare("UPDATE entrepreneur_payouts SET collection_status='collected',collected_at=COALESCE(collected_at,NOW()),payout_due_at=IF(payout_amount>0,COALESCE(payout_due_at,DATE_ADD(COALESCE(collected_at,NOW()),INTERVAL 7 DAY)),payout_due_at),payout_status=IF(payout_amount>0 AND payout_status<>'paid','pending_transfer',IF(payout_status='paid','paid','cancelled')) WHERE order_id=?")->execute([$matches[1]]);
             }elseif(in_array($status,['Returned','Rejected','Cancelled'],true)){
                 $paid=$pdo->prepare("SELECT payout_status FROM entrepreneur_payouts WHERE order_id=?");$paid->execute([$matches[1]]);$paidStatus=(string)($paid->fetchColumn() ?: '');
                 $nextPayout=$paidStatus==='paid'?'reversal_required':'cancelled';

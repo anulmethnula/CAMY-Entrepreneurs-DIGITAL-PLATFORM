@@ -93,8 +93,18 @@ npm.cmd run dev
 Development addresses:
 
 - Web app: `http://127.0.0.1:8080`
+- Public entrepreneur registration: `http://127.0.0.1:8080/register`
 - PHP API: `http://127.0.0.1:8000`
 - API health through Vite: `http://127.0.0.1:8080/api/health`
+
+For a deployed site, set `VITE_PUBLIC_URL` to the public CAMY origin before building. The admin registration QR code and copied registration link use this value, for example:
+
+```powershell
+$env:VITE_PUBLIC_URL="https://camy.example.com"
+npm.cmd run build
+```
+
+Do not share a QR containing `localhost` or `127.0.0.1`; those addresses only work on the computer running CAMY.
 
 `npm run dev` checks MySQL, creates `camy_new` when missing, applies the current schema/migrations and then starts PHP + Vite.
 

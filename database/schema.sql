@@ -181,11 +181,13 @@ CREATE TABLE IF NOT EXISTS entrepreneur_payouts (
   payout_reference VARCHAR(120) NULL,
   payout_receipt_path VARCHAR(255) NULL,
   collected_at DATETIME NULL,
+  payout_due_at DATETIME NULL,
   paid_at DATETIME NULL,
   recorded_by BIGINT UNSIGNED NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX payout_member_status (entrepreneur_member_id,payout_status),
+  INDEX payout_due_status (payout_status,payout_due_at),
   INDEX payout_paid_at (paid_at),
   FOREIGN KEY (order_id) REFERENCES shop_orders(id) ON DELETE CASCADE,
   FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
@@ -2152,6 +2152,24 @@ input:focus, select:focus, textarea:focus {
 .admin-shell .admin-hero > div > span { color: #9bd3fa; border-color: rgba(132,200,247,.32); background: rgba(80,159,214,.1); }
 
 .admin-shell .metric-row { gap: 15px; margin: 22px 0; }
+.overview-finance-summary { margin:0 0 20px; padding:20px; border:1px solid #d8e6ef; border-radius:20px; background:linear-gradient(145deg,#fff,#f5fafe); box-shadow:0 12px 30px rgba(15,54,82,.06); }
+.overview-finance-summary > header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:15px; }
+.overview-finance-summary header span { color:#287bb3; font-size:9px; font-weight:850; letter-spacing:.1em; }
+.overview-finance-summary header h2 { margin:4px 0 0; color:#173a56; font-size:20px; }
+.overview-finance-summary header button { border:0; color:#216a9a; background:transparent; display:flex; align-items:center; gap:6px; font-size:11px; font-weight:800; }
+.overview-finance-summary header button svg { width:15px; }
+.overview-finance-summary > div { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.overview-finance-summary article { min-height:118px; padding:16px; border:1px solid #dce8f0; border-radius:15px; background:#fff; }
+.overview-finance-summary article > span { width:35px; height:35px; border-radius:11px; color:#287bb3; background:#eaf5fc; display:grid; place-items:center; }
+.overview-finance-summary article.camy-profit > span { color:#147c59; background:#eaf8f1; }
+.overview-finance-summary article.entrepreneur-commission > span { color:#8260be; background:#f1edfc; }
+.overview-finance-summary article svg { width:17px; }
+.overview-finance-summary article small,.overview-finance-summary article strong,.overview-finance-summary article p { display:block; }
+.overview-finance-summary article small { margin-top:12px; color:#718798; font-size:8px; font-weight:850; letter-spacing:.07em; }
+.overview-finance-summary article strong { margin-top:5px; color:#153b57; font-size:20px; letter-spacing:-.03em; }
+.overview-finance-summary article.camy-profit strong { color:#147c59; }
+.overview-finance-summary article p { margin:5px 0 0; color:#738899; font-size:9px; line-height:1.45; }
+@media (max-width:760px) { .overview-finance-summary { padding:16px; }.overview-finance-summary > header { align-items:flex-start; flex-direction:column; }.overview-finance-summary > div { grid-template-columns:1fr; }.overview-finance-summary article { min-height:0; } }
 .admin-shell .metric-v2 {
   position: relative;
   min-height: 140px;
@@ -2783,6 +2801,14 @@ input:focus, select:focus, textarea:focus {
 .collection-state-v3 { margin-top:10px; padding:10px 13px; border-radius:11px; color:#2b5c76; background:#eaf4fa; display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:10px; }
 .collection-state-v3 span { display:flex; align-items:center; gap:6px; }
 .collection-state-v3 svg { width:15px; color:#16906a; }
+.payout-deadline-v3 { margin-top:10px; padding:11px 13px; border:1px solid #f0d79d; border-radius:11px; color:#75551e; background:#fff9e9; display:flex; align-items:center; gap:9px; }
+.payout-deadline-v3 > svg { width:18px; flex:0 0 auto; color:#bd7b15; }
+.payout-deadline-v3 strong,.payout-deadline-v3 small { display:block; }
+.payout-deadline-v3 strong { font-size:10px; }
+.payout-deadline-v3 small { margin-top:2px; color:#8c744a; font-size:9px; }
+.payout-deadline-v3.overdue { border-color:#f0b8ae; color:#963d33; background:#fff2ef; }
+.payout-deadline-v3.overdue > svg { color:#d75d4c; }
+.payout-deadline-v3.overdue small { color:#9b655d; }
 .payout-bank-blocker-v3 { margin-top:12px; padding:14px; border:1px solid #f0c9c1; border-radius:14px; background:#fff4f1; display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:12px; }
 .payout-bank-blocker-v3 > span { width:40px; height:40px; border-radius:12px; color:#bd5145; background:#ffe7e2; display:grid; place-items:center; }
 .payout-bank-blocker-v3 > span svg { width:19px; }
@@ -2830,7 +2856,18 @@ input:focus, select:focus, textarea:focus {
 .mini-progress-v3 span.done { color:#15795a; }
 .mini-progress-v3 span.done i { color:#fff; background:#22a174; }
 .mini-progress-v3 svg { width:12px; }
-.fulfilment-panel-v3 > .workflow-panel { padding:17px 0 0; }
+.fulfilment-panel-v3 > .workflow-panel {
+  margin:0;
+  padding:17px 0 0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.fulfilment-panel-v3 > .workflow-panel > h3 { margin:0 0 7px; }
+.fulfilment-panel-v3 > .workflow-panel > p { margin:8px 0; }
+.fulfilment-panel-v3 > .workflow-panel > .workflow-note { margin:14px 0 0; }
+.fulfilment-panel-v3 > .workflow-panel > .order-return-panel { margin:18px 0 0; }
 .fulfilment-panel-v3 .workflow-actions { margin-top:14px; }
 .order-terminal-v3 { margin:0 24px 24px; padding:13px; border:1px solid #f0c6c1; border-radius:13px; color:#9e443d; background:#fff1ef; font-size:10px; font-weight:750; }
 @media (max-width:900px) { .order-glance-v3 { grid-template-columns:1fr 1fr; }.order-glance-v3 article:last-child { grid-column:1/-1; }.ordered-products-v3 article { grid-template-columns:1fr; }.ordered-products-v3 dl { grid-template-columns:repeat(4,1fr); }.line-total-v3 { text-align:left; }.payout-form-v3 { grid-template-columns:1fr; }.payout-form-v3 > .btn { grid-column:1; justify-self:stretch; width:100%; }.payout-bank-blocker-v3 { grid-template-columns:42px 1fr; }.payout-bank-blocker-v3 .btn { grid-column:1/-1; width:100%; }.payout-bank-ready-v3 { grid-template-columns:1fr; }.payout-bank-ready-v3 small { text-align:left; }.money-flow-v3 { grid-template-columns:1fr; }.money-flow-v3 > svg { transform:rotate(90deg); }.money-plus { padding:0; } }
@@ -2883,9 +2920,56 @@ input:focus, select:focus, textarea:focus {
 .commission-order svg { width:18px; }
 .commission-amount > strong { color:#16805c!important; font-size:15px!important; }
 .commission-amount .status-pill { margin-top:6px; }
+.commission-amount > p.overdue { color:#c74b3d; font-weight:800; }
 .commission-open { min-height:42px; padding:0 13px; border:1px solid #c7dceb; border-radius:11px; color:#226c9d; background:#eef7fc; display:flex; align-items:center; justify-content:center; gap:7px; font-size:9px; font-weight:800; white-space:nowrap; }
 .commission-row.ready-to-pay .commission-open { border-color:#ff7059; color:#fff; background:linear-gradient(135deg,#ff624e,#ff8c6a); box-shadow:0 7px 16px rgba(255,99,77,.18); }
 .commission-open svg { width:14px; }
+
+/* Commission register: keep every financial field in a predictable column and
+   prevent the order heading/identifier from ever collapsing into one line. */
+.admin-shell .commission-workspace > header {
+  grid-template-columns: minmax(330px, .82fr) minmax(0, 1.75fr);
+  gap: 16px;
+}
+.admin-shell .commission-workspace > header > label { height: 54px; padding-inline: 16px; }
+.admin-shell .commission-workspace > header input { font-size: 13px; }
+.admin-shell .commission-workspace > header > div {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  overflow: visible;
+}
+.admin-shell .commission-workspace > header > div button {
+  min-height: 44px;
+  padding: 0 8px;
+  font-size: 10px;
+  text-align: center;
+}
+.admin-shell .commission-workspace > header > div button b { margin-left: 4px; }
+.admin-shell .commission-row {
+  min-height: 116px;
+  grid-template-columns: minmax(270px, 1.45fr) minmax(160px, .95fr) minmax(150px, .86fr) minmax(142px, .8fr) minmax(160px, .92fr) minmax(150px, auto);
+  gap: 16px;
+  padding: 16px 18px;
+}
+.admin-shell .commission-order { align-items: flex-start; gap: 13px; }
+.admin-shell .commission-order > span { width: 50px; height: 50px; border-radius:15px; }
+.admin-shell .commission-order > span svg { width: 21px; }
+.admin-shell .commission-order > div { min-width: 0; display: grid; gap: 3px; }
+.admin-shell .commission-order > div > small,
+.admin-shell .commission-order > div > strong,
+.admin-shell .commission-order > div > p { display: block; }
+.admin-shell .commission-row > div > small { font-size: 9px; }
+.admin-shell .commission-row > div > strong { font-size: 13px; }
+.admin-shell .commission-row > div > p { font-size: 10px; }
+.admin-shell .commission-order > div > strong { margin-top: 0; font-size: 15px; letter-spacing: .01em; }
+.admin-shell .commission-order > div > p { margin-top: 0; white-space: normal; line-height: 1.45; }
+.admin-shell .commission-amount > strong { font-size: 18px!important; }
+.admin-shell .commission-open { min-height: 48px; padding-inline: 16px; font-size: 11px; }
+@media (max-width: 1420px) {
+  .admin-shell .commission-workspace > header { grid-template-columns: 1fr; }
+  .admin-shell .commission-row { grid-template-columns: minmax(250px,1.35fr) minmax(145px,.9fr) minmax(135px,.8fr) minmax(125px,.72fr) minmax(150px,.85fr) auto; gap: 12px; }
+}
 @media (max-width:1120px) { .commission-kpis { grid-template-columns:repeat(2,1fr); }.commission-workspace > header { grid-template-columns:1fr; }.commission-workspace > header > div { overflow-x:auto; }.commission-row { grid-template-columns:1.2fr 1fr 1fr; }.commission-row > div:nth-child(4),.commission-row > div:nth-child(5),.commission-row > button { grid-row:2; }.commission-row > button { justify-self:end; } }
 @media (max-width:680px) { .commission-kpis { grid-template-columns:1fr; }.commission-alert { grid-template-columns:42px 1fr; }.commission-alert > button { grid-column:1/-1; }.commission-row { grid-template-columns:1fr 1fr; }.commission-order { grid-column:1/-1; }.commission-row > div:nth-child(4),.commission-row > div:nth-child(5),.commission-row > button { grid-row:auto; }.commission-row > button { width:100%; grid-column:1/-1; }.commission-workspace { padding:12px!important; } }
 
@@ -2908,6 +2992,130 @@ input:focus, select:focus, textarea:focus {
 .admin-order-table .view-order-btn{width:auto!important;min-width:82px;height:36px!important;padding:0 10px!important;border:1px solid #d6e3ec!important;border-radius:10px!important;background:#f7fbfe!important;color:#1f6eaa!important;display:inline-flex!important;align-items:center;justify-content:center;gap:6px}
 .admin-order-table .view-order-btn span{font-size:10px;font-weight:800}
 .admin-order-table .view-order-btn:hover{border-color:#a9cce4!important;background:#edf7fd!important}
+
+/* Admin orders table — readable financial and fulfilment summary */
+.admin-orders-page .admin-order-table .data-row{
+  grid-template-columns:minmax(175px,1.05fr) minmax(165px,1fr) minmax(195px,1.15fr) minmax(220px,1.35fr) minmax(145px,.85fr) minmax(155px,.9fr) minmax(105px,.65fr);
+  min-width:1160px;
+  min-height:108px;
+  gap:18px;
+  padding:16px 22px;
+}
+.admin-orders-page .admin-order-table .data-row.head{
+  min-height:58px;
+  padding-block:0;
+  color:#456985;
+  font-size:10px;
+  font-weight:850;
+}
+.admin-orders-page .admin-order-table .data-row.head > :nth-child(5),
+.admin-orders-page .admin-order-table .data-row > :nth-child(5){text-align:right}
+.admin-orders-page .admin-order-table .data-row.head > :nth-child(6),
+.admin-orders-page .admin-order-table .data-row.head > :nth-child(7),
+.admin-orders-page .admin-order-table .data-row > :nth-child(6),
+.admin-orders-page .admin-order-table .data-row > :nth-child(7){justify-self:center}
+.admin-orders-page .admin-order-table .order-id-cell{gap:12px}
+.admin-orders-page .admin-order-table .order-id-cell > i{width:44px;height:44px;border-radius:13px}
+.admin-orders-page .admin-order-table .order-id-cell svg{width:19px}
+.admin-orders-page .admin-order-table .order-id-cell > span{min-width:0}
+.admin-orders-page .admin-order-table .order-id-cell strong{font-size:14px;letter-spacing:.01em;white-space:nowrap}
+.admin-orders-page .admin-order-table .admin-order-person strong,
+.admin-orders-page .admin-order-table .admin-order-client strong,
+.admin-orders-page .admin-order-table .admin-order-delivery strong,
+.admin-orders-page .admin-order-table .admin-order-money strong{font-size:14px;line-height:1.35}
+.admin-orders-page .admin-order-table .data-row small{margin-top:5px;font-size:11px;line-height:1.45}
+.admin-orders-page .admin-order-table .admin-order-client em,
+.admin-orders-page .admin-order-table .admin-order-money em{margin-top:6px;font-size:11px;line-height:1.35}
+.admin-orders-page .admin-order-table .admin-order-delivery small{max-width:220px}
+.admin-orders-page .admin-order-table .admin-order-status{min-width:145px}
+.admin-orders-page .admin-order-table .admin-order-status > small{font-size:10px;line-height:1.4;white-space:nowrap}
+.admin-orders-page .admin-order-table .view-order-btn{min-width:106px;height:42px!important;padding:0 14px!important}
+.admin-orders-page .admin-order-table .view-order-btn span{font-size:11px}
+@media(max-width:1250px){
+  .admin-orders-page .admin-order-table .data-row{min-width:1120px;gap:15px;padding-inline:18px}
+}
+@media(max-width:700px){
+  .admin-orders-page .admin-order-table .data-row{min-width:1080px;min-height:100px;padding:14px 16px}
+  .admin-orders-page .admin-order-table .admin-order-person strong,
+  .admin-orders-page .admin-order-table .admin-order-client strong,
+  .admin-orders-page .admin-order-table .admin-order-delivery strong,
+  .admin-orders-page .admin-order-table .admin-order-money strong{font-size:13px}
+}
+
+/* Keep the admin order table fully visible — never require horizontal scrolling. */
+.admin-orders-page .admin-order-table{overflow:hidden!important}
+.admin-orders-page .admin-order-table .data-row{
+  width:100%;
+  min-width:0;
+  grid-template-columns:1.1fr .95fr 1.18fr 1.38fr .88fr .95fr .72fr;
+  gap:12px;
+  padding:15px 18px;
+}
+.admin-orders-page .admin-order-table .data-row>span{min-width:0}
+.admin-orders-page .admin-order-table .order-id-cell strong{white-space:normal;overflow-wrap:anywhere}
+.admin-orders-page .admin-order-table .admin-order-person strong,
+.admin-orders-page .admin-order-table .admin-order-client strong,
+.admin-orders-page .admin-order-table .admin-order-delivery strong,
+.admin-orders-page .admin-order-table .admin-order-money strong{font-size:13px}
+.admin-orders-page .admin-order-table .data-row small,
+.admin-orders-page .admin-order-table .admin-order-client em,
+.admin-orders-page .admin-order-table .admin-order-money em{font-size:10px}
+.admin-orders-page .admin-order-table .admin-order-delivery small{max-width:none}
+.admin-orders-page .admin-order-table .admin-order-status{min-width:0;text-align:center}
+.admin-orders-page .admin-order-table .admin-order-status > small{white-space:normal}
+.admin-orders-page .admin-order-table .view-order-btn{min-width:96px;padding:0 10px!important}
+@media(max-width:1050px){
+  .admin-orders-page .admin-order-table .data-row{grid-template-columns:1fr 1fr;gap:14px 24px;padding:18px 20px}
+  .admin-orders-page .admin-order-table .data-row.head{display:none}
+  .admin-orders-page .admin-order-table .order-id-cell{grid-column:1}
+  .admin-orders-page .admin-order-table .admin-order-person{grid-column:2}
+  .admin-orders-page .admin-order-table .admin-order-client{grid-column:1}
+  .admin-orders-page .admin-order-table .admin-order-delivery{grid-column:2}
+  .admin-orders-page .admin-order-table .admin-order-money{grid-column:1;text-align:left!important}
+  .admin-orders-page .admin-order-table .order-row>:nth-child(6){grid-column:2;justify-self:start!important}
+  .admin-orders-page .admin-order-table .view-order-btn{grid-column:1 / -1;justify-self:stretch!important;width:100%!important}
+}
+@media(max-width:620px){
+  .admin-orders-page .admin-order-table .data-row{grid-template-columns:1fr;gap:12px;padding:17px}
+  .admin-orders-page .admin-order-table .order-id-cell,.admin-orders-page .admin-order-table .admin-order-person,.admin-orders-page .admin-order-table .admin-order-client,.admin-orders-page .admin-order-table .admin-order-delivery,.admin-orders-page .admin-order-table .admin-order-money,.admin-orders-page .admin-order-table .order-row>:nth-child(6),.admin-orders-page .admin-order-table .view-order-btn{grid-column:1!important}
+  .admin-orders-page .admin-order-table .order-row>:nth-child(6){justify-self:start!important;text-align:left}
+}
+
+/* Premium, high-legibility treatment for the live orders workspace. */
+.admin-orders-page .admin-order-table{font-family:'Plus Jakarta Sans','Segoe UI',sans-serif;border-color:#cfe0eb!important;background:#fff;box-shadow:0 18px 38px rgba(19,61,91,.08)}
+.admin-orders-page .admin-order-table .data-row{min-height:120px;padding-block:18px;border-top-color:#e4edf3}
+.admin-orders-page .admin-order-table .data-row.head{min-height:64px;color:#315f82;background:linear-gradient(105deg,#edf7fd,#e5f1f9);font-size:11px;letter-spacing:.075em}
+.admin-orders-page .admin-order-table .order-row{background:linear-gradient(90deg,#fff,#fcfeff)}
+.admin-orders-page .admin-order-table .order-row:nth-child(odd){background:linear-gradient(90deg,#fafdff,#fff)}
+.admin-orders-page .admin-order-table .order-row:hover{transform:translateY(-2px) scale(1.001);background:#f2f9fe;box-shadow:0 14px 30px rgba(26,85,122,.11)}
+.admin-orders-page .admin-order-table .order-id-cell{gap:14px}
+.admin-orders-page .admin-order-table .order-id-cell > i{width:50px;height:50px;border-radius:15px}
+.admin-orders-page .admin-order-table .order-id-cell svg{width:21px;height:21px}
+.admin-orders-page .admin-order-table .order-id-cell strong{font-size:16px;font-weight:800;line-height:1.35;letter-spacing:-.015em}
+.admin-orders-page .admin-order-table .admin-order-person strong,
+.admin-orders-page .admin-order-table .admin-order-client strong,
+.admin-orders-page .admin-order-table .admin-order-delivery strong,
+.admin-orders-page .admin-order-table .admin-order-money strong{font-size:15px;font-weight:800;line-height:1.4;letter-spacing:-.015em}
+.admin-orders-page .admin-order-table .admin-order-money strong{font-variant-numeric:tabular-nums;color:#123f62}
+.admin-orders-page .admin-order-table .data-row small{margin-top:6px;color:#6e879b;font-size:12px;font-weight:500;line-height:1.45}
+.admin-orders-page .admin-order-table .admin-order-client em,
+.admin-orders-page .admin-order-table .admin-order-money em{margin-top:7px;font-size:12px;font-weight:700;line-height:1.4}
+.admin-orders-page .admin-order-table .admin-order-client small svg,
+.admin-orders-page .admin-order-table .admin-order-delivery small svg{width:14px;height:14px}
+.admin-orders-page .admin-order-table .status-pill{min-height:34px;padding:0 13px;border:1px solid rgba(33,112,159,.12);font-size:11px;font-weight:800;box-shadow:0 3px 8px rgba(20,77,113,.04)}
+.admin-orders-page .admin-order-table .status-pill i{width:7px;height:7px}
+.admin-orders-page .admin-order-table .admin-order-status > small{margin-top:8px;color:#58738b;font-size:11px;font-weight:650}
+.admin-orders-page .admin-order-table .view-order-btn{min-width:112px;height:46px!important;border-color:#bcd9eb!important;border-radius:13px!important;color:#14699d!important;background:linear-gradient(145deg,#f6fcff,#eaf6fd)!important;font-size:12px;box-shadow:0 5px 13px rgba(28,111,159,.07)}
+.admin-orders-page .admin-order-table .view-order-btn span{font-size:12px;font-weight:800}.admin-orders-page .admin-order-table .view-order-btn svg{width:17px;height:17px}
+@media(max-width:1050px){.admin-orders-page .admin-order-table .data-row{min-height:0}.admin-orders-page .admin-order-table .data-row small,.admin-orders-page .admin-order-table .admin-order-client em,.admin-orders-page .admin-order-table .admin-order-money em{font-size:12px}}
+@media(max-width:620px){.admin-orders-page .admin-order-table .order-id-cell strong{font-size:16px}.admin-orders-page .admin-order-table .admin-order-person strong,.admin-orders-page .admin-order-table .admin-order-client strong,.admin-orders-page .admin-order-table .admin-order-delivery strong,.admin-orders-page .admin-order-table .admin-order-money strong{font-size:15px}}
+
+/* Finance-report explanation */
+.report-finance-note{margin:0 0 18px;padding:17px 19px;border:1px solid #c9e1d4;border-radius:18px;color:#255a48;background:linear-gradient(120deg,#f1faf5,#fbfffd);display:flex;align-items:center;gap:13px;box-shadow:0 10px 25px rgba(20,110,76,.055)}
+.report-finance-note>span{width:44px;height:44px;flex:0 0 auto;border-radius:13px;color:#fff;background:linear-gradient(135deg,#157a58,#38af82);display:grid;place-items:center}
+.report-finance-note svg{width:20px}.report-finance-note small,.report-finance-note strong,.report-finance-note p{display:block}
+.report-finance-note small{color:#1d8a64;font-size:9px;font-weight:850;letter-spacing:.09em}.report-finance-note strong{margin-top:3px;font-size:14px}.report-finance-note p{margin:4px 0 0;color:#68867a;font-size:11px}
+@media(max-width:620px){.report-finance-note{align-items:flex-start}.report-finance-note p{line-height:1.5}}
 .order-client-meta-v3{margin:12px 24px 0;padding:13px 16px;border:1px solid #dce7ef;border-radius:15px;background:#f8fbfd;display:grid!important;grid-template-columns:180px 180px minmax(240px,1fr);gap:10px}
 .order-client-meta-v3>span{min-width:0;padding:10px 12px;border-radius:11px;background:#fff;border:1px solid #e6edf2}
 .order-client-meta-v3 small,.order-client-meta-v3 strong{display:block}
