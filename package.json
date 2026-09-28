@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
+    "exceljs": "^4.4.0",
     "lucide-react": "latest",
     "qrcode.react": "^4.2.0",
     "react": "latest",

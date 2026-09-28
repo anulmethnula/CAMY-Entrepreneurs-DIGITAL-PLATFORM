@@ -46,6 +46,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   const [category, setCategory] = useState('All products')
   const [catalogueQuery, setCatalogueQuery] = useState('')
   const [detailProduct, setDetailProduct] = useState(null)
+  const [mobileCheckout, setMobileCheckout] = useState(false)
 
   const categories = useMemo(() => ['All products', ...Array.from(new Set(products.map(product => product.category).filter(Boolean)))], [products])
   const visibleProducts = useMemo(() => products.filter(product => (category === 'All products' || product.category === category) && `${product.name} ${product.code||''} ${product.category||''} ${product.description||''}`.toLowerCase().includes(catalogueQuery.trim().toLowerCase())), [products, category, catalogueQuery])
@@ -93,6 +94,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
       notify?.(`${result.order.id} sent to CAMY as Cash on Delivery. Your margin is ${money(result.order.entrepreneurMargin)} and is transferred after successful delivery and collection.`)
       setCart([])
       setClient(blankClient)
+      setMobileCheckout(false)
       window.dispatchEvent(new Event('camy-business-updated'))
     } catch (error) {
       notify?.(error.message)
@@ -128,8 +130,8 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
         })}</div>{!visibleProducts.length&&<div className="catalogue-no-results">No products found. Try another category or search term.</div>}
       </section>
 
-      <aside className="market-checkout stock-request-card">
-        <header><span><ShoppingCart size={19}/></span><div><small>COD CLIENT ORDER</small><h2>Order summary</h2></div></header>
+      <aside className={`market-checkout stock-request-card dropship-checkout ${mobileCheckout ? 'mobile-open' : ''}`}>
+        <header><span><ShoppingCart size={19}/></span><div><small>COD CLIENT ORDER</small><h2>Order summary</h2></div><button className="mobile-checkout-back" type="button" onClick={() => setMobileCheckout(false)} aria-label="Back to products"><X size={19}/></button></header>
         {selected.length ? selected.map(item => <div className="market-line dropship-order-line" key={item.productId}>
           <div className="dropship-line-product"><strong>{item.product.name}</strong><small>CAMY cost: {money(item.product.price)} each</small></div>
           <label className="dropship-quantity">Quantity<span className="dropship-stepper"><button type="button" aria-label={`Reduce quantity for ${item.product.name}`} disabled={Number(item.qty)<=1} onClick={()=>update(item.productId,{qty:Math.max(1,Number(item.qty)-1)})}>−</button><input aria-label={`Quantity for ${item.product.name}`} type="number" min="1" value={item.qty} onChange={event => update(item.productId, { qty: Math.max(1, Number(event.target.value) || 1) })}/><button type="button" aria-label={`Increase quantity for ${item.product.name}`} onClick={()=>update(item.productId,{qty:Number(item.qty)+1})}>+</button></span></label>
@@ -156,6 +158,18 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
     </div>
 
     {detailProduct&&<div className="catalogue-detail-layer" onMouseDown={()=>setDetailProduct(null)}><article onMouseDown={event=>event.stopPropagation()}><button type="button" className="catalogue-detail-close" onClick={()=>setDetailProduct(null)} aria-label="Close product details"><X/></button><img src={detailProduct.image} alt={detailProduct.name}/><div><small>{detailProduct.category} · {detailProduct.code||'CAMY product'}</small><h2>{detailProduct.name}</h2><strong>{money(detailProduct.price)}</strong><p>{detailProduct.description||'CAMY product available for entrepreneur sales.'}</p><div className="catalogue-detail-meta"><span><b>Product code</b>{detailProduct.code||'Not set'}</span><span><b>Warranty</b>{detailProduct.warranty||'Ask CAMY'}</span><span><b>Availability</b>{Number(detailProduct.stock)>0?`${detailProduct.stock} in stock`:'Currently unavailable'}</span></div><h3>Product features</h3><ul>{(detailProduct.specs?.length?detailProduct.specs:['CAMY quality assured','Available through CAMY']).map(spec=><li key={spec}>{spec}</li>)}</ul><button className="market-primary" disabled={Number(detailProduct.stock)<=0} onClick={()=>{add(detailProduct);setDetailProduct(null)}}>{Number(detailProduct.stock)>0?'Add to client order':'Currently unavailable'} <ArrowRight/></button></div></article></div>}
+    {selected.length > 0 && (
+      <button className="mobile-order-cart" type="button" onClick={() => setMobileCheckout(true)}>
+        <ShoppingCart size={19}/>
+        <span>
+          <small>{selected.reduce((sum, item) => sum + Number(item.qty), 0)} item{selected.length === 1 ? '' : 's'} selected</small>
+          <strong>View order cart</strong>
+        </span>
+        <b>{money(clientTotal)}</b>
+        <ArrowRight size={19}/>
+      </button>
+    )}
+
     <section className="market-history stock-request-history">
       <div><small>DELIVERY UPDATES</small><h2>My CAMY orders</h2><button className="market-primary" onClick={refresh} disabled={refreshing}><RefreshCw size={15}/> {refreshing ? 'Refreshing…' : 'Refresh'}</button></div>
       {orders.length ? [...orders].sort((a,b)=>String(b.createdAt||b.date).localeCompare(String(a.createdAt||a.date))).map(order => <article className="stock-tracker-entry dropship-money-entry" key={order.id}>

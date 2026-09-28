@@ -1,4 +1,5 @@
 import { ProductMediaEditor, ProductMediaGallery } from './ProductMedia'
+import { ProductBulkImport } from './ProductBulkImport'
 import { ReturnAttention } from './OrderReturns'
 import { EntrepreneurCustomers } from './EntrepreneurCustomers'
 import { exportReport, downloadWorkbook, reportSheets } from './reports'
@@ -556,7 +557,37 @@ function SingleManualOrderModal({ products, entrepreneurs, close, submit }) {
   return <Modal onClose={close} wide><form className="manual-order-v2" onSubmit={async event=>{event.preventDefault();if(valid)await submit({...form,qty:quantity,unitPrice:price})}}><header className="manual-order-heading"><span><Headphones /></span><div><small>CAMY COD ORDER</small><h2>Create an assisted order</h2><p>CAMY collects the full client price on delivery, then transfers the entrepreneur's margin with recorded proof.</p></div></header><div className="manual-order-progress"><span className={entrepreneur?'done':'active'}><i>{entrepreneur?<Check />:1}</i> Entrepreneur</span><span className={product?'done':entrepreneur?'active':''}><i>{product?<Check />:2}</i> Product & margin</span><span className={valid?'done':product?'active':''}><i>{valid?<Check />:3}</i> Customer</span></div><section className="manual-step"><div className="manual-step-title"><i>1</i><div><h3>Find the entrepreneur who made the sale</h3><p>The calculated margin belongs to this entrepreneur.</p></div></div><div className="smart-picker"><label><Search /><input value={entrepreneurSearch} onFocus={()=>setShowPeople(true)} onChange={event=>{setEntrepreneurSearch(event.target.value);setShowPeople(true);update('entrepreneurId','')}} placeholder="Type name, CE-0194, phone, NIC, or city..." /></label>{showPeople&&entrepreneurSearch&&<div className="smart-results">{people.map(person=><button type="button" key={person.id} onClick={()=>choosePerson(person)}><i>{person.initials}</i><span><strong>{person.name}</strong><small>{person.id} · {person.phone} · {person.city}</small></span><Status value={person.stage}/></button>)}{!people.length&&<p>No registered entrepreneur found.</p>}</div>}</div>{entrepreneur&&<div className="selected-entrepreneur"><span>{entrepreneur.initials}</span><div><small>COMMISSION WILL BE PAID TO</small><strong>{entrepreneur.name}</strong><p>{entrepreneur.id} · {entrepreneur.phone} · {entrepreneur.city}</p></div><BadgeCheck /></div>}</section><section className="manual-step"><div className="manual-step-title"><i>2</i><div><h3>Select the product and client selling price</h3><p>The entrepreneur may choose any selling price at or above the fixed CAMY product price.</p></div></div><div className="smart-picker"><label><Search /><input value={productSearch} onChange={event=>{setProductSearch(event.target.value);update('productId','')}} placeholder="Search product name, model code, or category..." /></label>{productSearch&&!product&&<div className="smart-results product-results">{productResults.map(item=><button type="button" key={item.id} onClick={()=>chooseProduct(item)}><img src={item.image} alt="" /><span><strong>{item.name}</strong><small>{item.code} · CAMY price {money(item.price)}</small></span><b>{item.stock} in stock</b></button>)}{!productResults.length&&<p>No available product found.</p>}</div>}</div>{product&&<div className="selected-product"><img src={product.image} alt={product.name} /><div><small>{product.category} · {product.code}</small><strong>{product.name}</strong><p>CAMY price {money(product.price)} · {product.stock} available</p></div><button type="button" onClick={()=>{update('productId','');setProductSearch('')}}>Change</button></div>}<div className="manual-price-grid"><label>Quantity<input min="1" max={product?.stock||1} type="number" value={form.qty} onFocus={event=>event.target.select()} onChange={event=>update('qty',event.target.value)} /></label><label>Client selling price / item<input min={product?.price||0} type="number" value={form.unitPrice} onFocus={event=>event.target.select()} onChange={event=>update('unitPrice',event.target.value)} /></label><label>Order source<select value={form.source} onChange={event=>update('source',event.target.value)}><option>Phone call</option><option>WhatsApp</option><option>Walk-in</option><option>Admin assisted</option></select></label></div>{product&&price<Number(product.price)&&<p className="form-error">Client price cannot be lower than the CAMY price of {money(product.price)}.</p>}{product&&quantity>product.stock&&<p className="form-error">Only {product.stock} units are currently available.</p>} {product&&price>=Number(product.price)&&<div className="manual-money-preview"><span><small>CAMY product cost</small><strong>{money(Number(product.price)*quantity)}</strong></span><span><small>Client COD total</small><strong>{money(total)}</strong></span><span><small>Entrepreneur commission</small><strong>{money((price-Number(product.price))*quantity)}</strong></span></div>}</section><section className="manual-step"><div className="manual-step-title"><i>3</i><div><h3>Customer and delivery details</h3><p>CAMY collects the full selling price from this client through Cash on Delivery.</p></div></div><div className="manual-customer-grid"><label>Customer name<input required value={form.customer} onChange={event=>update('customer',event.target.value)} placeholder="Full name" /></label><label>Phone number<input required value={form.phone} onChange={event=>update('phone',event.target.value)} placeholder="07X XXX XXXX" /></label><label>District<input required value={form.district} onChange={event=>update('district',event.target.value)} /></label><label>Delivery address<input required value={form.address} onChange={event=>update('address',event.target.value)} placeholder="House number, street, town" /></label><label className="wide">Internal notes<textarea rows="2" value={form.notes} onChange={event=>update('notes',event.target.value)} placeholder="Call instructions, preferred delivery time, or special notes" /></label></div></section><footer className="manual-order-total"><div><small>CLIENT PAYS CAMY BY COD</small><strong>{money(total)}</strong>{product&&price>=Number(product.price)&&<span>Entrepreneur earns {money((price-Number(product.price))*quantity)} after successful delivery</span>}</div><button type="button" onClick={close}>Cancel</button><Button type="submit" disabled={!valid||price<Number(product?.price||0)} icon={Check}>Create COD order</Button></footer></form></Modal>
 }
 
-function AdminProducts({ products, setProducts, openProduct, openAdd, openAddCategory, notify }) {
+function AdminProducts(props) {
+  const { products, setProducts, notify } = props
+  const [showImport, setShowImport] = useState(false)
+  const categories = [...new Set([
+    ...JSON.parse(localStorage.getItem('camy-product-categories-v2') || '[]'),
+    ...products.map(product => product.category),
+  ].filter(Boolean))]
+
+  const importProducts = imported => {
+    setProducts(current => {
+      const next = [...current]
+      let nextId = Math.max(0, ...current.map(product => Number(product.id) || 0)) + 1
+
+      for (const product of imported) {
+        const index = next.findIndex(item => String(item.code).trim().toLowerCase() === String(product.code).trim().toLowerCase())
+        if (index >= 0) next[index] = { ...next[index], ...product, id: next[index].id }
+        else next.push({ ...product, id: nextId++ })
+      }
+      return next
+    })
+    notify(`${imported.length} product${imported.length === 1 ? '' : 's'} imported. Review them, then click Save catalogue changes.`)
+  }
+
+  return <div className="admin-products-shell">
+    <AdminProductsCatalogue {...props} />
+    <button type="button" className="catalogue-import-launcher" onClick={() => setShowImport(true)}><Plus /> Import Excel</button>
+    {showImport && <ProductBulkImport products={products} categories={categories} onImport={importProducts} onClose={() => setShowImport(false)} />}
+  </div>
+}
+
+function AdminProductsCatalogue({ products, setProducts, openProduct, openAdd, openAddCategory, notify }) {
   const [search,setSearch]=useState(''); const [categoryList,setCategoryList]=useStoredState('camy-product-categories-v2',['Cookware','Home Appliances','Electronics']); const [categoryEditor,setCategoryEditor]=useState(null); const visible=products.filter(p=>`${p.name} ${p.code} ${p.category}`.toLowerCase().includes(search.toLowerCase()))
   useEffect(() => { const refresh=()=>setCategoryList(JSON.parse(localStorage.getItem('camy-product-categories-v2')||'[]')); window.addEventListener('camy-categories-updated',refresh); return () => window.removeEventListener('camy-categories-updated',refresh) }, [setCategoryList])
   const stock=(id,delta)=>setProducts(old=>old.map(p=>p.id===id?{...p,stock:Math.max(0,p.stock+delta)}:p))

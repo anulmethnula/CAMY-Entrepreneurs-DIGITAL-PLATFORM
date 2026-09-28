@@ -1,0 +1,164 @@
+import { useRef, useState } from 'react'
+import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Upload, X } from 'lucide-react'
+import { PortalOverlay } from './Dialog'
+import { downloadWorkbook } from './reports'
+
+const requiredHeaders = ['code', 'name', 'category', 'price', 'stock']
+const aliases = {
+  code: ['code', 'product code', 'model', 'model code', 'sku'],
+  name: ['name', 'product name'],
+  category: ['category', 'product category'],
+  price: ['price', 'price lkr', 'unit price'],
+  stock: ['stock', 'opening stock', 'warehouse stock', 'quantity'],
+  description: ['description'], tag: ['tag'], rating: ['rating', 'rating 0 5'], warranty: ['warranty'],
+  specifications: ['specifications', 'specs', 'specifications separate with'],
+  main_image_url: ['main image url', 'image', 'image url'],
+  additional_media_urls: ['additional media urls', 'other image video urls separate with', 'media urls'],
+  published: ['published', 'published yes no', 'live'],
+}
+
+const clean = value => String(value ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+const headerKey = value => Object.entries(aliases).find(([, names]) => names.includes(clean(value)))?.[0] || ''
+const splitValues = value => String(value ?? '').split(/[|\n]/).map(item => item.trim()).filter(Boolean)
+const mediaType = src => /\.(mp4|webm)(?:[?#]|$)/i.test(src) ? 'video' : 'image'
+const publishedValue = value => value === '' || value == null || !['no', 'false', '0', 'hidden'].includes(String(value).trim().toLowerCase())
+
+function validMediaUrl(value) {
+  if (!value) return true
+  if (value.startsWith('/')) return true
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol)
+  } catch { return false }
+}
+
+function parseCsv(text) {
+  const rows = [[]]
+  let value = ''
+  let quoted = false
+  for (let index = 0; index < text.length; index++) {
+    const character = text[index]
+    if (character === '"' && quoted && text[index + 1] === '"') { value += '"'; index++ }
+    else if (character === '"') quoted = !quoted
+    else if (character === ',' && !quoted) { rows.at(-1).push(value); value = '' }
+    else if ((character === '\n' || character === '\r') && !quoted) {
+      if (character === '\r' && text[index + 1] === '\n') index++
+      rows.at(-1).push(value); value = ''; rows.push([])
+    } else value += character
+  }
+  rows.at(-1).push(value)
+  return rows
+}
+
+function excelValue(value) {
+  if (value && typeof value === 'object') return value.text ?? value.result ?? value.hyperlink ?? ''
+  return value ?? ''
+}
+
+async function fileMatrix(file) {
+  if (file.name.toLowerCase().endsWith('.csv')) return parseCsv(await file.text())
+  const { default: ExcelJS } = await import('exceljs')
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.load(await file.arrayBuffer())
+  const worksheet = workbook.worksheets[0]
+  if (!worksheet) throw new Error('This workbook does not contain a worksheet.')
+  const matrix = []
+  worksheet.eachRow({ includeEmpty: true }, row => matrix.push(row.values.slice(1).map(excelValue)))
+  return matrix
+}
+
+async function parseFile(file, products, categories) {
+  const matrix = await fileMatrix(file)
+  const headerIndex = matrix.findIndex(row => requiredHeaders.every(required => row.some(cell => headerKey(cell) === required)))
+  if (headerIndex < 0) throw new Error('Include Product code, Product name, Category, Price and Opening stock columns.')
+
+  const keys = matrix[headerIndex].map(headerKey)
+  const categoryMap = new Map(categories.map(category => [category.toLowerCase(), category]))
+  const existingByCode = new Map(products.map(product => [clean(product.code), product]))
+  const seenCodes = new Set()
+
+  return matrix.slice(headerIndex + 1).map((cells, index) => {
+    const source = Object.fromEntries(keys.map((key, column) => [key, cells[column]]).filter(([key]) => key))
+    const code = String(source.code ?? '').trim()
+    const name = String(source.name ?? '').trim()
+    const requestedCategory = String(source.category ?? '').trim()
+    const category = categoryMap.get(requestedCategory.toLowerCase()) || ''
+    const price = Number(String(source.price ?? '').replace(/[^0-9.-]/g, ''))
+    const stock = Number(String(source.stock ?? '').replace(/[^0-9.-]/g, ''))
+    const rating = source.rating === '' ? 5 : Number(source.rating)
+    const mainImage = String(source.main_image_url ?? '').trim()
+    const mediaUrls = [mainImage, ...splitValues(source.additional_media_urls)].filter(Boolean)
+    const errors = []
+
+    if (!code) errors.push('Product code is required')
+    if (!name) errors.push('Product name is required')
+    if (!requestedCategory) errors.push('Category is required')
+    else if (!category) errors.push(`Unknown category: ${requestedCategory}`)
+    if (!Number.isFinite(price) || price <= 0) errors.push('Price must be greater than 0')
+    if (!Number.isInteger(stock) || stock < 0) errors.push('Stock must be a whole number, 0 or more')
+    if (!Number.isFinite(rating) || rating < 0 || rating > 5) errors.push('Rating must be between 0 and 5')
+    if (code && seenCodes.has(clean(code))) errors.push('Duplicate product code in this sheet')
+    if (mediaUrls.length > 12) errors.push('Use no more than 12 media URLs')
+    if (mediaUrls.some(url => !validMediaUrl(url))) errors.push('One or more media URLs are invalid')
+    if (code) seenCodes.add(clean(code))
+
+    const existing = existingByCode.get(clean(code))
+    const media = mediaUrls.map((src, mediaIndex) => ({ type: mediaType(src), src, name: mediaIndex ? `Imported media ${mediaIndex + 1}` : 'Main image' }))
+    const product = {
+      ...(existing || {}), code, name, category, price, stock, rating,
+      description: String(source.description ?? '').trim(),
+      tag: String(source.tag ?? '').trim(),
+      warranty: String(source.warranty ?? '').trim(),
+      specs: splitValues(source.specifications),
+      published: publishedValue(source.published),
+      ...(mediaUrls.length ? { image: mainImage || mediaUrls.find(url => mediaType(url) === 'image') || '', media } : {}),
+      ...(!existing && !mediaUrls.length ? { image: '/products/classic-set.png', media: [] } : {}),
+    }
+    return { rowNumber: headerIndex + index + 2, action: existing ? 'Update' : 'New', errors, product }
+  }).filter(row => row.product.code || row.product.name || row.product.category)
+}
+
+function downloadTemplate(categories) {
+  const definitions = [
+    ['code', 'Product code'], ['name', 'Product name'], ['category', 'Category'], ['price', 'Price (LKR)'],
+    ['stock', 'Opening stock'], ['description', 'Description'], ['tag', 'Tag'], ['rating', 'Rating (0-5)'],
+    ['warranty', 'Warranty'], ['specifications', 'Specifications (separate with |)'], ['main_image_url', 'Main image URL'],
+    ['additional_media_urls', 'Other image/video URLs (separate with |)'], ['published', 'Published (Yes/No)'],
+  ]
+  downloadWorkbook('camy-product-import-template.xlsx', [
+    {
+      name: 'Products', title: 'CAMY Bulk Product Import Template',
+      columns: definitions.map(([key, label]) => ({ key, label, type: ['price'].includes(key) ? 'currency' : 'text' })),
+      rows: [{ code: 'EXAMPLE-001', name: 'Example product', category: categories[0] || 'Cookware', price: 2500, stock: 10, description: 'Replace or delete this row.', tag: 'New', rating: 5, warranty: '1 year', specifications: 'Durable finish | Easy to clean', main_image_url: 'https://example.com/main.jpg', additional_media_urls: 'https://example.com/second.jpg | https://example.com/demo.mp4', published: 'Yes' }],
+    },
+    { name: 'Valid categories', title: 'Use one of these categories', columns: [{ key: 'category', label: 'Valid category', type: 'text' }], rows: categories.map(category => ({ category })) },
+  ])
+}
+
+export function ProductBulkImport({ products, categories, onImport, onClose }) {
+  const input = useRef(null)
+  const [rows, setRows] = useState([])
+  const [fileName, setFileName] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const validRows = rows.filter(row => !row.errors.length)
+
+  const chooseFile = async event => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setBusy(true); setError(''); setFileName(file.name)
+    try { setRows(await parseFile(file, products, categories)) }
+    catch (reason) { setRows([]); setError(reason.message || 'Could not read this spreadsheet.') }
+    finally { setBusy(false) }
+  }
+
+  return <PortalOverlay className="product-import-overlay" onClose={onClose} label="Import products from Excel">
+    <section className="product-import-dialog">
+      <header><i><FileSpreadsheet /></i><div><span>BULK CATALOGUE IMPORT</span><h2>Import products from Excel</h2><p>Use the template, validate every row, then import all valid products together.</p></div><button onClick={onClose} aria-label="Close"><X /></button></header>
+      <div className="product-import-actions"><button onClick={() => downloadTemplate(categories)}><Download />Download template</button><button className="primary" onClick={() => input.current?.click()}><Upload />{busy ? 'Reading file...' : 'Choose Excel or CSV'}</button><input ref={input} type="file" accept=".xlsx,.csv" onChange={chooseFile} hidden /></div>
+      <aside><strong>Images and videos</strong><p>Paste public media links into the URL columns. For files on your computer, import first and then use <b>Edit details</b> to upload JPG, PNG, WebP, MP4 or WebM.</p></aside>
+      {error && <p className="product-import-error"><AlertCircle />{error}</p>}
+      {!!rows.length && <><div className="product-import-summary"><span><b>{rows.length}</b> rows</span><span className="valid"><b>{validRows.length}</b> ready</span><span className="invalid"><b>{rows.length - validRows.length}</b> need fixing</span><small>{fileName}</small></div><div className="product-import-table"><div className="head"><span>Row</span><span>Product</span><span>Category</span><span>Action</span><span>Validation</span></div>{rows.map(row => <div key={row.rowNumber} className={row.errors.length ? 'invalid' : 'valid'}><span>{row.rowNumber}</span><span><strong>{row.product.name || 'Missing name'}</strong><small>{row.product.code || 'Missing code'}</small></span><span>{row.product.category || 'Not matched'}</span><span>{row.action}</span><span>{row.errors.length ? <><AlertCircle />{row.errors.join(' · ')}</> : <><CheckCircle2 />Ready</>}</span></div>)}</div></>}
+      <footer><p>Existing product codes are updated; new codes create products. Invalid rows are skipped.</p><button onClick={onClose}>Cancel</button><button className="primary" disabled={!validRows.length || busy} onClick={() => { onImport(validRows.map(row => row.product)); onClose() }}>Import {validRows.length || ''} valid product{validRows.length === 1 ? '' : 's'}</button></footer>
+    </section>
+  </PortalOverlay>
+}
