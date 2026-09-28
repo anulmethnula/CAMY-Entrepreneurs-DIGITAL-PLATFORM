@@ -299,8 +299,42 @@ function ProfilePage({ profile, setProfile, person, orders, entrepreneurs, notif
       window.removeEventListener('camy-save-profile', saveEdit)
     }
   })
-  const updatePhoto=event=>{const file=event.target.files?.[0];event.target.value='';if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>2*1024*1024){notify('Use a JPG, PNG or WebP profile photo up to 2 MB');return}const reader=new FileReader();reader.onload=()=>setDraft(old=>({...old,image:String(reader.result)}));reader.readAsDataURL(file)}
-  const removePhoto=()=>setDraft(old=>({...old,image:''}))
+  const saveProfilePhoto = async image => {
+    if (saving) return
+
+    const nextDraft = { ...draft, image }
+    setDraft(nextDraft)
+    setSaving(true)
+
+    try {
+      const saved = await setProfile(nextDraft)
+
+      if (saved) {
+        setEditing(false)
+        notify(image ? 'Profile photo saved to your account.' : 'Profile photo removed from your account.')
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const updatePhoto = event => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!file) return
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 2 * 1024 * 1024) {
+      notify('Use a JPG, PNG or WebP profile photo up to 2 MB.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => saveProfilePhoto(String(reader.result))
+    reader.readAsDataURL(file)
+  }
+
+  const removePhoto = () => saveProfilePhoto('')
   const requestExit=async()=>{if(saving||!canLeave)return;setSaving(true);try{if(await setProfile({...draft,joined,exitRequest:{status:'Pending',createdAt:new Date().toISOString()}}))setLeaveOpen(false)}finally{setSaving(false)}}
   return <div className="content-page"><PageTitle eyebrow="ACCOUNT" title="My business profile" text="Manage your identity, settlement details, membership, and account status."><Button variant={editing?'primary':'secondary'} icon={editing?Check:Pencil} disabled={saving} onClick={editing?save:()=>setEditing(true)}>{editing?'Save changes':'Edit profile'}</Button></PageTitle><section className="profile-layout"><article className="profile-summary"><div className="profile-cover"><div className="profile-avatar">{draft.image?<img src={draft.image} alt={draft.name}/>:<span>{(draft.name||'SK').split(' ').map(word=>word[0]).slice(0,2).join('').toUpperCase()}</span>}<label className="profile-photo-action" title="Upload a new profile photo"><Pencil/><input type="file" accept="image/png,image/jpeg,image/webp" onChange={updatePhoto}/></label></div></div><div className="profile-photo-tools"><label><Pencil/> Change photo<input type="file" accept="image/png,image/jpeg,image/webp" onChange={updatePhoto}/></label>{draft.image&&<button type="button" onClick={removePhoto}><Trash2/> Remove</button>}</div><h2>{draft.name} <BadgeCheck/></h2><p>CAMY Entrepreneur · {person?.id||'CE-0194'}</p><small className="profile-joined"><CalendarDays/> Member since {displayDate(joined)}</small><b><TrendingUp/> {person?.stage||'CAMY member'}</b><div className="profile-live-stats"><span><strong>{daysActive}</strong><small>Days active</small></span><span><strong>{customers}</strong><small>Customers</small></span><span><strong>#{rank}</strong><small>Current rank</small></span></div><Button variant="soft" icon={Headphones} onClick={()=>notify('CAMY Support: +94 77 755 4477')}>Contact support</Button></article><div className="form-stack"><Button variant="secondary" icon={Settings} onClick={()=>window.dispatchEvent(new Event('camy-change-password'))}>Change password</Button><ProfileForm title="Personal details" icon={UserRound} editing={editing} draft={draft} setDraft={setDraft} fields={[["name","Full name"],["nic","NIC number"],["phone","Contact number"],["email","Email address"],["address","Home address"]]}/><article className="card membership-card"><div className="card-head"><div><span>CAMY MEMBERSHIP</span><h2>Account information</h2></div><BadgeCheck/></div><div><span><small>Membership ID</small><strong>{person?.id||'CE-0194'}</strong></span><span><small>Joined CAMY</small><strong>{displayDate(joined)}</strong></span><span><small>Membership period</small><strong>{daysActive} days</strong></span><span><small>Account status</small><strong>{pending?'Exit review pending':'Active'}</strong></span></div></article><ProfileForm title="Bank account" icon={CreditCard} editing={editing} draft={draft} setDraft={setDraft} fields={[["bank","Bank"],["branch","Branch"],["accountName","Account holder"],["account","Account number"]]} secure/><article className="card leave-company-card"><div><span>ACCOUNT & MEMBERSHIP</span><h2>{pending?'Exit request under review':'Planning to leave CAMY?'}</h2><p>{pending?'CAMY Admin will review your account and contact you before it is closed.':canLeave?'You can submit a request for CAMY Admin to review and close your membership.':'Your account must have no outstanding credit and no active orders before an exit request can be submitted.'}</p></div><div className="leave-checks"><span className={outstanding===0?'clear':'blocked'}><WalletCards/><small>Outstanding credit</small><strong>{money(outstanding)}</strong></span><span className={activeOrders.length===0?'clear':'blocked'}><PackageOpen/><small>Active orders</small><strong>{activeOrders.length}</strong></span></div><Button variant="secondary" icon={LogOut} disabled={pending} onClick={()=>setLeaveOpen(true)}>{pending?'Request pending':'Request to leave CAMY'}</Button></article></div></section>{leaveOpen&&<Modal onClose={()=>setLeaveOpen(false)}><div className="form-modal exit-request-modal"><span className="exit-modal-icon"><LogOut/></span><h2>{canLeave?'Request membership closure':'Account cannot be closed yet'}</h2><p>{canLeave?'This sends a request to CAMY Admin. Your account remains active until an administrator completes the final review.':'To protect CAMY and your customers, resolve all outstanding credit and complete or return every active order first.'}</p><div className="leave-checks"><span className={outstanding===0?'clear':'blocked'}><WalletCards/><small>Outstanding credit</small><strong>{money(outstanding)}</strong></span><span className={activeOrders.length===0?'clear':'blocked'}><PackageOpen/><small>Active orders</small><strong>{activeOrders.length}</strong></span></div>{canLeave?<Button icon={Check} disabled={saving} onClick={requestExit}>Send exit request</Button>:<Button variant="secondary" onClick={()=>setLeaveOpen(false)}>I understand</Button>}</div></Modal>}</div>
 }

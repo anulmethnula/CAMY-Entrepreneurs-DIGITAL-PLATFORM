@@ -132,8 +132,8 @@ After backing up the full hosted database, run the versioned cleanup once:
 npm.cmd run db:cleanup
 ```
 
-The cleanup targets only the retired `orders`, `order_items`, `settlements`, and
-`exit_requests` tables. It writes a restorable SQL backup to
+The cleanup targets only retired order tables and the retired customer-account
+tables. It writes a restorable SQL backup to
 `private/database-backups/` before dropping anything. If any target contains
 records, the command creates the backup and stops without deleting tables. Review
 that backup before deliberately rerunning with:
@@ -142,8 +142,9 @@ that backup before deliberately rerunning with:
 npm.cmd run db:cleanup -- --allow-data
 ```
 
-The current `shop_orders`, `shop_order_items`, `entrepreneur_payouts`, customer,
-stock, security, and marketplace tables are active and are not cleanup targets.
+The current `customer_order_groups`, `shop_orders`, `shop_order_items`,
+`entrepreneur_payouts`, stock, security, and marketplace tables are active and
+are not cleanup targets.
 
 A fresh database may generate temporary admin credentials in:
 

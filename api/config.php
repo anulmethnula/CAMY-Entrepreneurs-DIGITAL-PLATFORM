@@ -32,7 +32,6 @@ function initialise_database(PDO $pdo): void
     $schema = file_get_contents(__DIR__ . '/../database/schema.sql');
     if ($schema === false) throw new RuntimeException('Database schema could not be loaded.');
     $pdo->exec($schema);
-    if(!$pdo->query("SHOW COLUMNS FROM customers LIKE 'session_version'")->fetch())$pdo->exec('ALTER TABLE customers ADD COLUMN session_version INT UNSIGNED NOT NULL DEFAULT 1');
     foreach(['must_change_password'=>'TINYINT(1) NOT NULL DEFAULT 0','session_version'=>'INT UNSIGNED NOT NULL DEFAULT 1','access_role'=>'VARCHAR(40) NULL','permissions_json'=>'TEXT NULL'] as $field=>$definition){
         if(!$pdo->query("SHOW COLUMNS FROM users LIKE '$field'")->fetch())$pdo->exec("ALTER TABLE users ADD COLUMN $field $definition");
     }

@@ -5,13 +5,18 @@ declare(strict_types=1);
 require __DIR__ . '/../api/config.php';
 
 const LEGACY_TABLES = [
+    'customer_addresses',
+    'customer_checkout_requests',
+    'customer_favourites',
+    'customer_reviews',
+    'customers',
     'order_items',
     'orders',
     'settlements',
     'exit_requests',
 ];
 
-const MIGRATION_KEY = 'schema.legacy_cleanup_20260928';
+const MIGRATION_KEY = 'schema.retired_table_cleanup_20260928';
 
 function quoteIdentifier(string $identifier): string
 {

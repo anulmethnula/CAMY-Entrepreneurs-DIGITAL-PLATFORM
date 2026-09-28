@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 require_once __DIR__.'/storage.php';
 require_once __DIR__.'/catalogue.php';
-require_once __DIR__.'/customers.php';
 require_once __DIR__.'/returns.php';
 
 function market_state(PDO $pdo, bool $lock = false): array {
@@ -104,11 +103,6 @@ function market_route(PDO $pdo, string $path, string $method): void {
         $shops=[['id'=>'PREVIEW-COLOMBO','name'=>'Colombo Home Essentials · Sample','city'=>'Colombo','stage'=>'Preview'],['id'=>'PREVIEW-KANDY','name'=>'Kandy Living · Sample','city'=>'Kandy','stage'=>'Preview']];
         $inventory=[];foreach($catalogue['products'] as $index=>$product){$inventory[]=['entrepreneurId'=>$shops[$index%2]['id'],'productId'=>$product['id'],'qty'=>999999,'price'=>$product['price']];if($index<3)$inventory[]=['entrepreneurId'=>$shops[($index+1)%2]['id'],'productId'=>$product['id'],'qty'=>999999,'price'=>round($product['price']*1.03,2)];}
         response(['preview'=>true,'products'=>$catalogue['products'],'entrepreneurs'=>$shops,'inventory'=>$inventory,'ratingSummary'=>[]]);
-    }
-    if ($path === '/marketplace/public' && $method === 'GET') {
-        $public=market_public(market_state($pdo));
-        $public['ratingSummary']=$pdo->query("SELECT product_id AS productId,shop_id AS shopId,AVG(rating) AS average,COUNT(*) AS count FROM customer_reviews WHERE status='Published' GROUP BY product_id,shop_id")->fetchAll();
-        response($public);
     }
     if ($path === '/marketplace/state' && $method === 'GET') {
         $user=current_user($pdo); if (!$user) response(['message'=>'Authentication required.'],401);

@@ -22,6 +22,11 @@ $tables=array_map('strval',array_column($pdo->query('SHOW TABLES')->fetchAll(PDO
 foreach($expectedTables as $table)check_fail($errors,!in_array($table,$tables,true),"Missing required table: $table");
 
 $legacyTables = [
+    'customers',
+    'customer_addresses',
+    'customer_checkout_requests',
+    'customer_favourites',
+    'customer_reviews',
     'orders',
     'order_items',
     'settlements',
