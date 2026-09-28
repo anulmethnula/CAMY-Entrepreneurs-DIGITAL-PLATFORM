@@ -309,7 +309,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
                 if($status==='Cancelled')$state['orders'][$index]['clientPaymentStatus']='Cancelled before delivery';
             }
         }
-        $shop=$state['orders'][$index]['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)($entry['camyCost'] ?? $entry['amount']);$credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales&&$tier['credit']>$credit)$credit=(float)$tier['credit'];foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
+        $shop=$state['orders'][$index]['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)($entry['camyCost'] ?? $entry['amount']);$credit=catalogue_credit_for_sales($state['tiers'],$sales);foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
         market_save($pdo,$state);
         $management=in_array($user['role'],['admin','manager'],true);
         $responseProducts=$management?$state['products']:array_map(static fn($product)=>array_merge($product,['stock'=>(($product['stock'] ?? 0)>0?1:0)]),$state['products']);

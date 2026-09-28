@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ArrowRight, BadgeDollarSign, CheckCircle2, CircleDollarSign, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Truck, X } from 'lucide-react'
 import { api } from './api'
+import { creditProgression } from './creditRules'
 
 const money = value => `Rs. ${Number(value || 0).toLocaleString('en-LK', { maximumFractionDigits: 2 })}`
 const districts = ['Ampara','Anuradhapura','Badulla','Batticaloa','Colombo','Galle','Gampaha','Hambantota','Jaffna','Kalutara','Kandy','Kegalle','Kilinochchi','Kurunegala','Mannar','Matale','Matara','Monaragala','Mullaitivu','Nuwara Eliya','Polonnaruwa','Puttalam','Ratnapura','Trincomalee','Vavuniya']
@@ -25,16 +26,15 @@ function statusHelp(order) {
 function CreditSensor({ person, tiers = [], orders = [] }) {
   const delivered = orders.filter(order => order.status === 'Delivered')
   const sales = delivered.reduce((sum, order) => sum + Number(order.camyCost ?? order.amount ?? 0), 0)
-  const sorted = [...tiers].sort((a, b) => Number(a.sales) - Number(b.sales))
-  const active = [...sorted].reverse().find(tier => Number(tier.sales) <= sales)
-  const next = sorted.find(tier => Number(tier.sales) > sales)
-  const credit = Number(person?.credit ?? active?.credit ?? 0)
-  const remaining = next ? Math.max(0, Number(next.sales) - sales) : 0
+  const progression = creditProgression(tiers, sales)
+  const credit = progression.credit
+  const next = progression.next
+  const remaining = progression.remaining
   const phase = credit > 0 ? 'Phase 2 · Dropship + credit stock' : 'Phase 1 · Trial drop-shipping'
   return <section className="shop-home-stats">
     <article><small>CURRENT CAMY STAGE</small><strong className="phase-value">{phase}</strong><p>{credit > 0 ? 'You can keep drop-shipping and also request CAMY stock on credit. You choose which method suits each sale.' : 'Build verified delivered sales to unlock optional credit stock.'}</p></article>
     <article><small>VERIFIED CAMY SALES</small><strong>{money(sales)}</strong><p>Uses CAMY product value from successfully delivered orders, not your markup</p></article>
-    <article><small>CREDIT / NEXT TARGET</small><strong>{credit > 0 ? money(credit) : next ? money(remaining) : 'Not configured'}</strong><p>{credit > 0 ? 'Credit stock is optional; drop-shipping remains available' : next ? `${money(remaining)} more verified CAMY sales to unlock ${money(next.credit)} credit` : 'CAMY Admin must configure a credit tier'}</p></article>
+    <article><small>CURRENT CREDIT LIMIT</small><strong>{credit > 0 ? money(credit) : 'Not unlocked'}</strong><p>{next ? `${money(remaining)} more verified sales unlocks ${money(next.credit)} credit` : 'CAMY Admin must configure a credit tier'}</p><div className="credit-sensor-progress"><i style={{ width: `${progression.progress}%` }}/></div></article>
   </section>
 }
 
@@ -238,6 +238,7 @@ export function AdminCreditStockPage({ requests = [], products = [], entrepreneu
   const [query,setQuery]=useState('')
   const [busyId,setBusyId]=useState('')
   const [actionErrors,setActionErrors]=useState({})
+  const [actionMessage,setActionMessage]=useState('')
   const creditRequests=requests.filter(request=>request.creditMode===true)
   const visible=creditRequests.filter(request=>{
     const person=entrepreneurs.find(person=>String(person.id)===String(request.entrepreneurId))
@@ -249,14 +250,22 @@ export function AdminCreditStockPage({ requests = [], products = [], entrepreneu
 
   const act=async(id,status)=>{
     setBusyId(id)
+    setActionMessage('')
     setActionErrors(old=>({...old,[id]:''}))
-    try{await review(id,status)}catch(error){setActionErrors(old=>({...old,[id]:error.message||'The request could not be completed. Please try again.'}))}finally{setBusyId('')}
+    try{
+      await review(id,status)
+      setActionMessage(`${id} was ${status.toLowerCase()} successfully.`)
+    }catch(error){
+      setActionErrors(old=>({...old,[id]:error.message||'The request could not be completed. Please try again.'}))
+    }finally{setBusyId('')}
   }
 
   return <div className="content-page market-page">
     <div className="market-heading"><div><small>PHASE 2 · CREDIT STOCK CONTROL</small><h1>Credit stock requests</h1><p>Approve only eligible requests within the entrepreneur's available limit. Approval reserves CAMY warehouse stock; dispatch issues the credit and increases the entrepreneur's outstanding balance.</p></div></div>
     {!catalogueLive&&<div className="market-warning">The CAMY catalogue is not active. Activate and verify warehouse stock before dispatching credit stock.</div>}
     <div className="credit-stock-admin-filters"><input placeholder="Search request, entrepreneur or member ID" value={query} onChange={event=>setQuery(event.target.value)}/><select value={filter} onChange={event=>setFilter(event.target.value)}><option>Active</option><option>Pending</option><option>Approved</option><option>Dispatched</option><option>Rejected</option><option>All</option></select></div>
+    {busyId&&<div className="credit-admin-action-status"><RefreshCw/><span><strong>Updating {busyId}</strong><small>Please wait while CAMY verifies credit and reserves warehouse stock.</small></span></div>}
+    {actionMessage&&!busyId&&<div className="credit-admin-action-status success"><CheckCircle2/><span><strong>{actionMessage}</strong><small>The request list and warehouse stock have been refreshed.</small></span><button type="button" onClick={()=>setActionMessage('')}>Dismiss</button></div>}
     <section className="credit-stock-admin-list">{visible.length?visible.map(request=>{
       const person=entrepreneurs.find(person=>String(person.id)===String(request.entrepreneurId))
       const committed=creditRequests.filter(entry=>entry.id!==request.id&&String(entry.entrepreneurId)===String(request.entrepreneurId)&&['Pending','Approved'].includes(entry.status)).reduce((sum,entry)=>sum+Number(entry.total||0),0)

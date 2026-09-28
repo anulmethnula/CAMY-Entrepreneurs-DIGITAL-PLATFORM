@@ -1613,6 +1613,20 @@ input:focus, select:focus, textarea:focus {
 
 .stock-category-nav{display:flex;gap:8px;overflow:auto;margin:0 0 20px;padding:3px 1px 7px}.stock-category-nav button{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid #cfe2ef;border-radius:10px;color:#245f84;background:#fff;font-size:10px;font-weight:800;cursor:pointer;transition:.18s}.stock-category-nav button:hover{color:#fff;background:#247bac;border-color:#247bac;transform:translateY(-1px)}.stock-category-nav b{min-width:18px;height:18px;border-radius:6px;color:#21724e;background:#e3f7ec;display:grid;place-items:center;font-size:9px}.stock-category-nav button:hover b{color:#186b8d;background:#d8f5ff}.stock-category-sections{display:grid;gap:22px}.stock-category-section{scroll-margin-top:18px;padding:18px;border:1px solid #d9e8f1;border-radius:19px;background:linear-gradient(145deg,#fff,#f8fcfe)}.stock-category-section>header{display:flex;align-items:center;justify-content:space-between;margin:0 0 15px;padding-bottom:13px;border-bottom:1px solid #e1edf4}.stock-category-section>header small{color:#2775a8;letter-spacing:.13em;font-size:9px;font-weight:800}.stock-category-section>header h3{margin:4px 0 0;font-size:18px;letter-spacing:-.025em}.stock-category-section>header>span{padding:7px 9px;border-radius:9px;color:#55778e;background:#edf6fb;font-size:9px;font-weight:800}
 .shop-home-grid,.shop-home-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:18px 0}.shop-home-grid button,.shop-home-stats article{padding:22px;border:1px solid #d7e5f2;border-radius:17px;background:#fff;text-align:left}.shop-home-grid button{display:flex;flex-direction:column;align-items:flex-start;gap:8px;color:#183853;cursor:pointer}.shop-home-grid button>svg:first-child{width:32px;height:32px;color:#2879b6}.shop-home-grid strong{font-size:18px}.shop-home-grid small,.shop-home-stats p{color:#71879a}.shop-home-grid button>svg:last-child{margin-left:auto}.shop-home-stats small{color:#56809f;font-weight:800;letter-spacing:.08em}.shop-home-stats strong{display:block;margin:8px 0;font-size:27px}.shop-home-stats p{margin:0}@media(max-width:720px){.shop-home-grid,.shop-home-stats{grid-template-columns:1fr}}
+.credit-sensor-progress {
+  height: 7px;
+  margin-top: 16px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e6eef5;
+}
+
+.credit-sensor-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2483c5, #24a47d);
+}
 .customer-shop-link{position:fixed;right:28px;bottom:24px;z-index:10;display:flex;align-items:center;gap:8px;padding:13px 17px;border-radius:13px;color:#fff;background:#16649e;box-shadow:0 12px 28px rgba(13,52,88,.25);font-weight:800;text-decoration:none}@media(max-width:720px){.customer-shop-link{right:12px;bottom:12px;left:12px;justify-content:center;font-size:12px}}
 
 /* Public customer marketplace */
@@ -3454,15 +3468,6 @@ input:focus, select:focus, textarea:focus {
 .commission-kpis small { color:#72879a; font-size:8px; font-weight:850; letter-spacing:.08em; }
 .commission-kpis strong { margin-top:5px; color:#133955; font-size:21px; }
 .commission-kpis p { margin:5px 0 0; color:#7b8e9d; font-size:9px; }
-.commission-alert { min-height:90px; margin-bottom:16px; padding:15px 18px; border:1px solid #f0c8bd; border-radius:19px; background:linear-gradient(110deg,#fff3ef,#fffaf4); box-shadow:0 10px 28px rgba(143,62,43,.07); display:grid; grid-template-columns:46px 1fr auto; align-items:center; gap:13px; }
-.commission-alert > span { width:45px; height:45px; border-radius:14px; color:#fff; background:linear-gradient(135deg,#ff5e49,#ff9270); display:grid; place-items:center; }
-.commission-alert svg { width:20px; }
-.commission-alert small,.commission-alert strong { display:block; }
-.commission-alert small { color:#cf4e3e; font-size:8px; font-weight:850; letter-spacing:.1em; }
-.commission-alert strong { margin-top:3px; color:#73352d; font-size:13px; }
-.commission-alert p { margin:3px 0 0; color:#927067; font-size:10px; }
-.commission-alert button { min-height:40px; padding:0 15px; border:0; border-radius:11px; color:#fff; background:#183f61; display:flex; align-items:center; gap:7px; font-size:10px; font-weight:800; }
-.commission-alert button svg { width:15px; }
 .commission-workspace { padding:18px!important; }
 .commission-workspace > header { display:grid; grid-template-columns:minmax(280px,1fr) auto; align-items:center; gap:13px; padding-bottom:16px; border-bottom:1px solid #e1eaf0; }
 .commission-workspace > header > label { height:48px; padding:0 13px; border:1px solid #d5e2eb; border-radius:13px; background:#f7fafc; display:flex; align-items:center; gap:9px; }
@@ -3539,7 +3544,7 @@ input:focus, select:focus, textarea:focus {
   .admin-shell .commission-row { grid-template-columns: minmax(250px,1.35fr) minmax(145px,.9fr) minmax(135px,.8fr) minmax(125px,.72fr) minmax(150px,.85fr) auto; gap: 12px; }
 }
 @media (max-width:1120px) { .commission-kpis { grid-template-columns:repeat(2,1fr); }.commission-workspace > header { grid-template-columns:1fr; }.commission-workspace > header > div { overflow-x:auto; }.commission-row { grid-template-columns:1.2fr 1fr 1fr; }.commission-row > div:nth-child(4),.commission-row > div:nth-child(5),.commission-row > button { grid-row:2; }.commission-row > button { justify-self:end; } }
-@media (max-width:680px) { .commission-kpis { grid-template-columns:1fr; }.commission-alert { grid-template-columns:42px 1fr; }.commission-alert > button { grid-column:1/-1; }.commission-row { grid-template-columns:1fr 1fr; }.commission-order { grid-column:1/-1; }.commission-row > div:nth-child(4),.commission-row > div:nth-child(5),.commission-row > button { grid-row:auto; }.commission-row > button { width:100%; grid-column:1/-1; }.commission-workspace { padding:12px!important; } }
+@media (max-width:680px) { .commission-kpis { grid-template-columns:1fr; }.commission-row { grid-template-columns:1fr 1fr; }.commission-order { grid-column:1/-1; }.commission-row > div:nth-child(4),.commission-row > div:nth-child(5),.commission-row > button { grid-row:auto; }.commission-row > button { width:100%; grid-column:1/-1; }.commission-workspace { padding:12px!important; } }
 
 
 /* Active COD order admin visibility */
@@ -3835,6 +3840,27 @@ input:focus, select:focus, textarea:focus {
 .commission-payment-dialog > header small { color:#168263; font-size:9px; font-weight:850; letter-spacing:.1em; }
 .commission-payment-dialog > header h2 { margin:4px 0; color:#143b58; font-size:25px; }
 .commission-payment-dialog > header p { margin:0; color:#74899a; font-size:11px; }
+.commission-order-review { margin-top:18px; overflow:hidden; border:1px solid #d8e5ee; border-radius:16px; background:#fff; }
+.commission-order-review > header { padding:14px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2ebf1; background:#f7fafc; }
+.commission-order-review > header small { color:#287aa9; font-size:8px; font-weight:850; letter-spacing:.1em; }
+.commission-order-review > header h3 { margin:4px 0 0; color:#173c57; font-size:16px; }
+.commission-order-meta { padding:14px 16px; display:grid; grid-template-columns:.8fr 1fr 1.5fr; gap:12px; border-bottom:1px solid #e6edf2; }
+.commission-order-meta span,.commission-order-meta small,.commission-order-meta strong,.commission-order-meta em { display:block; min-width:0; }
+.commission-order-meta small { color:#758a9a; font-size:9px; }
+.commission-order-meta strong { margin-top:4px; color:#173d59; font-size:11px; overflow-wrap:anywhere; }
+.commission-order-meta em { margin-top:3px; color:#718596; font-size:9px; font-style:normal; overflow-wrap:anywhere; }
+.commission-products { padding:0 16px; }
+.commission-products article { padding:12px 0; display:grid; grid-template-columns:minmax(210px,1fr) minmax(390px,1.4fr); gap:14px; align-items:center; border-bottom:1px solid #e6edf2; }
+.commission-products article:last-child { border-bottom:0; }
+.commission-products article > div { display:flex; align-items:center; gap:10px; min-width:0; }
+.commission-products img,.commission-products article > div > span { width:42px; height:42px; flex:0 0 auto; border-radius:9px; object-fit:contain; background:#f1f6f9; display:grid; place-items:center; }
+.commission-products p,.commission-products p strong,.commission-products p small { display:block; margin:0; min-width:0; }
+.commission-products p strong { color:#173d59; font-size:11px; }
+.commission-products p small { margin-top:3px; color:#778b9a; font-size:8px; }
+.commission-products dl { margin:0; display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.commission-products dl span { padding:8px; border-radius:9px; background:#f6f9fb; }
+.commission-products dt { color:#7a8d9c; font-size:8px; }
+.commission-products dd { margin:3px 0 0; color:#173d59; font-size:10px; font-weight:800; }
 .commission-payment-summary { margin:18px 0; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
 .commission-payment-summary > div { padding:15px; border:1px solid #d7e4ed; border-radius:14px; background:#f7fafc; }
 .commission-payment-summary small,.commission-payment-summary strong { display:block; }
@@ -3842,11 +3868,54 @@ input:focus, select:focus, textarea:focus {
 .commission-payment-summary strong { margin-top:5px; color:#153b57; font-size:18px; }
 .commission-payment-summary > div:last-child { border-color:#bfe0d2; background:#eff9f4; }
 .commission-payment-summary > div:last-child strong { color:#16815e; }
+.commission-bank-card { margin:0 0 14px; padding:16px; border:1px solid #bfe0d2; border-radius:16px; background:#f2faf6; }
+.commission-bank-card > header { display:grid; grid-template-columns:38px 1fr auto; align-items:center; gap:10px; }
+.commission-bank-card > header > span { width:38px; height:38px; border-radius:11px; color:#16805f; background:#dff2e9; display:grid; place-items:center; }
+.commission-bank-card > header small { color:#16805f; font-size:8px; font-weight:850; letter-spacing:.1em; }
+.commission-bank-card > header h3 { margin:3px 0 0; color:#214d3e; font-size:15px; }
+.commission-bank-card > header b { color:#16805f; font-size:9px; display:flex; align-items:center; gap:5px; }
+.commission-bank-card > header b svg { width:15px; }
+.commission-bank-card > div { margin-top:13px; display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.commission-bank-card > div span { padding:11px; border:1px solid #d2e8de; border-radius:10px; background:#fff; }
+.commission-bank-card > div small,.commission-bank-card > div strong { display:block; }
+.commission-bank-card > div small { color:#738b80; font-size:8px; }
+.commission-bank-card > div strong { margin-top:4px; color:#214d3e; font-size:11px; overflow-wrap:anywhere; }
+.commission-bank-card.missing { border-color:#efc4bb; background:#fff5f2; }
+.commission-bank-card.missing > header > span { color:#b64c40; background:#ffe3dd; }
+.commission-bank-card.missing > header small,.commission-bank-card.missing > header h3,.commission-bank-card.missing > header b { color:#98483e; }
+.commission-bank-card > button { margin-top:12px; min-height:38px; padding:0 13px; border:1px solid #e2aca1; border-radius:10px; color:#99473d; background:#fff; font:inherit; font-size:10px; font-weight:800; display:flex; align-items:center; gap:7px; cursor:pointer; }
+.commission-bank-card > button svg { width:15px; }
 .commission-payment-dialog > .payout-panel-v3 { margin:0; }
-@media(max-width:620px){.commission-payment-modal{width:100%!important;min-height:100dvh}.commission-payment-dialog{padding:18px 12px}.commission-payment-summary{grid-template-columns:1fr}.commission-payment-dialog>header h2{font-size:21px}}
+@media(max-width:760px){.commission-order-meta{grid-template-columns:1fr 1fr}.commission-order-meta span:last-child{grid-column:1/-1}.commission-products article{grid-template-columns:1fr}.commission-bank-card>div{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.commission-payment-modal{width:100%!important;min-height:100dvh}.commission-payment-dialog{padding:18px 12px}.commission-payment-summary{grid-template-columns:1fr}.commission-payment-dialog>header h2{font-size:21px}.commission-order-meta,.commission-bank-card>div{grid-template-columns:1fr}.commission-order-meta span:last-child{grid-column:auto}.commission-products dl{grid-template-columns:1fr 1fr}.commission-bank-card>header{grid-template-columns:38px 1fr}.commission-bank-card>header b{grid-column:2}.commission-bank-card>button{width:100%;justify-content:center}}
 .credit-request-success { margin:18px 0; padding:16px 18px; border:1px solid #bce1d1; border-radius:16px; color:#176e53; background:#effaf5; display:grid; grid-template-columns:38px 1fr auto; align-items:center; gap:12px; }
 .credit-request-success > svg { width:27px; height:27px; }
 .credit-request-success strong,.credit-request-success p { display:block; }
 .credit-request-success p { margin:4px 0 0; color:#527b6c; font-size:11px; }
 .credit-request-success button { min-height:38px; padding:0 14px; border:1px solid #a9d7c4; border-radius:10px; color:#176e53; background:#fff; font:inherit; font-weight:800; cursor:pointer; }
 @media(max-width:620px){.credit-request-success{grid-template-columns:32px 1fr}.credit-request-success button{grid-column:1/-1;width:100%}}
+.credit-admin-action-status { margin:14px 0; padding:14px 16px; border:1px solid #c9ddeb; border-radius:14px; color:#255a7e; background:#eef6fb; display:grid; grid-template-columns:34px 1fr auto; align-items:center; gap:11px; }
+.credit-admin-action-status > svg { width:22px; animation:spin 1s linear infinite; }
+.credit-admin-action-status strong,.credit-admin-action-status small { display:block; }
+.credit-admin-action-status small { margin-top:3px; color:#688397; }
+.credit-admin-action-status.success { border-color:#bce0d0; color:#177354; background:#eff9f4; }
+.credit-admin-action-status.success > svg { animation:none; }
+.credit-admin-action-status button { min-height:36px; padding:0 13px; border:1px solid #acd6c4; border-radius:9px; color:#177354; background:#fff; font:inherit; font-weight:800; }
+.credit-stock-admin-list { display:grid; gap:16px; }
+.credit-stock-admin-card { padding:0!important; overflow:hidden; border:1px solid #d7e4ed!important; border-radius:18px!important; box-shadow:0 8px 24px rgba(18,55,83,.06)!important; }
+.credit-stock-admin-card > header { padding:18px 20px; border-bottom:1px solid #e1eaf1; background:#fbfdff; }
+.credit-stock-admin-card > header h3 { margin:4px 0; font-size:18px; }
+.credit-stock-admin-metrics { padding:16px 20px; grid-template-columns:repeat(4,1fr); gap:10px; }
+.credit-stock-admin-metrics > span { min-height:76px; padding:13px!important; border:1px solid #dce7ef; border-radius:12px!important; background:#f6f9fb!important; }
+.credit-stock-admin-items { margin:0 20px; padding:13px 0; border-top:1px solid #e3ebf1; }
+.credit-stock-admin-card > footer { margin-top:14px; padding:15px 20px; border-top:1px solid #dfe9f0; background:#f8fbfd; display:flex; gap:10px; }
+.credit-stock-admin-card > footer button { min-height:44px; padding:0 17px; border:1px solid #cbdce8; border-radius:11px; color:#42627a; background:#fff; font:inherit; font-weight:800; }
+.credit-stock-admin-card > footer .market-primary { border-color:#2078ad; color:#fff; background:#2078ad; }
+.credit-stock-admin-card > footer button:disabled { opacity:.55; }
+.commission-payment-dialog > .payout-panel-v3 { padding:0; border:0; background:transparent; box-shadow:none; }
+.commission-payment-dialog .payout-bank-ready-v3 { margin:0 0 12px; }
+.commission-payment-dialog .payout-form-v3 { margin:0; grid-template-columns:1fr; padding:18px; }
+.commission-payment-dialog .payout-form-copy { align-items:center; }
+.commission-payment-dialog .payout-form-fields { grid-template-columns:1fr 1fr; }
+.commission-payment-dialog .payout-form-v3 > .btn { grid-column:1; width:100%; justify-self:stretch; }
+@media(max-width:760px){.credit-stock-admin-metrics{grid-template-columns:1fr 1fr}.credit-admin-action-status{grid-template-columns:30px 1fr}.credit-admin-action-status button{grid-column:1/-1}.commission-payment-dialog .payout-form-fields{grid-template-columns:1fr}}

@@ -39,10 +39,45 @@ function catalogue_tiers(array $tiers): array {
     }
     usort($clean,static fn($a,$b)=>$a['sales']<=>$b['sales']);return $clean;
 }
+function catalogue_credit_progression(array $tiers, float $sales): array {
+    usort($tiers, static fn(array $left, array $right): int => (float)$left['sales'] <=> (float)$right['sales']);
+
+    $credit = 0.0;
+    foreach ($tiers as $tier) {
+        if ((float)$tier['sales'] <= $sales) {
+            $credit = max($credit, (float)$tier['credit']);
+        }
+    }
+
+    $count = count($tiers);
+    if ($count === 0 || $sales < (float)$tiers[$count - 1]['sales']) {
+        return ['credit' => $credit];
+    }
+
+    $last = $tiers[$count - 1];
+    $previous = $count > 1 ? $tiers[$count - 2] : ['sales' => 0, 'credit' => 0];
+    $salesStep = (float)$last['sales'] - (float)$previous['sales'];
+    $creditStep = (float)$last['credit'] - (float)$previous['credit'];
+
+    if ($salesStep <= 0 || $creditStep <= 0) {
+        return ['credit' => $credit];
+    }
+
+    $completedSteps = (int)floor(($sales - (float)$last['sales']) / $salesStep);
+
+    return [
+        'credit' => (float)$last['credit'] + ($completedSteps * $creditStep),
+        'nextSales' => (float)$last['sales'] + (($completedSteps + 1) * $salesStep),
+        'nextCredit' => (float)$last['credit'] + (($completedSteps + 1) * $creditStep),
+    ];
+}
+function catalogue_credit_for_sales(array $tiers, float $sales): float {
+    return round((float)catalogue_credit_progression($tiers, $sales)['credit'], 2);
+}
 function catalogue_credit(array &$state): void {
     foreach($state['entrepreneurs'] as &$person){
         $sales=0;foreach($state['orders'] as $order)if((string)$order['entrepreneurId']===(string)$person['id']&&$order['status']==='Delivered')$sales+=(float)($order['camyCost'] ?? $order['amount']);
-        $credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales)$credit=max($credit,(float)$tier['credit']);
+        $credit = catalogue_credit_for_sales($state['tiers'], $sales);
         $person['sales']=round($sales,2);$person['credit']=$credit;
         if(($person['stage'] ?? '')!=='Departed')$person['stage']=$credit>0?'Credit eligible':'Trial seller';
     }unset($person);

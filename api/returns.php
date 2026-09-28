@@ -50,7 +50,7 @@ function return_route(PDO $pdo,string $path,string $method): void {
             $order['payoutStatus']=$nextPayout;
         }
         $sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$order['entrepreneurId']&&$entry['status']==='Delivered')$sales+=(float)($entry['camyCost'] ?? $entry['amount']);
-        $credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales)$credit=max($credit,(float)$tier['credit']);
+        $credit=catalogue_credit_for_sales($state['tiers'],$sales);
         foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$order['entrepreneurId']){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
     }else{
         if($stage!=='Received'||($return['refundStatus']??'')!=='Pending')response(['message'=>'This return is not awaiting a refund.'],409);

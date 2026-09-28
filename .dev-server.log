@@ -1,0 +1,7 @@
+
+> camy-entrepreneurs-platform@1.0.0 dev
+> node scripts/dev.mjs
+
+CAMY PHP: D:\xammp\php\php.exe
+CAMY database ready: camy_new
+3:25:52 PM [vite] (client) Re-optimizing dependencies because vite config has changed

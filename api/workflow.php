@@ -156,7 +156,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
             $state['orders'][$index]['status']='Delivered';$state['orders'][$index]['updatedAt']=date(DATE_ATOM);$state['orders'][$index]['deliveredAt']=date(DATE_ATOM);
             $pdo->prepare("UPDATE shop_orders SET status='Delivered',delivered_at=COALESCE(delivered_at,NOW()) WHERE id=?")->execute([$order['id']]);
             $shop=$order['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)($entry['camyCost'] ?? $entry['amount']);
-            $credit=0;foreach($state['tiers'] as $tier)if((float)$tier['sales']<=$sales)$credit=max($credit,(float)$tier['credit']);
+            $credit=catalogue_credit_for_sales($state['tiers'],$sales);
             foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
             market_save($pdo,$state);
         }

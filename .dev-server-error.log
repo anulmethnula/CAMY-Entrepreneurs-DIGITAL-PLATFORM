@@ -1,0 +1,9 @@
+[Mon Sep 28 15:25:52 2026] PHP 8.2.12 Development Server (http://127.0.0.1:8000) started
+error when starting dev server:
+Error: Port 8080 is already in use
+    at httpServerStart (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:11681:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async startServer (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:26694:30)
+    at async Object.listen (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:26511:4)
+    at async CAC.<anonymous> (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/cli.js:721:3)
+CAMY web server stopped. Check the output above and ensure ports 8000 and 8080 are available.
