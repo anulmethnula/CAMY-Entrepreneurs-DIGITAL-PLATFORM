@@ -21,6 +21,8 @@ import { AdminCreditStockPage, CreditStockPage, ShopHome, StockSupplyPage } from
 import camyLogo from '../camy-logo-official.png'
 
 const money = (value) => `Rs. ${Number(value || 0).toLocaleString('en-LK')}`
+const SUPPORT_PHONE_DISPLAY = '+94 77 716 5336'
+const SUPPORT_PHONE_DIAL = '+94777165336'
 const shortMoney = (value) => value >= 1000000 ? `Rs. ${(value / 1000000).toFixed(2)}M` : value >= 1000 ? `Rs. ${(value / 1000).toFixed(0)}K` : money(value)
 const displayDate = (value) => !value || Number.isNaN(new Date(value).getTime()) ? 'Not provided' : new Intl.DateTimeFormat('en-LK', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(value))
 const avatarFor = (person) => person.avatar || person.image || `https://i.pravatar.cc/160?img=${(Number.parseInt(String(person.id).replace(/\D/g, ''), 10) || 1) % 70 + 1}`
@@ -252,7 +254,51 @@ function ProfilePage({ profile, setProfile, person, orders, entrepreneurs, notif
   const [editing,setEditing]=useState(false); const [draft,setDraft]=useState(profile); const [leaveOpen,setLeaveOpen]=useState(false); const [saving,setSaving]=useState(false)
   useEffect(()=>setDraft(profile),[profile])
   const joined=person?.joined||profile.joined||'2026-03-21'; const joinedDate=new Date(joined); const daysActive=Math.max(1,Math.floor((Date.now()-joinedDate.getTime())/86400000)); const customers=new Set(orders.map(order=>order.phone||order.customer)).size; const leaders=[...entrepreneurs].sort((a,b)=>Number(b.sales||0)-Number(a.sales||0)); const rank=Math.max(1,leaders.findIndex(item=>item.id===person?.id)+1); const activeOrders=orders.filter(order=>!['Delivered','Returned','Rejected','Cancelled'].includes(order.status)); const outstanding=Number(person?.used||0); const canLeave=outstanding===0&&activeOrders.length===0; const exitStatus=person?.exitRequest?.status||profile.exitRequest?.status; const pending=exitStatus==='Pending'
-  const save=async()=>{setSaving(true);try{if(await setProfile({...draft,joined}))setEditing(false)}finally{setSaving(false)}}
+  const save = async () => {
+    if (saving) return
+
+    const phone = String(draft.phone || '').replace(/[\s-]/g, '')
+    const nic = String(draft.nic || '').trim()
+
+    if (!draft.name?.trim()) {
+      notify('Enter your full name before saving.')
+      return
+    }
+
+    if (!/^(?:\+94|0)7\d{8}$/.test(phone)) {
+      notify('Enter a valid mobile number, for example 0771234567.')
+      return
+    }
+
+    if (!/^(?:\d{9}[VvXx]|\d{12})$/.test(nic)) {
+      notify('Enter a valid 10-character old NIC or 12-digit new NIC number.')
+      return
+    }
+
+    setSaving(true)
+    try {
+      if (await setProfile({ ...draft, phone, nic, joined })) {
+        setEditing(false)
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  useEffect(() => {
+    const beginEdit = () => setEditing(true)
+    const saveEdit = () => {
+      if (!saving) save()
+    }
+
+    window.addEventListener('camy-edit-profile', beginEdit)
+    window.addEventListener('camy-save-profile', saveEdit)
+
+    return () => {
+      window.removeEventListener('camy-edit-profile', beginEdit)
+      window.removeEventListener('camy-save-profile', saveEdit)
+    }
+  })
   const updatePhoto=event=>{const file=event.target.files?.[0];event.target.value='';if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>2*1024*1024){notify('Use a JPG, PNG or WebP profile photo up to 2 MB');return}const reader=new FileReader();reader.onload=()=>setDraft(old=>({...old,image:String(reader.result)}));reader.readAsDataURL(file)}
   const removePhoto=()=>setDraft(old=>({...old,image:''}))
   const requestExit=async()=>{if(saving||!canLeave)return;setSaving(true);try{if(await setProfile({...draft,joined,exitRequest:{status:'Pending',createdAt:new Date().toISOString()}}))setLeaveOpen(false)}finally{setSaving(false)}}
@@ -298,7 +344,7 @@ function ProfileSecurityCard() {
   </article>
 }
 
-function ProfileForm({ title, icon:Icon, editing, draft, setDraft, fields, secure }) { return <article className="card profile-form"><div className="card-head"><div><span>{secure?'PAYMENT DETAILS':'YOUR INFORMATION'}</span><h2>{title}</h2></div><Icon /></div><div>{fields.map(([key,label])=><label className={key==='address'?'wide':''} key={key}>{label}<input disabled={!editing||key==='email'} value={draft[key]||''} onChange={e=>setDraft({...draft,[key]:e.target.value})} /></label>)}</div>{secure&&<p className="secure"><BadgeCheck /><span><strong>Your details are protected.</strong> CAMY uses this account to transfer your recorded entrepreneur earnings.</span></p>}</article> }
+function ProfileForm({ title, icon:Icon, editing, draft, setDraft, fields, secure }) { return <article className={`card profile-form ${editing?'is-editing':''}`}><div className="card-head"><div><span>{secure?'PAYMENT DETAILS':'YOUR INFORMATION'}</span><h2>{title}</h2></div><div className="profile-card-actions"><Icon/><button type="button" onClick={()=>window.dispatchEvent(new Event(editing?'camy-save-profile':'camy-edit-profile'))}>{editing?<><Check/> Save changes</>:<><Pencil/> Edit details</>}</button></div></div><div>{fields.map(([key,label])=>{const phoneInvalid=key==='phone'&&editing&&draft.phone&&!/^(?:\+94|0)7\d{8}$/.test(String(draft.phone).replace(/[\s-]/g,''));const nicInvalid=key==='nic'&&editing&&draft.nic&&!/^(?:\d{9}[VvXx]|\d{12})$/.test(String(draft.nic).trim());return <label className={`${key==='address'?'wide ':''}${phoneInvalid||nicInvalid?'field-invalid':''}`} key={key}>{label}<input disabled={!editing||key==='email'} inputMode={key==='phone'?'tel':undefined} placeholder={key==='phone'?'0771234567':undefined} value={draft[key]||''} onChange={e=>setDraft({...draft,[key]:e.target.value})}/>{phoneInvalid&&<small>Use a Sri Lankan mobile number such as 0771234567.</small>}{nicInvalid&&<small>Use a 10-character old NIC or a 12-digit new NIC.</small>}</label>})}</div>{secure&&<p className="secure"><BadgeCheck/><span><strong>Your details are protected.</strong> CAMY uses this account to transfer your recorded entrepreneur earnings.</span></p>}</article> }
 
 function AdminOverview({ entrepreneurs, orders, products, tiers = [], requests = [], setPage, openEntrepreneur }) {
   const active=entrepreneurs.filter(person=>person.active!==false&&person.stage!=='Departed')
@@ -312,17 +358,13 @@ function AdminOverview({ entrepreneurs, orders, products, tiers = [], requests =
   const outstanding=entrepreneurs.reduce((sum,person)=>sum+Number(person.used||0),0)
   const inProgress=orders.filter(order=>!['Delivered','Returned','Rejected','Cancelled'].includes(order.status))
   const now=new Date(), month=now.toISOString().slice(0,7)
-  const overduePayouts=orders.filter(order=>{
-    if(order.orderMode!=='dropship'||order.payoutStatus!=='pending_transfer')return false
-    const due=new Date(order.payoutDueAt||new Date(order.deliveredAt||order.updatedAt||order.date).getTime()+7*86400000)
-    return Number.isFinite(due.getTime())&&due.getTime()<Date.now()
-  })
+  const readyPayouts=orders.filter(order=>order.orderMode==='dropship'&&order.payoutStatus==='pending_transfer')
   const monthSales=delivered.filter(order=>String(order.date).startsWith(month)).reduce((sum,order)=>sum+Number(order.camyCost??order.amount??0),0)
   const monthly=Array.from({length:6},(_,index)=>{const date=new Date(now.getFullYear(),now.getMonth()-5+index,1);const key=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0');return {label:date.toLocaleDateString('en-LK',{month:'short'}),amount:delivered.filter(order=>String(order.date).startsWith(key)).reduce((sum,order)=>sum+Number(order.camyCost??order.amount??0),0)}})
   const max=Math.max(1,...monthly.map(item=>item.amount))
   const [stageFilter,setStageFilter]=useState('All'), [startDate,setStartDate]=useState(''), [endDate,setEndDate]=useState('')
   const top=active.filter(person=>(stageFilter==='All'||person.stage===stageFilter)&&(!startDate||person.joined>=startDate)&&(!endDate||person.joined<=endDate)).sort((a,b)=>Number(b.sales||0)-Number(a.sales||0)).slice(0,4)
-  const tasks=[[WalletCards,overduePayouts.length,'Overdue entrepreneur commissions','Pay within 7 days of delivery and save the transfer receipt','payouts'],[PackageOpen,requests.filter(item=>item.status==='Pending').length,'Credit stock requests to approve','Check eligibility, credit and warehouse stock','stock-supply'],[PackageCheck,requests.filter(item=>item.status==='Approved').length,'Approved credit stock to dispatch','Dispatching issues credit and increases outstanding balance','stock-supply'],[Truck,orders.filter(item=>item.status==='Processing').length,'COD client orders ready to dispatch','CAMY will collect the client payment on delivery','admin-orders'],[WalletCards,active.filter(person=>Number(person.used||0)>0).length,'Accounts with outstanding credit',money(outstanding)+' outstanding','credit-control']]
+  const tasks=[[WalletCards,readyPayouts.length,'Entrepreneur commissions ready','Transfer at any time and save the payment receipt','payouts'],[PackageOpen,requests.filter(item=>item.status==='Pending').length,'Credit stock requests to approve','Check eligibility, credit and warehouse stock','stock-supply'],[PackageCheck,requests.filter(item=>item.status==='Approved').length,'Approved credit stock to dispatch','Dispatching issues credit and increases outstanding balance','stock-supply'],[Truck,orders.filter(item=>item.status==='Processing').length,'COD client orders ready to dispatch','CAMY will collect the client payment on delivery','admin-orders'],[WalletCards,active.filter(person=>Number(person.used||0)>0).length,'Accounts with outstanding credit',money(outstanding)+' outstanding','credit-control']]
   return <div className="content-page"><section className="admin-hero"><div><span><BadgeCheck/> CAMY MANAGEMENT</span><h1>Your network. <em>One clear view.</em></h1><p>Live figures from saved accounts, verified orders, and warehouse stock.</p></div></section><section className="metric-row"><Metric icon={UsersRound} label="Active entrepreneurs" value={active.length} detail={active.filter(person=>String(person.joined||'').startsWith(month)).length+' joined this month'} tone="purple"/><Metric icon={CircleDollarSign} label="Verified network sales" value={shortMoney(networkSales)} detail={delivered.length+' delivered orders'}/><Metric icon={WalletCards} label="Credit outstanding" value={money(outstanding)} detail={active.filter(person=>Number(person.used||0)>0).length+' accounts with a balance'} tone="gold"/><Metric icon={Truck} label="Orders in progress" value={inProgress.length} detail={orders.filter(order=>order.status==='Dispatched').length+' dispatched'} tone="green"/></section><section className="overview-finance-summary"><header><div><span>DELIVERED COD FINANCE SUMMARY</span><h2>CAMY revenue and entrepreneur commissions</h2></div><button type="button" onClick={()=>setPage('payouts')}>Open payouts <ArrowRight/></button></header><div><article><span><CircleDollarSign/></span><small>CLIENT COD COLLECTED</small><strong>{money(clientCollections)}</strong><p>{delivered.length} successful delivery{delivered.length===1?'':'ies'}</p></article><article className="camy-profit"><span><Banknote/></span><small>CAMY GROSS PROFIT</small><strong>{money(camyGrossProfit)}</strong><p>After entrepreneur commission · before stock and operating costs</p></article><article className="entrepreneur-commission"><span><WalletCards/></span><small>ENTREPRENEUR COMMISSION</small><strong>{money(entrepreneurCommissions)}</strong><p>{money(paidCommissions)} paid · {money(pendingCommissions)} waiting to pay</p></article></div></section><section className="dashboard-grid"><article className="card chart-card"><div className="card-head"><div><span>VERIFIED SALES</span><h2>{money(monthSales)} <small>this month</small></h2></div><button onClick={()=>setPage('reports')}>View reports <ArrowRight/></button></div><SalesBars values={monthly.map(item=>100*item.amount/max)} labels={monthly.map(item=>item.label)} amounts={monthly.map(item=>item.amount)}/></article><article className="card action-centre"><div className="card-head"><div><span>NEEDS ATTENTION</span><h2>Action centre</h2></div><b>{tasks.reduce((sum,task)=>sum+task[1],0)}</b></div>{tasks.map(([Icon,count,title,text,target])=><button key={title} onClick={()=>setPage(target)}><span><Icon/></span><div><strong>{count} {title.toLowerCase()}</strong><small>{text}</small></div><ChevronRight/></button>)}</article></section><article className="card admin-preview"><div className="card-head"><div><span>ENTREPRENEUR ACTIVITY</span><h2>Top verified sellers</h2></div><button onClick={()=>setPage('entrepreneurs')}>Manage all <ArrowRight/></button></div><div className="overview-filters"><select value={stageFilter} onChange={event=>setStageFilter(event.target.value)}><option value="All">All stages</option><option>Trial seller</option><option>Credit eligible</option></select><label>From<input type="date" value={startDate} onChange={event=>setStartDate(event.target.value)}/></label><label>To<input type="date" value={endDate} onChange={event=>setEndDate(event.target.value)}/></label><button onClick={()=>{setStartDate('');setEndDate('');setStageFilter('All')}}>Clear</button></div><EntrepreneurTable people={top} onOpen={openEntrepreneur} readOnly/>{!top.length&&<Empty icon={UsersRound} title="No matching entrepreneurs" text="Saved active accounts appear here."/>}</article><section className="admin-snapshot"><article className="card"><div className="card-head"><div><span>SAVED CREDIT RULES</span><h2>Sales tier summary</h2></div><button onClick={()=>setPage('credit-control')}>Manage <Settings/></button></div><div className="snapshot-rules">{tiers.map((tier,index)=><span key={tier.id||index}><small>{money(tier.sales)} verified sales</small><strong>{money(tier.credit)} credit</strong></span>)}</div>{!tiers.length&&<p>No credit tiers configured.</p>}</article><article className="card"><div className="card-head"><div><span>WAREHOUSE STOCK</span><h2>Stock snapshot</h2></div><button onClick={()=>setPage('admin-products')}>Manage <ArrowRight/></button></div><div className="stock-snapshot"><span><i className="good"/><strong>{products.filter(product=>product.stock>8).length}</strong> healthy</span><span><i className="low"/><strong>{products.filter(product=>product.stock>0&&product.stock<=8).length}</strong> low stock</span><span><i className="out"/><strong>{products.filter(product=>product.stock===0).length}</strong> unavailable</span></div></article></section></div>
 }
 
@@ -600,24 +642,12 @@ function UserAccessPage({ users, setUsers, notify, currentUser }) {
 function CommissionPayouts({ orders, openOrder }) {
   const [filter,setFilter]=useState('Ready to pay')
   const [search,setSearch]=useState('')
-  const dueAt=order=>{
-    if(order.payoutDueAt&&Number.isFinite(new Date(order.payoutDueAt).getTime()))return new Date(order.payoutDueAt)
-    const deliveredAt=order.deliveredAt||order.updatedAt||order.date
-    const delivered=new Date(deliveredAt)
-    return Number.isFinite(delivered.getTime())?new Date(delivered.getTime()+7*86400000):null
-  }
-  const deadlineText=order=>{
-    const due=dueAt(order);if(!due)return 'Due date pending'
-    const days=Math.ceil((due.getTime()-Date.now())/86400000)
-    return days<0?`${Math.abs(days)} day${Math.abs(days)===1?'':'s'} overdue`:days===0?'Due today':`Due ${displayDate(due)}`
-  }
   const payoutOrders=orders.filter(order=>order.orderMode==='dropship'&&Number(order.entrepreneurMargin||0)>0)
   const ready=payoutOrders.filter(order=>order.status==='Delivered'&&order.payoutStatus==='pending_transfer')
-  const overdue=ready.filter(order=>{const due=dueAt(order);return due&&due.getTime()<Date.now()})
   const waiting=payoutOrders.filter(order=>!['Delivered','Returned','Rejected','Cancelled'].includes(order.status)&&order.payoutStatus==='pending_delivery')
   const paid=payoutOrders.filter(order=>order.payoutStatus==='paid')
   const review=payoutOrders.filter(order=>order.payoutStatus==='reversal_required')
-  const matchesStatus=order=>filter==='All'||(filter==='Ready to pay'&&ready.includes(order))||(filter==='Overdue'&&overdue.includes(order))||(filter==='Waiting for delivery'&&waiting.includes(order))||(filter==='Paid'&&paid.includes(order))||(filter==='Needs review'&&review.includes(order))
+  const matchesStatus=order=>filter==='All'||(filter==='Ready to pay'&&ready.includes(order))||(filter==='Waiting for delivery'&&waiting.includes(order))||(filter==='Paid'&&paid.includes(order))||(filter==='Needs review'&&review.includes(order))
   const visible=payoutOrders.filter(order=>matchesStatus(order)&&`${order.id} ${order.entrepreneur} ${order.entrepreneurId} ${order.customer} ${order.phone}`.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>String(b.deliveredAt||b.updatedAt||b.date).localeCompare(String(a.deliveredAt||a.updatedAt||a.date)))
   const statusFor=order=>order.payoutStatus==='paid'?'Paid':order.payoutStatus==='reversal_required'?'Needs review':order.payoutStatus==='pending_transfer'?'Ready to pay':'Waiting for delivery'
   return <div className="content-page commission-page">
@@ -628,16 +658,15 @@ function CommissionPayouts({ orders, openOrder }) {
       <article className="paid"><span><BadgeCheck/></span><div><small>TRANSFERRED</small><strong>{money(paid.reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0))}</strong><p>{paid.length} completed payout{paid.length===1?'':'s'}</p></div></article>
       <article className="review"><span><ReceiptText/></span><div><small>NEEDS REVIEW</small><strong>{review.length}</strong><p>Returned after payout</p></div></article>
     </section>
-    {overdue.length>0&&<section className="commission-alert"><span><CalendarDays/></span><div><small>OVERDUE PAYOUT REMINDER</small><strong>{overdue.length} entrepreneur commission{overdue.length===1?' is':'s are'} overdue</strong><p>These margins were due within seven days of delivery. Transfer them now and upload the bank receipt.</p></div><button type="button" onClick={()=>setFilter('Overdue')}>Show overdue <ArrowRight/></button></section>}
-    {!overdue.length&&ready.length>0&&<section className="commission-alert"><span><WalletCards/></span><div><small>ACTION REQUIRED</small><strong>{ready.length} entrepreneur commission{ready.length===1?' is':'s are'} ready to transfer</strong><p>Every delivered commission must be paid within seven days. Open each order, transfer the commission, and upload the bank receipt.</p></div><button type="button" onClick={()=>setFilter('Ready to pay')}>Show payouts <ArrowRight/></button></section>}
+    {ready.length>0&&<section className="commission-alert"><span><WalletCards/></span><div><small>READY WHEN CAMY IS</small><strong>{ready.length} entrepreneur commission{ready.length===1?' is':'s are'} available to transfer</strong><p>There is no fixed deadline. CAMY can pay any time after delivery, then upload the bank receipt.</p></div><button type="button" onClick={()=>setFilter('Ready to pay')}>Show payouts <ArrowRight/></button></section>}
     <article className="card commission-workspace">
-      <header><label><Search/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search order, entrepreneur, customer, or phone"/></label><div>{['Ready to pay','Overdue','Waiting for delivery','Paid','Needs review','All'].map(item=><button type="button" className={filter===item?'active':''} key={item} onClick={()=>setFilter(item)}>{item}<b>{item==='Ready to pay'?ready.length:item==='Overdue'?overdue.length:item==='Waiting for delivery'?waiting.length:item==='Paid'?paid.length:item==='Needs review'?review.length:payoutOrders.length}</b></button>)}</div></header>
+      <header><label><Search/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search order, entrepreneur, customer, or phone"/></label><div>{['Ready to pay','Waiting for delivery','Paid','Needs review','All'].map(item=><button type="button" className={filter===item?'active':''} key={item} onClick={()=>setFilter(item)}>{item}<b>{item==='Ready to pay'?ready.length:item==='Waiting for delivery'?waiting.length:item==='Paid'?paid.length:item==='Needs review'?review.length:payoutOrders.length}</b></button>)}</div></header>
       <div className="commission-list">{visible.map(order=><article className={`commission-row ${statusFor(order).toLowerCase().replaceAll(' ','-')}`} key={order.id}>
         <div className="commission-order"><span><ReceiptText/></span><div><small>ORDER</small><strong>{order.id}</strong><p>{displayDate(order.deliveredAt||order.date)} · {order.product}</p></div></div>
         <div><small>ENTREPRENEUR</small><strong>{order.entrepreneur}</strong><p>{order.entrepreneurId}</p></div>
         <div><small>CLIENT PAYMENT</small><strong>{money(order.amount)}</strong><p>{order.clientPaymentStatus||'Cash on delivery'}</p></div>
         <div><small>CAMY VALUE</small><strong>{money(order.camyCost)}</strong><p>Product cost</p></div>
-        <div className="commission-amount"><small>COMMISSION</small><strong>{money(order.entrepreneurMargin)}</strong>{order.payoutStatus==='pending_transfer'&&<p className={overdue.includes(order)?'overdue':''}>{deadlineText(order)}</p>}<Status value={statusFor(order)}/></div>
+        <div className="commission-amount"><small>COMMISSION</small><strong>{money(order.entrepreneurMargin)}</strong>{order.payoutStatus==='pending_transfer'&&<p>Pay any time</p>}<Status value={statusFor(order)}/></div>
         <button type="button" className="commission-open" onClick={()=>openOrder(order)}><span>{order.payoutStatus==='pending_transfer'?'Pay commission':'View order'}</span><ArrowRight/></button>
       </article>)}</div>
       {!visible.length&&<Empty icon={Banknote} title={payoutOrders.length?'No payouts match this view':'No commission records yet'} text={payoutOrders.length?'Choose another status or clear the search.':'Delivered COD orders with entrepreneur commission will appear here automatically.'}/>}
@@ -651,35 +680,32 @@ function ReportsPage({ entrepreneurs, orders, products }) {
   const returned=orders.filter(order=>order.status==='Returned').length
   const deliverySuccess=delivered+returned?Math.round(delivered/(delivered+returned)*1000)/10:100
   const commissionRows=deliveredOrders.filter(order=>order.orderMode==='dropship'&&Number(order.entrepreneurMargin||0)>0).map(order=>{
-    const fallback=new Date(order.deliveredAt||order.updatedAt||order.date);const due=new Date(order.payoutDueAt||fallback.getTime()+7*86400000)
-    const overdue=order.payoutStatus==='pending_transfer'&&Number.isFinite(due.getTime())&&due.getTime()<Date.now()
-    return {orderId:order.id,deliveredAt:order.deliveredAt||order.date,entrepreneur:order.entrepreneur,entrepreneurId:order.entrepreneurId,customer:order.customer,clientCod:Number(order.amount||0),camyGrossProfit:Math.max(0,Number(order.amount||0)-Number(order.entrepreneurMargin||0)),commission:Number(order.entrepreneurMargin||0),payoutStatus:order.payoutStatus||'pending_delivery',payoutDueAt:Number.isFinite(due.getTime())?due.toISOString():null,paidAt:order.payoutPaidAt||null,payoutReference:order.payoutReference||'',overdue:overdue?'Yes':'No',daysOverdue:overdue?Math.ceil((Date.now()-due.getTime())/86400000):0}
+    return {orderId:order.id,deliveredAt:order.deliveredAt||order.date,entrepreneur:order.entrepreneur,entrepreneurId:order.entrepreneurId,customer:order.customer,clientCod:Number(order.amount||0),camyGrossProfit:Math.max(0,Number(order.amount||0)-Number(order.entrepreneurMargin||0)),commission:Number(order.entrepreneurMargin||0),payoutStatus:order.payoutStatus||'pending_delivery',paidAt:order.payoutPaidAt||null,payoutReference:order.payoutReference||''}
   })
   const clientCodCollected=deliveredOrders.reduce((sum,order)=>sum+Number(order.amount||0),0)
   const totalCommission=commissionRows.reduce((sum,row)=>sum+row.commission,0)
   const paidCommission=commissionRows.filter(row=>row.payoutStatus==='paid').reduce((sum,row)=>sum+row.commission,0)
   const pendingCommission=commissionRows.filter(row=>row.payoutStatus==='pending_transfer').reduce((sum,row)=>sum+row.commission,0)
-  const overdueCommission=commissionRows.filter(row=>row.overdue==='Yes').reduce((sum,row)=>sum+row.commission,0)
   const grossProfit=Math.max(0,clientCodCollected-totalCommission)
   const financeColumns=[{key:'metric',label:'Metric',type:'text'},{key:'amount',label:'Amount (LKR)',type:'currency'},{key:'note',label:'Calculation / note',type:'text'}]
-  const commissionColumns=[{key:'orderId',label:'Order ID',type:'text'},{key:'deliveredAt',label:'Delivered date',type:'date'},{key:'entrepreneur',label:'Entrepreneur',type:'text'},{key:'entrepreneurId',label:'Member ID',type:'text'},{key:'customer',label:'Customer',type:'text'},{key:'clientCod',label:'Client COD (LKR)',type:'currency'},{key:'camyGrossProfit',label:'CAMY gross profit (LKR)',type:'currency'},{key:'commission',label:'Entrepreneur commission (LKR)',type:'currency'},{key:'payoutStatus',label:'Payout status',type:'text'},{key:'payoutDueAt',label:'Payout due date',type:'date'},{key:'paidAt',label:'Paid date',type:'date'},{key:'payoutReference',label:'Transfer reference',type:'text'},{key:'overdue',label:'Overdue',type:'text'},{key:'daysOverdue',label:'Days overdue',type:'auto'}]
-  const financialSummary=[{metric:'Client COD collected',amount:clientCodCollected,note:'Delivered customer orders only'},{metric:'CAMY gross profit',amount:grossProfit,note:'Client COD less entrepreneur commission; before stock and operating costs'},{metric:'Entrepreneur commission',amount:totalCommission,note:'Total commission earned from delivered dropship orders'},{metric:'Commission paid',amount:paidCommission,note:'Transfer proof recorded by CAMY'},{metric:'Commission waiting to pay',amount:pendingCommission,note:'Must be paid within 7 days of delivery'},{metric:'Overdue commission',amount:overdueCommission,note:'Unpaid after the 7-day deadline'}]
+  const commissionColumns=[{key:'orderId',label:'Order ID',type:'text'},{key:'deliveredAt',label:'Delivered date',type:'date'},{key:'entrepreneur',label:'Entrepreneur',type:'text'},{key:'entrepreneurId',label:'Member ID',type:'text'},{key:'customer',label:'Customer',type:'text'},{key:'clientCod',label:'Client COD (LKR)',type:'currency'},{key:'camyGrossProfit',label:'CAMY gross profit (LKR)',type:'currency'},{key:'commission',label:'Entrepreneur commission (LKR)',type:'currency'},{key:'payoutStatus',label:'Payout status',type:'text'},{key:'paidAt',label:'Paid date',type:'date'},{key:'payoutReference',label:'Transfer reference',type:'text'}]
+  const financialSummary=[{metric:'Client COD collected',amount:clientCodCollected,note:'Delivered customer orders only'},{metric:'CAMY gross profit',amount:grossProfit,note:'Client COD less entrepreneur commission; before stock and operating costs'},{metric:'Entrepreneur commission',amount:totalCommission,note:'Total commission earned from delivered dropship orders'},{metric:'Commission paid',amount:paidCommission,note:'Transfer proof recorded by CAMY'},{metric:'Commission waiting to pay',amount:pendingCommission,note:'Available for CAMY to transfer at any time'}]
   const grossProfitRows=deliveredOrders.map(order=>{const commission=order.orderMode==='dropship'?Number(order.entrepreneurMargin||0):0;const clientCod=Number(order.amount||0);return {orderId:order.id,deliveredAt:order.deliveredAt||order.date,entrepreneur:order.entrepreneur||'CAMY direct order',clientCod,commission,camyGrossProfit:Math.max(0,clientCod-commission)}})
   const grossProfitColumns=[{key:'orderId',label:'Order ID',type:'text'},{key:'deliveredAt',label:'Delivered date',type:'date'},{key:'entrepreneur',label:'Entrepreneur',type:'text'},{key:'clientCod',label:'Client COD (LKR)',type:'currency'},{key:'commission',label:'Entrepreneur commission (LKR)',type:'currency'},{key:'camyGrossProfit',label:'CAMY gross profit (LKR)',type:'currency'}]
-  const payoutAgeingRows=commissionRows.filter(row=>row.payoutStatus==='pending_transfer').map(row=>({...row,ageing:row.overdue==='Yes'?`${row.daysOverdue} days overdue`:'Within 7-day payment window'}))
-  const payoutAgeingColumns=[...commissionColumns.filter(column=>['orderId','deliveredAt','entrepreneur','entrepreneurId','commission','payoutStatus','payoutDueAt','overdue','daysOverdue'].includes(column.key)),{key:'ageing',label:'Ageing',type:'text'}]
-  const financialWorkbook=()=>downloadWorkbook('camy-financial-summary.xlsx',[{name:'Financial summary',title:'CAMY Entrepreneurs - Financial Summary',columns:financeColumns,rows:financialSummary},{name:'CAMY gross profit',title:'CAMY Entrepreneurs - Gross Profit by Order',columns:grossProfitColumns,rows:grossProfitRows},{name:'Commissions',title:'CAMY Entrepreneurs - Commission Register',columns:commissionColumns,rows:commissionRows},{name:'Payout ageing',title:'CAMY Entrepreneurs - Payout Ageing',columns:payoutAgeingColumns,rows:payoutAgeingRows}])
+  const pendingPayoutRows=commissionRows.filter(row=>row.payoutStatus==='pending_transfer')
+  const pendingPayoutColumns=commissionColumns.filter(column=>['orderId','deliveredAt','entrepreneur','entrepreneurId','commission','payoutStatus'].includes(column.key))
+  const financialWorkbook=()=>downloadWorkbook('camy-financial-summary.xlsx',[{name:'Financial summary',title:'CAMY Entrepreneurs - Financial Summary',columns:financeColumns,rows:financialSummary},{name:'CAMY gross profit',title:'CAMY Entrepreneurs - Gross Profit by Order',columns:grossProfitColumns,rows:grossProfitRows},{name:'Commissions',title:'CAMY Entrepreneurs - Commission Register',columns:commissionColumns,rows:commissionRows},{name:'Pending payouts',title:'CAMY Entrepreneurs - Pending Commission Payouts',columns:pendingPayoutColumns,rows:pendingPayoutRows}])
   const reports=[
-    ['Financial summary','Client COD, CAMY gross profit, paid commission, pending commission, and overdue amounts.',Banknote,financialWorkbook],
+    ['Financial summary','Client COD, CAMY gross profit, paid commission, and pending commission amounts.',Banknote,financialWorkbook],
     ['CAMY gross profit','Gross profit by delivered order after entrepreneur commission, before stock and operating costs.',CircleDollarSign,()=>downloadWorkbook('camy-gross-profit.xlsx',[{name:'Gross profit',title:'CAMY Entrepreneurs - Gross Profit by Order',columns:grossProfitColumns,rows:grossProfitRows}])],
-    ['Entrepreneur commissions','Complete commission register with transfer status, due dates, proof reference, and overdue flag.',WalletCards,()=>downloadWorkbook('camy-entrepreneur-commissions.xlsx',[{name:'Commission register',title:'CAMY Entrepreneurs - Entrepreneur Commission Register',columns:commissionColumns,rows:commissionRows}])],
-    ['Payout ageing & overdue','Unpaid commissions ordered by their 7-day payment deadline for finance follow-up.',CalendarDays,()=>downloadWorkbook('camy-payout-ageing.xlsx',[{name:'Payout ageing',title:'CAMY Entrepreneurs - Unpaid Commission Ageing',columns:payoutAgeingColumns,rows:payoutAgeingRows}])],
+    ['Entrepreneur commissions','Complete commission register with transfer status and payment proof reference.',WalletCards,()=>downloadWorkbook('camy-entrepreneur-commissions.xlsx',[{name:'Commission register',title:'CAMY Entrepreneurs - Entrepreneur Commission Register',columns:commissionColumns,rows:commissionRows}])],
+    ['Pending commission payouts','Delivered commissions that CAMY can transfer at any time.',CalendarDays,()=>downloadWorkbook('camy-pending-payouts.xlsx',[{name:'Pending payouts',title:'CAMY Entrepreneurs - Pending Commission Payouts',columns:pendingPayoutColumns,rows:pendingPayoutRows}])],
     ['Entrepreneur performance','Registration, sales, rank, stages, and credit limits.',UsersRound,()=>exportReport('entrepreneur-performance.xlsx',entrepreneurs)],
     ['Order and delivery report','All processing, dispatched, delivered, and returned orders.',Truck,()=>exportReport('order-delivery-report.xlsx',orders)],
     ['Credit and settlements','Issued credit, current use, and entrepreneur balances.',CreditCard,()=>exportReport('credit-settlement-report.xlsx',entrepreneurs.map(p=>({id:p.id,name:p.name,limit:p.credit,outstanding:p.used})))],
     ['Product and stock report','Catalogue prices, model numbers, categories, and live stock.',PackageOpen,()=>exportReport('product-stock-report.xlsx',products)]
   ]
-  return <div className="content-page"><PageTitle eyebrow="MANAGEMENT REPORTS" title="Reports for every CAMY decision" text="Finance, commission, payout, delivery, credit, entrepreneur, and stock reports—ready for Excel."><Button icon={Download} onClick={financialWorkbook}>Download finance summary</Button></PageTitle><section className="report-finance-note"><span><Banknote/></span><div><small>FINANCE REPORTING RULE</small><strong>CAMY gross profit = delivered client COD − entrepreneur commission</strong><p>Gross profit is shown before warehouse product cost and operating expenses, which are not yet recorded in the platform.</p></div></section><div className="report-grid">{reports.map(([title,text,Icon,download])=><article className="card" key={title}><span><Icon /></span><h2>{title}</h2><p>{text}</p><Button variant="secondary" icon={Download} onClick={download}>Download Excel</Button></article>)}</div><article className="card report-summary"><div><span>DELIVERED ORDER SUMMARY</span><h2>CAMY financial and operational snapshot</h2><p>Use the finance reports to reconcile collections, CAMY gross profit, commissions, and payout deadlines.</p></div><section><span><strong>{money(grossProfit)}</strong> CAMY gross profit</span><span><strong>{money(pendingCommission)}</strong> commission waiting</span><span><strong>{money(overdueCommission)}</strong> commission overdue</span><span><strong>{deliverySuccess}%</strong> delivery success</span></section></article></div>
+  return <div className="content-page"><PageTitle eyebrow="MANAGEMENT REPORTS" title="Reports for every CAMY decision" text="Finance, commission, payout, delivery, credit, entrepreneur, and stock reports—ready for Excel."><Button icon={Download} onClick={financialWorkbook}>Download finance summary</Button></PageTitle><section className="report-finance-note"><span><Banknote/></span><div><small>FINANCE REPORTING RULE</small><strong>CAMY gross profit = delivered client COD − entrepreneur commission</strong><p>Gross profit is shown before warehouse product cost and operating expenses, which are not yet recorded in the platform.</p></div></section><div className="report-grid">{reports.map(([title,text,Icon,download])=><article className="card" key={title}><span><Icon /></span><h2>{title}</h2><p>{text}</p><Button variant="secondary" icon={Download} onClick={download}>Download Excel</Button></article>)}</div><article className="card report-summary"><div><span>DELIVERED ORDER SUMMARY</span><h2>CAMY financial and operational snapshot</h2><p>Use the finance reports to reconcile collections, CAMY gross profit, commissions, and completed transfers.</p></div><section><span><strong>{money(grossProfit)}</strong> CAMY gross profit</span><span><strong>{money(pendingCommission)}</strong> commission waiting</span><span><strong>{money(paidCommission)}</strong> commission paid</span><span><strong>{deliverySuccess}%</strong> delivery success</span></section></article></div>
 }
 
 function Empty({ icon:Icon,title,text }) { return <div className="empty"><span><Icon /></span><h2>{title}</h2><p>{text}</p></div> }
@@ -775,13 +801,18 @@ function DropshipPayoutPanel({ order, admin, entrepreneur, onEditEntrepreneur, o
     holder:entrepreneur?.accountName||entrepreneur?.bankDetails?.holder||'',
     account:entrepreneur?.accountNumber||entrepreneur?.account||entrepreneur?.bankDetails?.account||''
   }
-  const bankComplete=['bank','branch','holder','account'].every(key=>String(bank[key]||'').trim())
-  const canTransfer=admin&&bankComplete&&order.status==='Delivered'&&margin>0&&order.payoutStatus!=='paid'&&order.payoutStatus!=='reversal_required'
-  const payoutNeedsBank=admin&&!bankComplete&&order.status==='Delivered'&&margin>0&&order.payoutStatus!=='paid'&&order.payoutStatus!=='reversal_required'
+  const bankComplete = ['bank', 'branch', 'holder', 'account'].every(key => (
+    String(bank[key] || '').trim()
+  ))
+  const canTransfer = (
+    admin
+    && order.status === 'Delivered'
+    && margin > 0
+    && order.payoutStatus !== 'paid'
+    && order.payoutStatus !== 'reversal_required'
+  )
+  const payoutNeedsBank = canTransfer && !bankComplete
   const payoutLabel=order.payoutStatus==='paid'?'Paid':order.payoutStatus==='pending_transfer'?'Ready to transfer':order.payoutStatus==='reversal_required'?'Reversal required':order.payoutStatus==='not_required'?'No payout due':'Waiting for delivery'
-  const payoutDueAt=order.payoutDueAt||(()=>{const delivered=new Date(order.deliveredAt||order.updatedAt||order.date);return Number.isFinite(delivered.getTime())?new Date(delivered.getTime()+7*86400000).toISOString():null})()
-  const payoutDueDate=payoutDueAt&&new Date(payoutDueAt)
-  const payoutOverdue=order.payoutStatus==='pending_transfer'&&payoutDueDate&&payoutDueDate.getTime()<Date.now()
   const upload=async event=>{
     event.preventDefault()
     if(!file||!reference.trim()||busy)return
@@ -795,11 +826,66 @@ function DropshipPayoutPanel({ order, admin, entrepreneur, onEditEntrepreneur, o
     <header><span><Banknote/></span><div><small>COD MONEY FLOW</small><h3>Collection and entrepreneur payout</h3><p>See exactly what CAMY keeps and what must be transferred to the entrepreneur.</p></div><Status value={payoutLabel}/></header>
     <div className="money-flow-v3"><article className="client"><small>Customer pays CAMY</small><strong>{money(clientTotal)}</strong><span>Cash on delivery</span></article><ArrowRight/><article className="camy"><small>CAMY product value</small><strong>{money(camyCost)}</strong><span>Company collection</span></article><b className="money-plus">+</b><article className="profit"><small>Entrepreneur earns</small><strong>{money(margin)}</strong><span>{payoutLabel}</span></article></div>
     <div className="collection-state-v3"><span><Check/> Client collection</span><strong>{order.clientPaymentStatus||(order.status==='Delivered'?'Collected by CAMY':'Collect on delivery')}</strong></div>
-    {order.payoutStatus==='pending_transfer'&&payoutDueDate&&<div className={`payout-deadline-v3 ${payoutOverdue?'overdue':''}`}><CalendarDays/><span><strong>{payoutOverdue?'Payout overdue — action required':'Entrepreneur payout deadline'}</strong><small>{payoutOverdue?`This commission was due on ${displayDate(payoutDueDate)}. Record the transfer immediately.`:`Pay this commission by ${displayDate(payoutDueDate)} (within 7 days of delivery).`}</small></span></div>}
+    {order.payoutStatus==='pending_transfer'&&<div className="payout-deadline-v3"><CalendarDays/><span><strong>Commission ready for payment</strong><small>No fixed payment date. CAMY can transfer this commission at any time.</small></span></div>}
     {order.payoutStatus==='paid'&&<div className="payout-complete-v3"><span><BadgeCheck/></span><div><strong>Entrepreneur payout recorded</strong><small>Reference {order.payoutReference||'Recorded'} · {displayDate(order.payoutPaidAt)}</small></div>{order.payoutReceipt&&<a className="btn secondary" href={order.payoutReceipt} target="_blank" rel="noreferrer"><FileText/> View receipt</a>}</div>}
     {order.payoutStatus==='reversal_required'&&<div className="login-error">This order was returned after the margin was transferred. Finance reconciliation is required.</div>}
-    {payoutNeedsBank&&<div className="payout-bank-blocker-v3"><span><CreditCard/></span><div><small>BANK DETAILS REQUIRED</small><strong>Complete the entrepreneur payout account first</strong><p>Add bank, branch, account holder and account number before CAMY records a margin transfer.</p></div><button type="button" className="btn secondary" onClick={onEditEntrepreneur}>Open entrepreneur profile</button></div>}
-    {canTransfer&&<><div className="payout-bank-ready-v3"><span><BadgeCheck/> Transfer to</span><strong>{bank.bank} · {bank.branch}</strong><small>{bank.holder} · {bank.account}</small></div><form className="payout-form-v3" onSubmit={upload}><div className="payout-form-copy"><span><WalletCards/></span><div><small>FINAL FINANCE STEP</small><h4>Transfer {money(margin)}</h4><p>Send the margin to the entrepreneur’s saved bank account, then attach proof below.</p></div></div><div className="payout-form-fields"><label>Bank transfer reference<input required maxLength="120" value={reference} onChange={event=>setReference(event.target.value)} placeholder="Example: TXN-2026-001"/></label><label className={`receipt-upload-v3 ${file?'selected':''}`}><input required type="file" accept="image/png,image/jpeg,image/webp,application/pdf" onChange={event=>setFile(event.target.files?.[0]||null)}/><FileText/><span><strong>{file?'Receipt selected':'Choose transfer receipt'}</strong><small>{file?file.name:'JPG, PNG, WebP or PDF · maximum 5 MB'}</small></span></label></div>{error&&<p className="market-error">{error}</p>}<Button type="submit" disabled={busy||!file||!reference.trim()} icon={Banknote}>{busy?'Saving payout…':'Confirm payout and save proof'}</Button></form></>}
+    {payoutNeedsBank&&<div className="payout-bank-blocker-v3"><span><CreditCard/></span><div><small>BANK DETAILS NOT SAVED</small><strong>You can still record this payout</strong><p>Confirm the payment destination separately, then enter the transfer reference and attach proof below.</p></div><button type="button" className="btn secondary" onClick={onEditEntrepreneur}>Add bank details</button></div>}
+    {canTransfer && <>
+      <div className={`payout-bank-ready-v3 ${bankComplete ? '' : 'details-missing'}`}>
+        <span>
+          {bankComplete ? <><BadgeCheck/> Transfer to</> : <><CreditCard/> Payment destination</>}
+        </span>
+        <strong>{bankComplete ? `${bank.bank} · ${bank.branch}` : 'Confirm directly with entrepreneur'}</strong>
+        <small>{bankComplete ? `${bank.holder} · ${bank.account}` : 'No bank account is saved on this profile'}</small>
+      </div>
+
+      <form className="payout-form-v3" onSubmit={upload}>
+        <div className="payout-form-copy">
+          <span><WalletCards/></span>
+          <div>
+            <small>FINAL FINANCE STEP</small>
+            <h4>Record payment of {money(margin)}</h4>
+            <p>Complete the transfer using the confirmed payment destination, then attach proof below.</p>
+          </div>
+        </div>
+
+        <div className="payout-form-fields">
+          <label>
+            Transfer reference
+            <input
+              required
+              maxLength="120"
+              value={reference}
+              onChange={event => setReference(event.target.value)}
+              placeholder="Example: TXN-2026-001"
+            />
+          </label>
+
+          <label className={`receipt-upload-v3 ${file ? 'selected' : ''}`}>
+            <input
+              required
+              type="file"
+              accept="image/png,image/jpeg,image/webp,application/pdf"
+              onChange={event => setFile(event.target.files?.[0] || null)}
+            />
+            <FileText/>
+            <span>
+              <strong>{file ? 'Receipt selected' : 'Choose transfer receipt'}</strong>
+              <small>{file ? file.name : 'JPG, PNG, WebP or PDF · maximum 5 MB'}</small>
+            </span>
+          </label>
+        </div>
+
+        {error && <p className="market-error">{error}</p>}
+        <Button
+          type="submit"
+          disabled={busy || !file || !reference.trim()}
+          icon={Banknote}
+        >
+          {busy ? 'Saving payout…' : 'Confirm payout and save proof'}
+        </Button>
+      </form>
+    </>}
     {admin&&order.status!=='Delivered'&&margin>0&&<div className="payout-locked-v3"><Truck/><span><strong>Payout is locked</strong><small>It becomes available after this order is marked delivered.</small></span></div>}
   </section>
 }
@@ -1007,6 +1093,7 @@ function LoginScreen({ onLogin }) {
   const [error,setError]=useState('')
   const [success,setSuccess]=useState('')
   const [busy,setBusy]=useState(false)
+  const [showLoginPassword,setShowLoginPassword]=useState(false)
   useEffect(()=>{const syncLocation=()=>{setView(registrationLocationActive()?'register':'login');setStep(1);setError('')};window.addEventListener('popstate',syncLocation);return()=>window.removeEventListener('popstate',syncLocation)},[])
   const update=(key,value)=>setForm(old=>({...old,[key]:value}))
   const uploadNic=(key,event)=>{const file=event.target.files?.[0];event.target.value='';if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){setError('Use a JPG, PNG or WebP NIC photo up to 5 MB.');return}const reader=new FileReader();reader.onload=()=>update(key,String(reader.result));reader.onerror=()=>setError('Could not read the NIC photo.');reader.readAsDataURL(file)}
@@ -1060,7 +1147,7 @@ function LoginScreen({ onLogin }) {
       {error&&<div className="login-error" role="alert">{error}</div>}{success&&<div className="login-success" role="status">{success}</div>}
       {view==='login'?<>
         <label>Email address<input type="email" required autoComplete="username" value={form.email} onChange={e=>update('email',e.target.value)} placeholder="name@example.com"/></label>
-        <label>Password<input type="password" required autoComplete="current-password" value={form.password} onChange={e=>update('password',e.target.value)} placeholder="Enter your password"/></label>
+        <label>Password<div className="login-password-field"><input type={showLoginPassword?'text':'password'} required autoComplete="current-password" value={form.password} onChange={e=>update('password',e.target.value)} placeholder="Enter your password"/><button type="button" onClick={()=>setShowLoginPassword(value=>!value)} aria-label={showLoginPassword?'Hide password':'Show password'} aria-pressed={showLoginPassword} title={showLoginPassword?'Hide password':'Show password'}>{showLoginPassword?<EyeOff/>:<Eye/>}</button></div></label>
         <button className="login-submit" disabled={busy}>{busy?'Signing in…':'Sign in securely'}<ArrowRight/></button>
       </>:<>
         <div className="registration-steps"><button type="button" className={step>=1?'active':''} onClick={()=>step>1&&setStep(1)}><b>1</b><span>Personal</span></button><i/><button type="button" className={step>=2?'active':''} onClick={()=>step>2&&setStep(2)}><b>2</b><span>Business</span></button><i/><button type="button" className={step>=3?'active':''}><b>3</b><span>Confirm</span></button></div>
@@ -1099,7 +1186,20 @@ export default function App() {
     catalogueBaseStock.current=nextBase
     catalogueRevision.current=Number(revision||catalogueRevision.current)
   }
-  const notify=(message)=>{if(message==='CAMY Support: +94 77 755 4477')window.location.href='tel:+94777554477';setToast(message);window.clearTimeout(window.__camyToast);window.__camyToast=window.setTimeout(()=>setToast(''),2600)}
+  const notify = message => {
+    const supportRequest = String(message).startsWith('CAMY Support:')
+    const shownMessage = supportRequest
+      ? `Anything at Supun support: ${SUPPORT_PHONE_DISPLAY}`
+      : message
+
+    if (supportRequest) {
+      window.location.href = `tel:${SUPPORT_PHONE_DIAL}`
+    }
+
+    setToast(shownMessage)
+    window.clearTimeout(window.__camyToast)
+    window.__camyToast = window.setTimeout(() => setToast(''), 2600)
+  }
   const applySession=(user,resetRequired=false)=>{setProducts([]);setOrders([]);setEntrepreneurs([]);setTiers([]);setSettlements([]);setStockRequests([]);setShopInventory([]);setSyncError('');productDraft.current=false;tierDraft.current=false;setAuthUser(user);setMarketReady(false);setCatalogueLive(false);setPasswordResetRequired(resetRequired);const admin=user.role!=='entrepreneur';setMode(admin?'admin':'entrepreneur');setPage(admin?'overview':'home');if(!admin)setProfile(old=>({...old,id:user.member_id,name:user.full_name,email:user.email,nic:user.nic||'',phone:user.phone||'',address:user.address||'',joined:user.joined_date||old.joined,image:user.profile_image||'',bank:user.bank_name||'',branch:user.bank_branch||'',accountName:user.account_holder||'',account:user.account_number||'',exitRequest:null}))}
   useEffect(()=>{api('/auth/me').then(({user,passwordResetRequired})=>applySession(user,passwordResetRequired)).catch(()=>setAuthUser(null)).finally(()=>setAuthLoading(false))},[])
   useEffect(()=>{const refreshed=()=>setRefreshVersion(old=>old+1);window.addEventListener('camy-business-updated',refreshed);const expired=()=>{setAuthUser(null);setMarketReady(false);setProducts([]);setOrders([]);setEntrepreneurs([]);setStockRequests([]);setShopInventory([]);setPasswordModal(false);setPasswordResetRequired(false);setOrderModal(null);setPersonModal(null);setCart([]);setCartOpen(false);setNotifyOpen(false);setSystemUsers([])};window.addEventListener('camy-session-expired',expired);const open=()=>setPasswordModal(true);window.addEventListener('camy-change-password',open);return()=>{window.removeEventListener('camy-change-password',open);window.removeEventListener('camy-session-expired',expired);window.removeEventListener('camy-business-updated',refreshed)}},[])
@@ -1146,7 +1246,54 @@ export default function App() {
     notify(`${id} updated to ${status}`)
   }
   const updateOrderDetails=(id,quantity,unitPrice)=>{const order=orders.find(item=>item.id===id);const product=products.find(item=>item.name===order?.product);if(!order||!product||quantity<1||unitPrice<0)return;const stockChange=quantity-order.qty;if(stockChange>product.stock){notify(`Only ${product.stock} more units are available`);return}const amount=quantity*unitPrice;setOrders(old=>old.map(item=>item.id===id?{...item,qty:quantity,amount,items:[{id:product.id,name:product.name,qty:quantity,price:unitPrice}]}:item));setProducts(old=>old.map(item=>item.id===product.id?{...item,stock:item.stock-stockChange}:item));if(order.status==='Delivered')setEntrepreneurs(old=>old.map(person=>{if(person.name!==order.entrepreneur)return person;const sales=Math.max(0,Number(person.sales||0)+(amount-order.amount));const credit=Number([...tiers].filter(tier=>Number(tier.sales)<=sales).sort((a,b)=>Number(b.sales)-Number(a.sales))[0]?.credit||0);return {...person,sales,credit,stage:credit>0?'Credit eligible':'Trial seller'}}));notify(`${id} price, quantity, and stock updated${order.status==='Delivered'?', with verified sales recalculated':''}`)}
-  const updateBusinessProfile=async next=>{try{const result=await api('/account/profile',{method:'PATCH',body:JSON.stringify({...next,city:next.city||currentEntrepreneur.city||'',accountNumber:next.account})});setProfile({...next,exitRequest:result.person.exitRequest||null});setEntrepreneurs(old=>old.map(person=>person.id===result.person.id?result.person:person));setRefreshVersion(old=>old+1);notify(next.exitRequest?.status==='Pending'?'Exit request sent to CAMY Admin':'Profile saved to MySQL');return true}catch(reason){notify(reason.message);return false}}
+  const updateBusinessProfile = async nextProfile => {
+    try {
+      const payload = {
+        ...nextProfile,
+        city: nextProfile.city || currentEntrepreneur?.city || '',
+        accountNumber: nextProfile.account ?? nextProfile.accountNumber ?? '',
+      }
+
+      const result = await api('/account/profile', {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      })
+
+      const savedProfile = result.person || {}
+      const canonicalProfile = {
+        ...nextProfile,
+        ...savedProfile,
+        name: savedProfile.name ?? nextProfile.name,
+        email: savedProfile.email ?? nextProfile.email,
+        nic: savedProfile.nic ?? nextProfile.nic,
+        phone: savedProfile.phone ?? nextProfile.phone,
+        address: savedProfile.address ?? nextProfile.address,
+        bank: savedProfile.bank ?? savedProfile.bankDetails?.bank ?? nextProfile.bank,
+        branch: savedProfile.branch ?? savedProfile.bankDetails?.branch ?? nextProfile.branch,
+        accountName: savedProfile.accountName ?? savedProfile.bankDetails?.holder ?? nextProfile.accountName,
+        account: savedProfile.accountNumber ?? savedProfile.bankDetails?.account ?? payload.accountNumber,
+        image: savedProfile.image ?? nextProfile.image,
+        joined: savedProfile.joined ?? nextProfile.joined,
+        exitRequest: savedProfile.exitRequest || null,
+      }
+
+      setProfile(canonicalProfile)
+      setEntrepreneurs(current => current.map(person => (
+        person.id === savedProfile.id ? { ...person, ...savedProfile } : person
+      )))
+      setRefreshVersion(current => current + 1)
+
+      notify(
+        nextProfile.exitRequest?.status === 'Pending'
+          ? 'Exit request sent to CAMY Admin'
+          : 'Profile details saved successfully',
+      )
+      return true
+    } catch (reason) {
+      notify(reason.message)
+      return false
+    }
+  }
   const createEntrepreneur=async(form)=>{try{const result=await api('/admin/entrepreneurs',{method:'POST',body:JSON.stringify(form)});setEntrepreneurs(old=>[...old,result.entrepreneur]);notify(`${result.entrepreneur.name} account created · ${result.entrepreneur.id}`);return true}catch(reason){notify(reason.message);throw reason}}
   const createProduct=(form)=>{editProducts(old=>[...old,{...form,id:Date.now(),published:true,price:Number(form.price),stock:Number(form.stock),image:form.image||'/products/classic-set.png',tag:form.tag||'New',rating:Number(form.rating||5),warranty:form.warranty||'1 year',description:form.description||'New CAMY catalogue product.',specs:form.specs?.length?form.specs:['CAMY quality assured','Ready for entrepreneur orders']}]);notify('Product added to catalogue')}
   const createCategory=(name)=>{const key='camy-product-categories-v2';const existing=JSON.parse(localStorage.getItem(key)||'[]');if(existing.some(category=>category.toLowerCase()===name.toLowerCase())){notify('That category already exists');return}localStorage.setItem(key,JSON.stringify([...existing,name]));window.dispatchEvent(new Event('camy-categories-updated'));setAddCategory(false);notify(`${name} category created`)}
@@ -1161,10 +1308,8 @@ export default function App() {
     const relevantOrders=mode==='admin'?liveOrders:myOrders
     const next=[]
     if(mode==='admin'){
-      const overduePayouts=relevantOrders.filter(order=>order.payoutStatus==='pending_transfer'&&new Date(order.payoutDueAt||new Date(new Date(order.deliveredAt||order.date).getTime()+7*86400000)).getTime()<Date.now())
       const readyPayouts=relevantOrders.filter(order=>order.payoutStatus==='pending_transfer')
-      if(overduePayouts.length)next.push({id:'payout-overdue',type:'credit',title:'Overdue entrepreneur payouts',body:`${overduePayouts.length} commission payment${overduePayouts.length===1?' is':'s are'} past the seven-day deadline.`,time:'Action required'})
-      else if(readyPayouts.length)next.push({id:'payout-ready',type:'credit',title:'Commission payouts ready',body:`${readyPayouts.length} delivered order${readyPayouts.length===1?' has':'s have'} an entrepreneur commission ready to transfer.`,time:'Finance update'})
+      if(readyPayouts.length)next.push({id:'payout-ready',type:'credit',title:'Commission payouts ready',body:`${readyPayouts.length} delivered order${readyPayouts.length===1?' has':'s have'} an entrepreneur commission available to transfer at any time.`,time:'Finance update'})
       const active=relevantOrders.filter(order=>['Processing','Dispatched'].includes(order.status))
       if(active.length)next.push({id:'orders-active',type:'delivery',title:'Orders need fulfilment',body:`${active.length} order${active.length===1?' is':'s are'} currently processing or dispatched.`,time:'Operations update'})
     }else{

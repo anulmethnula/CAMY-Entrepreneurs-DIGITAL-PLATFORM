@@ -21,6 +21,21 @@ $expectedTables=[
 $tables=array_map('strval',array_column($pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_NUM),0));
 foreach($expectedTables as $table)check_fail($errors,!in_array($table,$tables,true),"Missing required table: $table");
 
+$legacyTables = [
+    'orders',
+    'order_items',
+    'settlements',
+    'exit_requests',
+];
+
+foreach ($legacyTables as $table) {
+    check_fail(
+        $errors,
+        in_array($table, $tables, true),
+        "Legacy table still exists: $table. Run npm run db:cleanup."
+    );
+}
+
 $expectedIndexes=[
     'users'=>['users_role_status_member'],
     'stock_supply_requests'=>['supply_member_status_created'],

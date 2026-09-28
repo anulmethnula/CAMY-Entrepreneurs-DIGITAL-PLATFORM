@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS entrepreneurs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT UNSIGNED NULL,
   member_id VARCHAR(30) NOT NULL UNIQUE,
+  full_name VARCHAR(150) NULL,
+  email VARCHAR(190) NULL,
   nic VARCHAR(30) NULL UNIQUE,
   nic_image_path VARCHAR(255) NULL,
   phone VARCHAR(30) NULL,
@@ -50,37 +52,6 @@ CREATE TABLE IF NOT EXISTS products (
   status ENUM('active','inactive') NOT NULL DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS orders (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  order_number VARCHAR(40) NOT NULL UNIQUE,
-  entrepreneur_id BIGINT UNSIGNED NOT NULL,
-  customer_name VARCHAR(150) NOT NULL,
-  customer_phone VARCHAR(30) NOT NULL,
-  delivery_address TEXT NOT NULL,
-  source ENUM('portal','phone','admin') NOT NULL DEFAULT 'portal',
-  status ENUM('Processing','Dispatched','Delivered','Returned','Cancelled') NOT NULL DEFAULT 'Processing',
-  subtotal DECIMAL(14,2) NOT NULL,
-  discount DECIMAL(14,2) NOT NULL DEFAULT 0,
-  total DECIMAL(14,2) NOT NULL,
-  notes TEXT NULL,
-  created_by BIGINT UNSIGNED NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (entrepreneur_id) REFERENCES entrepreneurs(id),
-  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS order_items (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  order_id BIGINT UNSIGNED NOT NULL,
-  product_id BIGINT UNSIGNED NOT NULL,
-  quantity INT UNSIGNED NOT NULL,
-  unit_price DECIMAL(14,2) NOT NULL,
-  line_total DECIMAL(14,2) NOT NULL,
-  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-  FOREIGN KEY (product_id) REFERENCES products(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS marketplace_state (
@@ -223,30 +194,6 @@ CREATE TABLE IF NOT EXISTS credit_settlement_requests (
   record_json LONGTEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX settlement_member_status(entrepreneur_member_id,status)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS settlements (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  entrepreneur_id BIGINT UNSIGNED NOT NULL,
-  amount DECIMAL(14,2) NOT NULL,
-  reference VARCHAR(100) NULL,
-  recorded_by BIGINT UNSIGNED NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (entrepreneur_id) REFERENCES entrepreneurs(id),
-  FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS exit_requests (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  entrepreneur_id BIGINT UNSIGNED NOT NULL,
-  reason TEXT NOT NULL,
-  status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
-  admin_note TEXT NULL,
-  reviewed_by BIGINT UNSIGNED NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  reviewed_at DATETIME NULL,
-  FOREIGN KEY (entrepreneur_id) REFERENCES entrepreneurs(id),
-  FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS registration_requests (

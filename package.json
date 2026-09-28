@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "db:setup": "node scripts/run-php.mjs scripts/setup-local-db.php",
     "db:reset": "node scripts/run-php.mjs scripts/setup-local-db.php --reset",
+    "db:cleanup": "node scripts/run-php.mjs scripts/cleanup-legacy-tables.php",
     "php:version": "node scripts/run-php.mjs -v",
     "db:check": "node scripts/run-php.mjs scripts/check-local-db.php"
   },

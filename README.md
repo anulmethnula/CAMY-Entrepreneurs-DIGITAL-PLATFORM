@@ -124,6 +124,27 @@ npm.cmd run db:reset
 
 **Warning:** `db:reset` deletes all data. Do not use it for normal updates.
 
+### Production legacy-table cleanup
+
+After backing up the full hosted database, run the versioned cleanup once:
+
+```powershell
+npm.cmd run db:cleanup
+```
+
+The cleanup targets only the retired `orders`, `order_items`, `settlements`, and
+`exit_requests` tables. It writes a restorable SQL backup to
+`private/database-backups/` before dropping anything. If any target contains
+records, the command creates the backup and stops without deleting tables. Review
+that backup before deliberately rerunning with:
+
+```powershell
+npm.cmd run db:cleanup -- --allow-data
+```
+
+The current `shop_orders`, `shop_order_items`, `entrepreneur_payouts`, customer,
+stock, security, and marketplace tables are active and are not cleanup targets.
+
 A fresh database may generate temporary admin credentials in:
 
 ```text

@@ -1125,6 +1125,12 @@ input:focus, select:focus, textarea:focus {
 .login-card > p { margin:0 0 29px; color:#65788d; }
 .login-card label { margin-top:17px; color:#314b65; display:grid; gap:8px; font-size:13px; font-weight:700; }
 .login-card input { width:100%; height:54px; padding:0 16px; border:1px solid #cfdeeb; border-radius:14px; font-size:14px; }
+.login-password-field { position:relative; }
+.login-password-field input { padding-right:58px; }
+.login-password-field button { position:absolute; top:50%; right:8px; width:40px; height:40px; padding:0; border:0; border-radius:10px; color:#526f89; background:transparent; display:grid; place-items:center; transform:translateY(-50%); cursor:pointer; }
+.login-password-field button:hover { color:#155f94; background:#dcebf8; }
+.login-password-field button:focus-visible { outline:3px solid rgba(53,126,196,.25); outline-offset:1px; }
+.login-password-field button svg { width:19px; height:19px; }
 .login-submit { width:100%; height:55px; margin-top:24px; padding:0 19px; border:0; border-radius:14px; color:#fff; background:linear-gradient(135deg,#1f63b5,#258bd2); box-shadow:0 14px 28px rgba(31,99,181,.24); display:flex; align-items:center; justify-content:center; gap:10px; font-weight:800; }
 .login-submit svg { width:18px; }
 .login-submit:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 18px 34px rgba(31,99,181,.3); }
@@ -3107,6 +3113,19 @@ input:focus, select:focus, textarea:focus {
 .admin-orders-page .admin-order-table .admin-order-status > small{margin-top:8px;color:#58738b;font-size:11px;font-weight:650}
 .admin-orders-page .admin-order-table .view-order-btn{min-width:112px;height:46px!important;border-color:#bcd9eb!important;border-radius:13px!important;color:#14699d!important;background:linear-gradient(145deg,#f6fcff,#eaf6fd)!important;font-size:12px;box-shadow:0 5px 13px rgba(28,111,159,.07)}
 .admin-orders-page .admin-order-table .view-order-btn span{font-size:12px;font-weight:800}.admin-orders-page .admin-order-table .view-order-btn svg{width:17px;height:17px}
+
+/* Profile edit controls remain visible within each details section. */
+.profile-card-actions{display:flex;align-items:center;gap:10px}
+.profile-card-actions>svg{width:20px;color:#9da0a7}
+.profile-card-actions button{min-height:38px;padding:0 13px;border:1px solid #b9d7e9;border-radius:10px;color:#176c9f;background:#eff8fd;display:flex;align-items:center;gap:7px;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
+.profile-card-actions button:hover:not(:disabled){color:#fff;border-color:#2279ac;background:#2279ac}
+.profile-card-actions button:disabled{color:#2b7c60;border-color:#bfe0d3;background:#eef9f4;cursor:default}
+.profile-card-actions button svg{width:15px;height:15px}
+.profile-form.is-editing{border-color:#9fcde7;box-shadow:0 0 0 3px rgba(52,139,190,.08)}
+.profile-form label.field-invalid{color:#a63333}
+.profile-form label.field-invalid input{border-color:#d95c5c;background:#fff8f8;box-shadow:0 0 0 3px rgba(217,92,92,.1)}
+.profile-form label.field-invalid small{display:block;margin-top:6px;color:#a63333;font-size:10px;line-height:1.4}
+@media(max-width:620px){.profile-card-actions>svg{display:none}.profile-card-actions button{padding-inline:10px}.profile-card-actions button:disabled{font-size:0}.profile-card-actions button:disabled svg{width:17px;height:17px}}
 @media(max-width:1050px){.admin-orders-page .admin-order-table .data-row{min-height:0}.admin-orders-page .admin-order-table .data-row small,.admin-orders-page .admin-order-table .admin-order-client em,.admin-orders-page .admin-order-table .admin-order-money em{font-size:12px}}
 @media(max-width:620px){.admin-orders-page .admin-order-table .order-id-cell strong{font-size:16px}.admin-orders-page .admin-order-table .admin-order-person strong,.admin-orders-page .admin-order-table .admin-order-client strong,.admin-orders-page .admin-order-table .admin-order-delivery strong,.admin-orders-page .admin-order-table .admin-order-money strong{font-size:15px}}
 

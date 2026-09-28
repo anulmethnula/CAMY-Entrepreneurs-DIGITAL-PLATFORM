@@ -239,8 +239,8 @@ try {
         $memberId = member_id($pdo);
         $userInsert = $pdo->prepare("INSERT INTO users(member_id,full_name,email,password_hash,role,status) VALUES(?,?,?,?, 'entrepreneur','active')");
         $userInsert->execute([$memberId,$request['full_name'],$request['email'],$request['password_hash']]); $userId=(int)$pdo->lastInsertId();
-        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,nic,nic_image_path,phone,address,city,joined_date) VALUES(?,?,?,?,?,?,?,CURDATE())');
-        $entrepreneurInsert->execute([$userId,$memberId,$request['nic'],$request['nic_front_path'] ?: $request['nic_image_path'],$request['phone'],$request['address'],$request['city']]);
+        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,full_name,email,nic,nic_image_path,phone,address,city,joined_date) VALUES(?,?,?,?,?,?,?,?,?,CURDATE())');
+        $entrepreneurInsert->execute([$userId,$memberId,$request['full_name'],$request['email'],$request['nic'],$request['nic_front_path'] ?: $request['nic_image_path'],$request['phone'],$request['address'],$request['city']]);
         $pdo->prepare("UPDATE registration_requests SET status='approved',admin_note=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$note ?: null,$admin['id'],$id]);
         $pdo->commit();
         $activationMessage="Hello {$request['full_name']}, your CAMY entrepreneur account has been approved. Your username is {$request['email']}. Please use the password you created during registration to sign in. Member ID: $memberId.";
@@ -266,8 +266,8 @@ try {
         $pdo->beginTransaction(); $memberId=member_id($pdo);
         $userInsert=$pdo->prepare("INSERT INTO users(member_id,full_name,email,password_hash,role,status,must_change_password) VALUES(?,?,?,?, 'entrepreneur','active',1)");
         $userInsert->execute([$memberId,$data['full_name'],$data['email'],password_hash($data['password'],PASSWORD_DEFAULT)]); $userId=(int)$pdo->lastInsertId();
-        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,nic,phone,address,city,joined_date) VALUES(?,?,?,?,?,?,?)');
-        $entrepreneurInsert->execute([$userId,$memberId,$data['nic'],$data['phone'],$data['address'],$data['city'],$data['joined']]); $pdo->commit();
+        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,full_name,email,nic,phone,address,city,joined_date) VALUES(?,?,?,?,?,?,?,?,?)');
+        $entrepreneurInsert->execute([$userId,$memberId,$data['full_name'],$data['email'],$data['nic'],$data['phone'],$data['address'],$data['city'],$data['joined']]); $pdo->commit();
         response(['entrepreneur'=>['id'=>$memberId,'name'=>$data['full_name'],'email'=>$data['email'],'phone'=>$data['phone'],'nic'=>$data['nic'],'address'=>$data['address'],'city'=>$data['city'],'joined'=>$data['joined'],'sales'=>0,'credit'=>0,'used'=>0,'active'=>true,'stage'=>'Trial seller','initials'=>strtoupper(substr($data['full_name'],0,1))]],201);
     }
 

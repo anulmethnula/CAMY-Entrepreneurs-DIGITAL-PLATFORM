@@ -57,8 +57,16 @@ function initialise_database(PDO $pdo): void
     ] as $field=>$definition){
         if(!$pdo->query("SHOW COLUMNS FROM registration_requests LIKE '$field'")->fetch())$pdo->exec("ALTER TABLE registration_requests ADD COLUMN $field $definition");
     }
-    $identityColumn=$pdo->query("SHOW COLUMNS FROM entrepreneurs LIKE 'nic_image_path'")->fetchAll();
-    if(!$identityColumn)$pdo->exec('ALTER TABLE entrepreneurs ADD COLUMN nic_image_path VARCHAR(255) NULL AFTER nic');
+    foreach([
+        'full_name'=>'VARCHAR(150) NULL AFTER member_id',
+        'email'=>'VARCHAR(190) NULL AFTER full_name',
+        'nic_image_path'=>'VARCHAR(255) NULL AFTER nic',
+    ] as $field=>$definition){
+        if(!$pdo->query("SHOW COLUMNS FROM entrepreneurs LIKE '$field'")->fetch())$pdo->exec("ALTER TABLE entrepreneurs ADD COLUMN $field $definition");
+    }
+    // Keep a complete entrepreneur record for administration/reporting while the
+    // users table remains the authentication source of truth.
+    $pdo->exec("UPDATE entrepreneurs e JOIN users u ON u.id=e.user_id SET e.full_name=u.full_name,e.email=u.email WHERE u.role='entrepreneur'");
 
     foreach(['stock_supply_requests','shop_orders'] as $table){$column=$pdo->query("SHOW COLUMNS FROM $table LIKE 'status'")->fetch();if(!str_contains($column['Type'],'varchar'))$pdo->exec("ALTER TABLE $table MODIFY status VARCHAR(40) NOT NULL DEFAULT 'Pending'");}
     if(!$pdo->query("SHOW COLUMNS FROM shop_orders LIKE 'delivered_at'")->fetch())$pdo->exec('ALTER TABLE shop_orders ADD COLUMN delivered_at DATETIME NULL AFTER status');
@@ -66,7 +74,9 @@ function initialise_database(PDO $pdo): void
     if(!$pdo->query("SHOW COLUMNS FROM entrepreneur_payouts LIKE 'payout_due_at'")->fetch())$pdo->exec('ALTER TABLE entrepreneur_payouts ADD COLUMN payout_due_at DATETIME NULL AFTER collected_at');
     $payoutDueIndex=$pdo->prepare("SHOW INDEX FROM entrepreneur_payouts WHERE Key_name=?");$payoutDueIndex->execute(['payout_due_status']);
     if(!$payoutDueIndex->fetch())$pdo->exec('ALTER TABLE entrepreneur_payouts ADD INDEX payout_due_status (payout_status,payout_due_at)');
-    $pdo->exec("UPDATE entrepreneur_payouts SET payout_due_at=DATE_ADD(COALESCE(collected_at,created_at),INTERVAL 7 DAY) WHERE payout_status='pending_transfer' AND payout_amount>0 AND payout_due_at IS NULL");
+    // Commissions have no fixed payment deadline. CAMY may record the transfer
+    // at any time after delivery and COD collection.
+    $pdo->exec('UPDATE entrepreneur_payouts SET payout_due_at=NULL WHERE payout_due_at IS NOT NULL');
 
     // Operational indexes are also applied to existing local databases. These keep
     // entrepreneur/state refreshes and the 90-day activity check responsive as data grows.
