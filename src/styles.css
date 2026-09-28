@@ -2330,6 +2330,334 @@ input:focus, select:focus, textarea:focus {
 }
 
 .category-no-results { margin: 12px 0 0; padding: 14px; border: 1px dashed #ccdce8; border-radius: 12px; color: #718599; background: #f8fbfd; text-align: center; font-size: 12px; }
+
+/* Phone-first order flow and final responsive safety rules. */
+@media (max-width: 720px) {
+  html,
+  body,
+  #root,
+  .app-v2 {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .content-page,
+  .content-page > *,
+  .card,
+  .page-title {
+    min-width: 0;
+  }
+
+  .cart-page-layer {
+    display: grid;
+    place-items: stretch;
+    background: #f4f8fb;
+    backdrop-filter: none;
+  }
+
+  .cart-drawer {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    border: 0;
+    box-shadow: none;
+    animation: mobile-cart-page .2s ease both;
+  }
+
+  .cart-drawer > header {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    padding: 18px 16px;
+    background: #fff;
+  }
+
+  .cart-drawer .drawer-items {
+    padding: 4px 16px;
+  }
+
+  .cart-drawer .drawer-items article {
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .cart-drawer .drawer-items img {
+    width: 64px;
+    height: 68px;
+  }
+
+  .cart-drawer .customer-fields {
+    padding: 18px 16px;
+  }
+
+  .cart-drawer .customer-fields > div {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .cart-drawer .customer-fields input,
+  .cart-drawer .customer-fields select,
+  .cart-drawer .customer-fields textarea {
+    font-size: 16px;
+  }
+
+  .cart-drawer > footer {
+    position: sticky;
+    z-index: 2;
+    bottom: 0;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    border-top: 1px solid #d9e4ed;
+    background: #fff;
+    box-shadow: 0 -10px 24px rgba(12, 43, 68, .08);
+  }
+
+  .cart-drawer > footer .btn {
+    min-height: 50px;
+    font-size: 14px;
+  }
+
+  .data-row,
+  .purchase-table,
+  .credit-list,
+  .orders-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@keyframes mobile-cart-page {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Full mobile workspace: designed for one hand, not a reduced desktop layout. */
+@media (max-width: 720px) {
+  :root {
+    --mobile-gutter: 14px;
+  }
+
+  body {
+    background: #f3f7fb;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app-v2 > main {
+    min-height: 100dvh;
+    padding-bottom: 90px;
+  }
+
+  .topbar-v2 {
+    height: 64px;
+    padding: 0 var(--mobile-gutter);
+    background: rgba(255, 255, 255, .96);
+  }
+
+  .topbar-left {
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .topbar-left .icon-btn,
+  .topbar-actions .icon-btn,
+  .cart-top {
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+    border-radius: 13px;
+  }
+
+  .topbar-left small {
+    overflow: hidden;
+    max-width: 170px;
+    color: #6e8499;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-left strong {
+    overflow: hidden;
+    max-width: 170px;
+    color: #0c2d4b;
+    font-size: 16px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-actions {
+    gap: 7px;
+  }
+
+  .topbar-actions .notify-btn {
+    display: grid;
+  }
+
+  .content-page {
+    width: 100%;
+    padding: 16px var(--mobile-gutter) 110px;
+  }
+
+  .page-title {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+
+  .page-title h1 {
+    font-size: clamp(25px, 8vw, 32px);
+    line-height: 1.05;
+  }
+
+  .page-title p {
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .page-title .btn,
+  .page-actions .btn,
+  .content-page > .btn,
+  .card .btn {
+    min-height: 46px;
+  }
+
+  .card,
+  .content-page > .card,
+  .profile-summary,
+  .stock-category-section,
+  .order-filter-shell {
+    border-radius: 18px;
+  }
+
+  .metric-row,
+  .dashboard-grid,
+  .admin-snapshot,
+  .report-grid,
+  .report-summary,
+  .profile-layout,
+  .credit-overview,
+  .admin-product-grid,
+  .stock-product-grid,
+  .member-contact,
+  .member-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-v2 {
+    min-height: 124px;
+    padding: 14px;
+    align-items: flex-start;
+  }
+
+  .metric-v2 > div:last-child > strong {
+    font-size: 19px;
+  }
+
+  .quick-products,
+  .catalog-controls > div,
+  .stock-category-nav,
+  .shop-categories {
+    scrollbar-width: none;
+  }
+
+  .quick-products::-webkit-scrollbar,
+  .catalog-controls > div::-webkit-scrollbar,
+  .stock-category-nav::-webkit-scrollbar,
+  .shop-categories::-webkit-scrollbar {
+    display: none;
+  }
+
+  input,
+  select,
+  textarea,
+  .form-modal input,
+  .form-modal select,
+  .form-modal textarea {
+    font-size: 16px;
+  }
+
+  input,
+  select {
+    min-height: 44px;
+  }
+
+  .two-fields,
+  .customer-fields > div,
+  .profile-form-grid,
+  .order-info-grid,
+  .member-detail-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-nav-v2 {
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    height: 72px;
+    padding: 6px;
+    border: 1px solid rgba(157, 201, 235, .22);
+    border-radius: 22px;
+  }
+
+  .mobile-nav-v2 button {
+    min-width: 0;
+    min-height: 58px;
+    padding: 4px 2px;
+    font-size: 8px;
+    line-height: 1.15;
+  }
+
+  .mobile-nav-v2 button span {
+    overflow: hidden;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-nav-v2 button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .modal-v2,
+  .modal-v2.wide,
+  .detail-modal,
+  .form-modal {
+    border-radius: 0;
+  }
+
+  .form-modal,
+  .detail-modal {
+    padding: 30px 18px calc(28px + env(safe-area-inset-bottom));
+  }
+
+  .toast-v2 {
+    bottom: 92px;
+    width: calc(100% - 32px);
+    max-width: 440px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 390px) {
+  .metric-row {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar-left small,
+  .topbar-left strong {
+    max-width: 130px;
+  }
+
+  .mobile-nav-v2 button {
+    font-size: 7px;
+  }
+}
 .category-manager { padding: 8px 4px 5px; }
 .category-manager > h2 { margin: 7px 0 5px; color: #153a58; font-size: 27px; }
 .category-manager > p { margin: 0 0 20px; color: #718497; font-size: 13px; line-height: 1.55; }

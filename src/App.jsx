@@ -762,12 +762,100 @@ function ProductModal({ product, close, addToCart, admin, setProducts, notify })
 }
 
 function CartDrawer({ cart, setCart, close, placeOrder }) {
-  const [customer,setCustomer]=useState({name:'',phone:'',address:'',district:'Kurunegala'}); const total=cart.reduce((s,p)=>s+p.price*p.qty,0)
-  const districts=['Ampara','Anuradhapura','Badulla','Batticaloa','Colombo','Galle','Gampaha','Hambantota','Jaffna','Kalutara','Kandy','Kegalle','Kilinochchi','Kurunegala','Mannar','Matale','Matara','Monaragala','Mullaitivu','Nuwara Eliya','Polonnaruwa','Puttalam','Ratnapura','Trincomalee','Vavuniya']
-  useEffect(()=>{const select=document.querySelector('.customer-fields select');if(!select)return;select.replaceChildren(...districts.map(district=>{const option=document.createElement('option');option.value=district;option.textContent=district;return option}));select.value=customer.district},[])
-  const qty=(id,d)=>setCart(old=>old.map(x=>x.id===id?{...x,qty:Math.min(x.stock,Math.max(0,x.qty+d))}:x).filter(x=>x.qty>0))
-  const valid=cart.length&&customer.name&&customer.phone&&customer.address
-  return <div className="drawer-layer" onMouseDown={close}><aside className="drawer" onMouseDown={e=>e.stopPropagation()}><header><div><small>CUSTOMER ORDER</small><h2>Order cart <span>{cart.reduce((s,x)=>s+x.qty,0)}</span></h2></div><button className="icon-btn" onClick={close}><X /></button></header>{!cart.length?<Empty icon={ShoppingCart} title="Your cart is empty" text="Add a product to begin a customer order."/>:<><div className="drawer-items">{cart.map(x=><article key={x.id}><img src={x.image} alt=""/><div><strong>{x.name}</strong><small>{money(x.price)}</small><span><button onClick={()=>qty(x.id,-1)}><Minus/></button>{x.qty}<button onClick={()=>qty(x.id,1)}><Plus/></button></span></div><b>{money(x.price*x.qty)}</b></article>)}</div><div className="customer-fields"><h3>Customer delivery details</h3><label>Customer name<input value={customer.name} onChange={e=>setCustomer({...customer,name:e.target.value})} placeholder="Full name" /></label><div><label>Phone number<input value={customer.phone} onChange={e=>setCustomer({...customer,phone:e.target.value})} placeholder="07X XXX XXXX" /></label><label>District<select value={customer.district} onChange={e=>setCustomer({...customer,district:e.target.value})}><option>Kurunegala</option><option>Colombo</option><option>Kandy</option><option>Galle</option><option>Gampaha</option></select></label></div><label>Delivery address<textarea value={customer.address} onChange={e=>setCustomer({...customer,address:e.target.value})} placeholder="House number, street and town" rows="3" /></label></div><footer><span>Order total <strong>{money(total)}</strong></span><Button disabled={!valid} onClick={()=>placeOrder(customer,total)}>Place customer order <ArrowRight /></Button><small><BadgeCheck /> CAMY confirms stock before processing.</small></footer></>}</aside></div>
+  const [customer, setCustomer] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    district: 'Kurunegala',
+  })
+
+  const districts = [
+    'Ampara', 'Anuradhapura', 'Badulla', 'Batticaloa', 'Colombo', 'Galle',
+    'Gampaha', 'Hambantota', 'Jaffna', 'Kalutara', 'Kandy', 'Kegalle',
+    'Kilinochchi', 'Kurunegala', 'Mannar', 'Matale', 'Matara', 'Monaragala',
+    'Mullaitivu', 'Nuwara Eliya', 'Polonnaruwa', 'Puttalam', 'Ratnapura',
+    'Trincomalee', 'Vavuniya',
+  ]
+
+  const total = cart.reduce((sum, product) => sum + product.price * product.qty, 0)
+  const itemCount = cart.reduce((sum, product) => sum + product.qty, 0)
+  const valid = cart.length > 0 && customer.name && customer.phone && customer.address
+
+  const changeQuantity = (id, change) => {
+    setCart(current => current
+      .map(item => item.id === id
+        ? { ...item, qty: Math.min(item.stock, Math.max(0, item.qty + change)) }
+        : item)
+      .filter(item => item.qty > 0))
+  }
+
+  return (
+    <div className="drawer-layer cart-page-layer" onMouseDown={close}>
+      <aside className="drawer cart-drawer" onMouseDown={event => event.stopPropagation()}>
+        <header>
+          <div>
+            <small>CUSTOMER ORDER</small>
+            <h2>Order cart <span>{itemCount}</span></h2>
+          </div>
+          <button className="icon-btn" aria-label="Close order cart" onClick={close}><X /></button>
+        </header>
+
+        {!cart.length ? (
+          <Empty icon={ShoppingCart} title="Your cart is empty" text="Add a product to begin a customer order." />
+        ) : (
+          <>
+            <div className="drawer-items">
+              {cart.map(item => (
+                <article key={item.id}>
+                  <img src={item.image} alt="" />
+                  <div>
+                    <strong>{item.name}</strong>
+                    <small>{money(item.price)}</small>
+                    <span>
+                      <button aria-label={`Remove one ${item.name}`} onClick={() => changeQuantity(item.id, -1)}><Minus /></button>
+                      {item.qty}
+                      <button aria-label={`Add one ${item.name}`} onClick={() => changeQuantity(item.id, 1)}><Plus /></button>
+                    </span>
+                  </div>
+                  <b>{money(item.price * item.qty)}</b>
+                </article>
+              ))}
+            </div>
+
+            <div className="customer-fields">
+              <h3>Customer delivery details</h3>
+              <label>
+                Customer name
+                <input value={customer.name} onChange={event => setCustomer({ ...customer, name: event.target.value })} placeholder="Full name" />
+              </label>
+              <div>
+                <label>
+                  Phone number
+                  <input value={customer.phone} onChange={event => setCustomer({ ...customer, phone: event.target.value })} placeholder="07X XXX XXXX" inputMode="tel" />
+                </label>
+                <label>
+                  District
+                  <select value={customer.district} onChange={event => setCustomer({ ...customer, district: event.target.value })}>
+                    {districts.map(district => <option key={district} value={district}>{district}</option>)}
+                  </select>
+                </label>
+              </div>
+              <label>
+                Delivery address
+                <textarea value={customer.address} onChange={event => setCustomer({ ...customer, address: event.target.value })} placeholder="House number, street and town" rows="3" />
+              </label>
+            </div>
+
+            <footer>
+              <span>Order total <strong>{money(total)}</strong></span>
+              <Button disabled={!valid} onClick={() => placeOrder(customer, total)}>Place customer order <ArrowRight /></Button>
+              <small><BadgeCheck /> CAMY confirms stock before processing.</small>
+            </footer>
+          </>
+        )}
+      </aside>
+    </div>
+  )
 }
 
 function NotificationsDrawer({ notifications, setNotifications, close }) {
@@ -1371,10 +1459,16 @@ export default function App() {
   const customerPages={home:<ShopHome person={currentEntrepreneur} inventory={shopInventory} products={products} requests={stockRequests} orders={myOrders} tiers={tiers} setPage={setPage}/>,products:<StockSupplyPage products={products} person={currentEntrepreneur} orders={myOrders} tiers={tiers} notify={notify} catalogueLive={catalogueLive}/>, 'credit-stock':<CreditStockPage products={products} person={currentEntrepreneur} requests={stockRequests} inventory={shopInventory} submit={submitStockRequest} notify={notify} catalogueLive={catalogueLive}/>,orders:<OrdersPage orders={myOrders} setOrders={setOrders} openOrder={setOrderModal} setPage={setPage}/>,growth:<GrowthPage entrepreneurs={entrepreneurs} person={currentEntrepreneur} orders={myOrders} tiers={tiers}/>,credit:<CreditPage tiers={tiers} settlements={settlements} person={currentEntrepreneur} orders={myOrders} onSettlement={()=>setSettlementModal(true)}/>,profile:<ProfilePage profile={profile} setProfile={updateBusinessProfile} person={currentEntrepreneur} orders={myOrders} entrepreneurs={entrepreneurs} notify={notify}/>}
   const adminPages={overview:<AdminOverview entrepreneurs={entrepreneurs} orders={liveOrders} products={products} tiers={tiers} requests={stockRequests} setPage={setPage} openEntrepreneur={person=>setPersonModal({person,readOnly:true})}/>,entrepreneurs:<AdminEntrepreneurs entrepreneurs={entrepreneurs} orders={liveOrders} setEntrepreneurs={setEntrepreneurs} openEntrepreneur={person=>setPersonModal({person,readOnly:false})} openAdd={()=>setAddEntrepreneur(true)} notify={notify}/>, 'admin-orders':<AdminOrders orders={liveOrders} setOrders={setOrders} products={products} entrepreneurs={entrepreneurs} onManualOrder={placeManualOrder} onUpdateStatus={updateOrderStatus} openOrder={setOrderModal}/>, 'admin-products':<>{!catalogueLive&&<div className="market-warning">Sample catalogue: verify real CAMY prices and warehouse stock before activating orders. <button className="market-primary" onClick={activateCatalogue}>Verify and activate catalogue</button></div>}<div className="catalogue-save-bar"><p>Save your catalogue changes to make them available to entrepreneurs.</p><Button disabled={savingCatalogue} onClick={saveCatalogue}>{savingCatalogue?'Saving...':'Save catalogue changes'}</Button></div><AdminProducts products={products} setProducts={editProducts} openProduct={setProductModal} openAdd={()=>setAddProduct(true)} openAddCategory={()=>setAddCategory(true)} notify={notify}/></>, 'stock-supply':<AdminCreditStockPage requests={stockRequests} products={products} entrepreneurs={entrepreneurs} inventory={shopInventory} review={reviewStockRequest} catalogueLive={catalogueLive}/>, 'credit-control':<CreditControl entrepreneurs={entrepreneurs} setEntrepreneurs={setEntrepreneurs} tiers={tiers} setTiers={editTiers} settlements={settlements} reviewSettlement={reviewSettlement} notify={notify} onSave={saveCreditRules}/>,reports:<ReportsPage entrepreneurs={entrepreneurs} orders={liveOrders} products={products}/>, 'user-access':<UserAccessPage users={systemUsers} setUsers={setSystemUsers} notify={notify} currentUser={authUser}/>}
   adminPages.payouts=<CommissionPayouts orders={liveOrders} openOrder={setOrderModal}/>
+  const mobilePageIds = mode === 'admin'
+    ? ['overview', 'entrepreneurs', 'admin-orders', 'payouts', 'reports']
+    : ['home', 'products', 'orders', 'credit', 'profile']
+  const mobileNavigation = (mode === 'admin' ? adminNav : entrepreneurNav)
+    .filter(([id]) => mobilePageIds.includes(id))
+    .filter(([id]) => mode !== 'admin' || userPermissions(authUser) === null || userPermissions(authUser).includes(id))
   if(authLoading)return <div className="auth-loading"><span></span><strong>Opening CAMY securely…</strong></div>
   if(registrationLocationActive())return <LoginScreen onLogin={login}/>
   if(!authUser)return <LoginScreen onLogin={login}/>
   if(passwordResetRequired||passwordModal)return <ChangePasswordModal required={passwordResetRequired} close={()=>setPasswordModal(false)} done={message=>{setPasswordResetRequired(false);setPasswordModal(false);notify(message)}}/>
   if(!marketReady)return <div className="auth-loading">{syncError?<><strong>Business data could not load</strong><p>{syncError}</p><Button onClick={()=>setRefreshVersion(old=>old+1)}>Retry loading</Button><Button variant="secondary" onClick={logout}>Sign out</Button></>:<><span/><strong>Loading your business data...</strong></>}</div>
-  return <div className={`app-v2 ${mode==='admin'?'admin-shell':'entrepreneur-shell'}`} data-page={page}><Sidebar mode={mode} setMode={setMode} page={page} setPage={setPage} open={menu} setOpen={setMenu} notify={notify} onLogout={logout} user={authUser}/><main><Topbar mode={mode} page={page} setPage={setPage} onMenu={()=>setMenu(true)} onCart={()=>setCartOpen(true)} cartCount={cart.reduce((s,x)=>s+x.qty,0)} notifications={notifications} setNotifications={setNotifyOpen} onSearch={runGlobalSearch} query={globalQuery} setQuery={setGlobalQuery} profile={profile} user={authUser}/>{mode==='admin'?(userPermissions(authUser)===null||userPermissions(authUser).includes(page)?adminPages[page]||adminPages.overview:<Empty icon={Settings} title="Access restricted" text="Choose an available page from your menu."/>):customerPages[page]||customerPages.home}</main><nav className="mobile-nav-v2">{(mode==='admin'?adminNav.filter(([id])=>userPermissions(authUser)===null||userPermissions(authUser).includes(id)).slice(0,5):entrepreneurNav.slice(0,5)).map(([id,label,Icon])=><button className={page===id?'active':''} key={id} onClick={()=>setPage(id)}><Icon/><span>{label}</span></button>)}</nav>{productModal&&<ProductModal product={productModal} close={()=>setProductModal(null)} addToCart={addToCart} admin={mode==='admin'} setProducts={editProducts} notify={notify}/>} {orderModal&&<OrderModal onUpdated={()=>setRefreshVersion(old=>old+1)} order={orderModal} products={products} admin={mode==='admin'} entrepreneur={entrepreneurs.find(item=>String(item.id)===String(orderModal.entrepreneurId))} updateOrderStatus={updateOrderStatus} updateOrderDetails={updateOrderDetails} openEntrepreneur={()=>{const person=entrepreneurs.find(item=>String(item.id)===String(orderModal.entrepreneurId));if(person){setOrderModal(null);setPersonModal({person,readOnly:false})}else notify('Entrepreneur profile was not found')}} close={()=>setOrderModal(null)}/>} {cartOpen&&<CartDrawer cart={cart} setCart={setCart} close={()=>setCartOpen(false)} placeOrder={placeOrder}/>} {notifyOpen&&<NotificationsDrawer notifications={notifications} setNotifications={setNotifications} close={()=>setNotifyOpen(false)}/>} {settlementModal&&<SettlementModal close={()=>setSettlementModal(false)} submit={submitSettlement}/>} {addEntrepreneur&&<AddEntrepreneurModal close={()=>setAddEntrepreneur(false)} submit={createEntrepreneur}/>} {personModal&&<EntrepreneurModal person={personModal.person} readOnly={personModal.readOnly} orders={liveOrders} setOrders={setOrders} close={()=>setPersonModal(null)} setEntrepreneurs={setEntrepreneurs} notify={notify}/>} {addProduct&&<AddProductModal close={()=>setAddProduct(false)} submit={createProduct}/>} {addCategory&&<AddCategoryModal close={()=>setAddCategory(false)} submit={createCategory}/>} {toast&&<div className="toast-v2"><span><Check/></span>{toast}</div>}</div>
+  return <div className={`app-v2 ${mode==='admin'?'admin-shell':'entrepreneur-shell'}`} data-page={page}><Sidebar mode={mode} setMode={setMode} page={page} setPage={setPage} open={menu} setOpen={setMenu} notify={notify} onLogout={logout} user={authUser}/><main><Topbar mode={mode} page={page} setPage={setPage} onMenu={()=>setMenu(true)} onCart={()=>setCartOpen(true)} cartCount={cart.reduce((s,x)=>s+x.qty,0)} notifications={notifications} setNotifications={setNotifyOpen} onSearch={runGlobalSearch} query={globalQuery} setQuery={setGlobalQuery} profile={profile} user={authUser}/>{mode==='admin'?(userPermissions(authUser)===null||userPermissions(authUser).includes(page)?adminPages[page]||adminPages.overview:<Empty icon={Settings} title="Access restricted" text="Choose an available page from your menu."/>):customerPages[page]||customerPages.home}</main><nav className="mobile-nav-v2">{mobileNavigation.map(([id,label,Icon])=><button className={page===id?'active':''} key={id} onClick={()=>setPage(id)}><Icon/><span>{label}</span></button>)}</nav>{productModal&&<ProductModal product={productModal} close={()=>setProductModal(null)} addToCart={addToCart} admin={mode==='admin'} setProducts={editProducts} notify={notify}/>} {orderModal&&<OrderModal onUpdated={()=>setRefreshVersion(old=>old+1)} order={orderModal} products={products} admin={mode==='admin'} entrepreneur={entrepreneurs.find(item=>String(item.id)===String(orderModal.entrepreneurId))} updateOrderStatus={updateOrderStatus} updateOrderDetails={updateOrderDetails} openEntrepreneur={()=>{const person=entrepreneurs.find(item=>String(item.id)===String(orderModal.entrepreneurId));if(person){setOrderModal(null);setPersonModal({person,readOnly:false})}else notify('Entrepreneur profile was not found')}} close={()=>setOrderModal(null)}/>} {cartOpen&&<CartDrawer cart={cart} setCart={setCart} close={()=>setCartOpen(false)} placeOrder={placeOrder}/>} {notifyOpen&&<NotificationsDrawer notifications={notifications} setNotifications={setNotifications} close={()=>setNotifyOpen(false)}/>} {settlementModal&&<SettlementModal close={()=>setSettlementModal(false)} submit={submitSettlement}/>} {addEntrepreneur&&<AddEntrepreneurModal close={()=>setAddEntrepreneur(false)} submit={createEntrepreneur}/>} {personModal&&<EntrepreneurModal person={personModal.person} readOnly={personModal.readOnly} orders={liveOrders} setOrders={setOrders} close={()=>setPersonModal(null)} setEntrepreneurs={setEntrepreneurs} notify={notify}/>} {addProduct&&<AddProductModal close={()=>setAddProduct(false)} submit={createProduct}/>} {addCategory&&<AddCategoryModal close={()=>setAddCategory(false)} submit={createCategory}/>} {toast&&<div className="toast-v2"><span><Check/></span>{toast}</div>}</div>
 }
