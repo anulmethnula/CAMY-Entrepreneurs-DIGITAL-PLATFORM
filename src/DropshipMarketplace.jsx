@@ -183,6 +183,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
 export function CreditStockPage({ products = [], person, requests = [], inventory = [], submit, notify, catalogueLive }) {
   const [cart,setCart]=useState([])
   const [busy,setBusy]=useState(false)
+  const [submittedId,setSubmittedId]=useState('')
   const mine=requests.filter(request=>String(request.entrepreneurId)===String(person?.id) && request.creditMode===true)
   const eligible=Number(person?.credit||0)>0 && person?.stage!=='Departed'
   const used=Number(person?.used||0)
@@ -202,8 +203,12 @@ export function CreditStockPage({ products = [], person, requests = [], inventor
     if(total>available+0.009)return notify?.(`This request exceeds your available credit by ${money(total-available)}.`)
     setBusy(true)
     try{
-      const ok=await submit({items:selected.map(item=>({productId:item.product.id,qty:Number(item.qty)})),creditMode:true})
-      if(ok){setCart([]);window.dispatchEvent(new Event('camy-business-updated'))}
+      const created=await submit({items:selected.map(item=>({productId:item.product.id,qty:Number(item.qty)})),creditMode:true})
+      if(created){
+        setCart([])
+        setSubmittedId(created.id)
+        window.dispatchEvent(new Event('camy-business-updated'))
+      }
     }finally{setBusy(false)}
   }
 
@@ -214,6 +219,7 @@ export function CreditStockPage({ products = [], person, requests = [], inventor
 
     {!eligible&&<section className="credit-stock-lock"><LockKeyhole/><div><h2>Credit stock is not unlocked yet</h2><p>You can continue using drop-shipping normally. Once your verified CAMY sales reach the first configured credit tier, this page unlocks automatically.</p></div></section>}
     {!catalogueLive&&<div className="market-warning">CAMY Admin must activate the real catalogue before credit stock requests can be submitted.</div>}
+    {submittedId&&<section className="credit-request-success"><CheckCircle2/><div><strong>Credit request {submittedId} was sent successfully</strong><p>The request basket has been cleared. Stay on this page to see CAMY approval and dispatch updates in My requests below.</p></div><button type="button" onClick={()=>setSubmittedId('')}>Dismiss</button></section>}
 
     {eligible&&<div className="stock-buy-layout"><section><div className="stock-catalogue-title"><div><small>CAMY CREDIT CATALOGUE</small><h2>Choose stock to receive</h2></div><span><CircleDollarSign size={16}/> {money(available)} available</span></div><div className="stock-product-grid">{products.map(product=>{
       const inCart=cart.find(item=>String(item.productId)===String(product.id))

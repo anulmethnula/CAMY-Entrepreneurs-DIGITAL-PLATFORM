@@ -115,6 +115,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
     }
     if(preg_match('#^/marketplace/orders/([^/]+)/payout$#',$path,$payoutMatch)&&$method==='POST'){
         $admin=require_admin($pdo);$data=input();$orderId=(string)$payoutMatch[1];
+        error_log('[CAMY payout] request started order='.$orderId.' admin='.(string)$admin['id']);
         $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
         foreach($state['orders'] as $key=>$candidate)if((string)$candidate['id']===$orderId){$index=$key;break;}
         if($index===null){$pdo->rollBack();response(['message'=>'Order not found.'],404);}
@@ -139,7 +140,9 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $reference=trim((string)($data['reference'] ?? ''));$receipt=workflow_receipt(['receipt'=>(string)($data['receipt'] ?? ''),'reference'=>$reference],$orderId.'-payout');
         $pdo->prepare("UPDATE entrepreneur_payouts SET collection_status='collected',payout_status='paid',payout_reference=?,payout_receipt_path=?,collected_at=COALESCE(collected_at,NOW()),paid_at=NOW(),recorded_by=? WHERE order_id=?")->execute([$reference,$receipt,$admin['id'],$orderId]);
         $state['orders'][$index]['payoutStatus']='paid';$state['orders'][$index]['payoutAmount']=$amount;$state['orders'][$index]['payoutReference']=$reference;$state['orders'][$index]['payoutReceipt']='/api/marketplace/orders/'.$orderId.'/payout-receipt';$state['orders'][$index]['payoutPaidAt']=date(DATE_ATOM);$state['orders'][$index]['payoutBankDetails']=$bank;$state['orders'][$index]['updatedAt']=date(DATE_ATOM);
-        market_save($pdo,$state);$pdo->commit();response(['order'=>$state['orders'][$index],'message'=>'Entrepreneur margin transfer recorded successfully.']);
+        market_save($pdo,$state);$pdo->commit();
+        error_log('[CAMY payout] transfer recorded order='.$orderId.' amount='.(string)$amount.' admin='.(string)$admin['id']);
+        response(['order'=>$state['orders'][$index],'message'=>'Entrepreneur margin transfer recorded successfully.']);
     }
     if(preg_match('#^/marketplace/orders/([^/]+)/confirm-delivery$#',$path,$match)&&$method==='POST'){
         $customer=customer_required($pdo);$pdo->beginTransaction();$state=market_state($pdo,true);$index=null;

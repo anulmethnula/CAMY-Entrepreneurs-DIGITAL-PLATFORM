@@ -3826,3 +3826,27 @@ input:focus, select:focus, textarea:focus {
   .product-import-dialog footer { position: sticky; bottom: 0; grid-template-columns: 1fr 1.4fr; padding: 16px 18px; background: #fff; box-shadow: 0 -10px 30px rgba(20, 55, 83, .1); }
   .product-import-dialog footer p { grid-column: 1 / -1; }
 }
+/* Dedicated finance dialog keeps commission payment separate from fulfilment. */
+.commission-payment-modal { width:min(980px,calc(100vw - 48px))!important; }
+.commission-payment-dialog { padding:30px; }
+.commission-payment-dialog > header { display:flex; align-items:center; gap:14px; padding:0 52px 20px 0; border-bottom:1px solid #dce7ef; }
+.commission-payment-dialog > header > span { width:52px; height:52px; flex:0 0 auto; border-radius:15px; color:#fff; background:linear-gradient(135deg,#176fa1,#25a27e); display:grid; place-items:center; }
+.commission-payment-dialog > header span svg { width:22px; }
+.commission-payment-dialog > header small { color:#168263; font-size:9px; font-weight:850; letter-spacing:.1em; }
+.commission-payment-dialog > header h2 { margin:4px 0; color:#143b58; font-size:25px; }
+.commission-payment-dialog > header p { margin:0; color:#74899a; font-size:11px; }
+.commission-payment-summary { margin:18px 0; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.commission-payment-summary > div { padding:15px; border:1px solid #d7e4ed; border-radius:14px; background:#f7fafc; }
+.commission-payment-summary small,.commission-payment-summary strong { display:block; }
+.commission-payment-summary small { color:#74899a; font-size:9px; }
+.commission-payment-summary strong { margin-top:5px; color:#153b57; font-size:18px; }
+.commission-payment-summary > div:last-child { border-color:#bfe0d2; background:#eff9f4; }
+.commission-payment-summary > div:last-child strong { color:#16815e; }
+.commission-payment-dialog > .payout-panel-v3 { margin:0; }
+@media(max-width:620px){.commission-payment-modal{width:100%!important;min-height:100dvh}.commission-payment-dialog{padding:18px 12px}.commission-payment-summary{grid-template-columns:1fr}.commission-payment-dialog>header h2{font-size:21px}}
+.credit-request-success { margin:18px 0; padding:16px 18px; border:1px solid #bce1d1; border-radius:16px; color:#176e53; background:#effaf5; display:grid; grid-template-columns:38px 1fr auto; align-items:center; gap:12px; }
+.credit-request-success > svg { width:27px; height:27px; }
+.credit-request-success strong,.credit-request-success p { display:block; }
+.credit-request-success p { margin:4px 0 0; color:#527b6c; font-size:11px; }
+.credit-request-success button { min-height:38px; padding:0 14px; border:1px solid #a9d7c4; border-radius:10px; color:#176e53; background:#fff; font:inherit; font-weight:800; cursor:pointer; }
+@media(max-width:620px){.credit-request-success{grid-template-columns:32px 1fr}.credit-request-success button{grid-column:1/-1;width:100%}}

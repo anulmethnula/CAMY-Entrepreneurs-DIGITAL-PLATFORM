@@ -903,7 +903,15 @@ function LegacyDropshipPayoutPanel({ order, admin, onDone }) {
   const canTransfer=admin&&order.status==='Delivered'&&margin>0&&order.payoutStatus!=='paid'&&order.payoutStatus!=='reversal_required'
   const upload=async event=>{
     event.preventDefault()
-    if(!file||!reference.trim()||busy)return
+    if(busy)return
+    if(!reference.trim()){
+      setError('Enter the bank transfer reference before confirming the payout.')
+      return
+    }
+    if(!file){
+      setError('Attach the bank transfer receipt before confirming the payout.')
+      return
+    }
     if(!['image/jpeg','image/png','image/webp','application/pdf'].includes(file.type)||file.size>5*1024*1024){setError('Choose a JPG, PNG, WebP or PDF CAMY transfer receipt up to 5 MB.');return}
     setBusy(true);setError('')
     try{
@@ -931,7 +939,7 @@ function LegacyDropshipPayoutPanel({ order, admin, onDone }) {
   </section>
 }
 
-function LegacyOrderModal({ order, products = [], admin = false, openEntrepreneur, close, onUpdated }) {
+function LegacyOrderModal({ order, products = [], admin = false, entrepreneur, openEntrepreneur, close, onUpdated }) {
   const items=order.items?.length?order.items:[{name:order.product,qty:order.qty,price:order.qty?Number(order.amount)/Number(order.qty):Number(order.amount)}]
   const progress=['Pending','Awaiting payment','Payment review','Processing','Dispatched','Delivered'], current=progress.indexOf(order.status)
   const dropship=order.orderMode==='dropship'
@@ -961,14 +969,21 @@ function DropshipPayoutPanel({ order, admin, entrepreneur, onEditEntrepreneur, o
     admin
     && order.status === 'Delivered'
     && margin > 0
-    && order.payoutStatus !== 'paid'
-    && order.payoutStatus !== 'reversal_required'
+    && order.payoutStatus === 'pending_transfer'
   )
   const payoutNeedsBank = canTransfer && !bankComplete
   const payoutLabel=order.payoutStatus==='paid'?'Paid':order.payoutStatus==='pending_transfer'?'Ready to transfer':order.payoutStatus==='reversal_required'?'Reversal required':order.payoutStatus==='not_required'?'No payout due':'Waiting for delivery'
   const upload=async event=>{
     event.preventDefault()
-    if(!file||!reference.trim()||busy)return
+    if(busy)return
+    if(!reference.trim()){
+      setError('Enter the bank transfer reference before confirming the payout.')
+      return
+    }
+    if(!file){
+      setError('Attach the bank transfer receipt before confirming the payout.')
+      return
+    }
     if(!['image/jpeg','image/png','image/webp','application/pdf'].includes(file.type)||file.size>5*1024*1024){setError('Choose a JPG, PNG, WebP or PDF receipt up to 5 MB.');return}
     setBusy(true);setError('')
     try{const receipt=await readReceiptFile(file);const result=await api('/marketplace/orders/'+encodeURIComponent(order.id)+'/payout',{method:'POST',body:JSON.stringify({reference:reference.trim(),receipt})});onDone?.(result.order,result.message)}
@@ -1032,7 +1047,7 @@ function DropshipPayoutPanel({ order, admin, entrepreneur, onEditEntrepreneur, o
         {error && <p className="market-error">{error}</p>}
         <Button
           type="submit"
-          disabled={busy || !file || !reference.trim()}
+          disabled={busy}
           icon={Banknote}
         >
           {busy ? 'Saving payout…' : 'Confirm payout and save proof'}
@@ -1050,13 +1065,18 @@ function OrderModal({ order, products = [], admin = false, entrepreneur, openEnt
   const margin=Number(order.entrepreneurMargin||0)
   const progress=['Processing','Dispatched','Delivered']
   const current=progress.indexOf(order.status)
+  if(order.payoutOnly)return <Modal onClose={close} wide className="commission-payment-modal"><div className="commission-payment-dialog">
+    <header><span><Banknote/></span><div><small>COMMISSION PAYMENT</small><h2>Pay {entrepreneur?.name||order.entrepreneur||'entrepreneur'}</h2><p>Order {order.id} · Delivered {displayDate(order.deliveredAt||order.date)}</p></div></header>
+    <section className="commission-payment-summary"><div><small>Client COD collected</small><strong>{money(order.amount)}</strong></div><div><small>CAMY product value</small><strong>{money(camyCost)}</strong></div><div><small>Commission to transfer</small><strong>{money(margin)}</strong></div></section>
+    <DropshipPayoutPanel order={order} admin={admin} entrepreneur={entrepreneur} onEditEntrepreneur={openEntrepreneur} onDone={(updated,message)=>{message&&window.dispatchEvent(new CustomEvent('camy-finance-message',{detail:message}));onUpdated?.(updated);close()}}/>
+  </div></Modal>
   return <Modal onClose={close} wide className="order-detail-shell"><div className="detail-modal order-detail-v3">
     <header className="order-hero-v3"><div><span className="modal-kicker">{dropship?'CAMY COD ORDER':'CUSTOMER ORDER'}</span><h2>{order.id}</h2><p>Placed {displayDate(order.date)} · {items.length} product{items.length===1?'':'s'} · {Number(order.qty||0)} unit{Number(order.qty||0)===1?'':'s'}</p></div><Status value={order.status}/></header>
     <section className="order-glance-v3"><article><span><UserRound/></span><div><small>Client</small><strong>{order.customer||'Not provided'}</strong><a href={order.phone?`tel:${order.phone}`:undefined}>{order.phone||'No phone number'}</a></div></article><article><span><MapPin/></span><div><small>Client delivery</small><strong>{order.district||'District not provided'}</strong><p>{order.address||'Delivery address not provided'}</p></div></article><article><span><Store/></span><div><small>Entrepreneur who placed the sale</small><strong>{order.entrepreneur||'Not assigned'}</strong><p>{order.entrepreneurId||'No member ID'}</p>{admin&&<button type="button" onClick={openEntrepreneur}>Open entrepreneur profile <ArrowRight/></button>}</div></article></section>{dropship&&<section className="order-client-meta-v3"><span><small>Payment method</small><strong>Cash on Delivery</strong></span><span><small>Client COD total</small><strong>{money(order.amount)}</strong></span><span><small>Order note</small><strong>{order.notes||'No special note'}</strong></span></section>}
     <section className="ordered-products-v3"><header><div><small>ORDER BASKET</small><h3>Products in this order</h3></div><b>{items.length} item{items.length===1?'':'s'}</b></header><div>{items.map((item,index)=>{const product=products.find(entry=>String(entry.id)===String(item.id||item.productId));const base=Number(item.camyPrice??product?.price??item.price);const sell=Number(item.price);const qty=Number(item.qty||0);return <article key={item.id||item.productId||index}><div className="product-main-v3">{product?.image?<img src={product.image} alt=""/>:<span><PackageOpen/></span>}<div><small>{product?.code||item.category||'CAMY PRODUCT'}</small><strong>{item.name||product?.name||'CAMY product'}</strong></div></div>{dropship&&<dl><div><dt>CAMY price</dt><dd>{money(base)}</dd></div><div><dt>Client price</dt><dd>{money(sell)}</dd></div><div><dt>Quantity</dt><dd>{qty}</dd></div><div><dt>Margin</dt><dd className="positive">{money((sell-base)*qty)}</dd></div></dl>}<strong className="line-total-v3"><small>Line total</small>{money(sell*qty)}</strong></article>})}</div></section>
     <section className="order-total-v3"><div><small>CLIENT ORDER TOTAL</small><strong>{money(order.amount)}</strong></div>{dropship&&<><span><small>CAMY value</small><strong>{money(camyCost)}</strong></span><span className="profit"><small>Entrepreneur margin</small><strong>{money(margin)}</strong></span></>}</section>
     {!dropship&&<section className="supply-payment"><h3>Payment information</h3><p>Payment reference: <strong>{order.reference||'Not submitted'}</strong></p>{order.bankDetails&&<BankDetails bank={order.bankDetails}/>} {!order.receipt&&<p>No payment receipt submitted yet.</p>}</section>}
-    {dropship&&<DropshipPayoutPanel order={order} admin={admin} onDone={(updated,message)=>{message&&window.dispatchEvent(new CustomEvent('camy-finance-message',{detail:message}));onUpdated?.(updated);close()}}/>}
+    {dropship&&<DropshipPayoutPanel order={order} admin={admin} entrepreneur={entrepreneur} onEditEntrepreneur={openEntrepreneur} onDone={(updated,message)=>{message&&window.dispatchEvent(new CustomEvent('camy-finance-message',{detail:message}));onUpdated?.(updated);close()}}/>}
     <section className="fulfilment-panel-v3"><header><div><small>FULFILMENT</small><h3>Next order action</h3></div><div className="mini-progress-v3">{progress.map((step,index)=><span className={current>=index?'done':''} key={step}><i>{current>index?<Check/>:index+1}</i>{step}</span>)}</div></header><OrderReview key={order.id+order.status} order={order} onDone={()=>{onUpdated?.();close()}}/></section>
     {['Rejected','Returned','Cancelled'].includes(order.status)&&<div className="order-terminal-v3">This order is {order.status.toLowerCase()}. Reserved warehouse stock has been restored.</div>}
   </div></Modal>
@@ -1450,7 +1470,17 @@ export default function App() {
   const createEntrepreneur=async(form)=>{try{const result=await api('/admin/entrepreneurs',{method:'POST',body:JSON.stringify(form)});setEntrepreneurs(old=>[...old,result.entrepreneur]);notify(`${result.entrepreneur.name} account created · ${result.entrepreneur.id}`);return true}catch(reason){notify(reason.message);throw reason}}
   const createProduct=(form)=>{editProducts(old=>[...old,{...form,id:Date.now(),published:true,price:Number(form.price),stock:Number(form.stock),image:form.image||'/products/classic-set.png',tag:form.tag||'New',rating:Number(form.rating||5),warranty:form.warranty||'1 year',description:form.description||'New CAMY catalogue product.',specs:form.specs?.length?form.specs:['CAMY quality assured','Ready for entrepreneur orders']}]);notify('Product added to catalogue')}
   const createCategory=(name)=>{const key='camy-product-categories-v2';const existing=JSON.parse(localStorage.getItem(key)||'[]');if(existing.some(category=>category.toLowerCase()===name.toLowerCase())){notify('That category already exists');return}localStorage.setItem(key,JSON.stringify([...existing,name]));window.dispatchEvent(new Event('camy-categories-updated'));setAddCategory(false);notify(`${name} category created`)}
-  const submitStockRequest=async request=>{try{const result=await api('/marketplace/requests',{method:'POST',body:JSON.stringify(request)});setStockRequests(old=>[result.request,...old]);notify(`${result.request.id} sent to CAMY for request approval`);return true}catch(reason){notify(reason.message);return false}}
+  const submitStockRequest=async request=>{
+    try{
+      const result=await api('/marketplace/requests',{method:'POST',body:JSON.stringify(request)})
+      setStockRequests(old=>[result.request,...old])
+      notify(`${result.request.id} sent to CAMY for approval`)
+      return result.request
+    }catch(reason){
+      notify(reason.message)
+      return false
+    }
+  }
   const reviewStockRequest=async(id,status,reason,items)=>{try{const action=status==='Edited'?'edit':{Approved:'approve',Rejected:'reject',Dispatched:'dispatch'}[status];if(!action)throw new Error('Unsupported credit stock action');let result=await api(`/marketplace/requests/${encodeURIComponent(id)}/${action}`,{method:'POST',body:JSON.stringify({reason,items})});if(!result.state)result={state:await api('/marketplace/state')};setStockRequests(result.state.requests);setShopInventory(result.state.inventory);setEntrepreneurs(result.state.entrepreneurs||entrepreneurs);syncLiveProducts(result.state.products||[],result.state.revision);notify(`${id} ${status.toLowerCase()}${status==='Approved'?': warehouse stock reserved automatically':status==='Dispatched'?': entrepreneur stock and outstanding credit updated automatically':''}`)}catch(reason){notify(reason.message);throw reason}}
   const saveShopPrice=async(productId,price,visible)=>{try{const result=await api('/marketplace/shop-price',{method:'POST',body:JSON.stringify({productId,price,...(visible===undefined?{}:{visible})})});setShopInventory(result.inventory);notify('Shop listing updated.')}catch(reason){notify(reason.message)}}
   const activateCatalogue=async()=>{if(!window.confirm('Confirm these are real CAMY products with verified prices and warehouse stock quantities? Entrepreneurs will be able to place COD drop-ship orders and eligible entrepreneurs can request credit stock.'))return;try{const result=await api('/marketplace/activate-catalogue',{method:'POST',body:'{}'});setCatalogueLive(Boolean(result.state.catalogue_live));notify('CAMY catalogue activated for COD orders and credit stock requests.')}catch(reason){notify(reason.message)}}
@@ -1489,7 +1519,7 @@ export default function App() {
   }
   const customerPages={home:<ShopHome person={currentEntrepreneur} inventory={shopInventory} products={products} requests={stockRequests} orders={myOrders} tiers={tiers} setPage={setPage}/>,products:<StockSupplyPage products={products} person={currentEntrepreneur} orders={myOrders} tiers={tiers} notify={notify} catalogueLive={catalogueLive}/>, 'credit-stock':<CreditStockPage products={products} person={currentEntrepreneur} requests={stockRequests} inventory={shopInventory} submit={submitStockRequest} notify={notify} catalogueLive={catalogueLive}/>,orders:<OrdersPage orders={myOrders} setOrders={setOrders} openOrder={setOrderModal} setPage={setPage}/>,growth:<GrowthPage entrepreneurs={entrepreneurs} person={currentEntrepreneur} orders={myOrders} tiers={tiers}/>,credit:<CreditPage tiers={tiers} settlements={settlements} person={currentEntrepreneur} orders={myOrders} onSettlement={()=>setSettlementModal(true)}/>,profile:<ProfilePage profile={profile} setProfile={updateBusinessProfile} person={currentEntrepreneur} orders={myOrders} entrepreneurs={entrepreneurs} notify={notify}/>}
   const adminPages={overview:<AdminOverview entrepreneurs={entrepreneurs} orders={liveOrders} products={products} tiers={tiers} requests={stockRequests} setPage={setPage} openEntrepreneur={person=>setPersonModal({person,readOnly:true})}/>,entrepreneurs:<AdminEntrepreneurs entrepreneurs={entrepreneurs} orders={liveOrders} setEntrepreneurs={setEntrepreneurs} openEntrepreneur={person=>setPersonModal({person,readOnly:false})} openAdd={()=>setAddEntrepreneur(true)} notify={notify}/>, 'admin-orders':<AdminOrders orders={liveOrders} setOrders={setOrders} products={products} entrepreneurs={entrepreneurs} onManualOrder={placeManualOrder} onUpdateStatus={updateOrderStatus} openOrder={setOrderModal}/>, 'admin-products':<>{!catalogueLive&&<div className="market-warning">Sample catalogue: verify real CAMY prices and warehouse stock before activating orders. <button className="market-primary" onClick={activateCatalogue}>Verify and activate catalogue</button></div>}<div className="catalogue-save-bar"><p>Save your catalogue changes to make them available to entrepreneurs.</p><Button disabled={savingCatalogue} onClick={saveCatalogue}>{savingCatalogue?'Saving...':'Save catalogue changes'}</Button></div><AdminProducts products={products} setProducts={editProducts} openProduct={setProductModal} openAdd={()=>setAddProduct(true)} openAddCategory={()=>setAddCategory(true)} notify={notify}/></>, 'stock-supply':<AdminCreditStockPage requests={stockRequests} products={products} entrepreneurs={entrepreneurs} inventory={shopInventory} review={reviewStockRequest} catalogueLive={catalogueLive}/>, 'credit-control':<CreditControl entrepreneurs={entrepreneurs} setEntrepreneurs={setEntrepreneurs} tiers={tiers} setTiers={editTiers} settlements={settlements} reviewSettlement={reviewSettlement} notify={notify} onSave={saveCreditRules}/>,reports:<ReportsPage entrepreneurs={entrepreneurs} orders={liveOrders} products={products}/>, 'user-access':<UserAccessPage users={systemUsers} setUsers={setSystemUsers} notify={notify} currentUser={authUser}/>}
-  adminPages.payouts=<CommissionPayouts orders={liveOrders} openOrder={setOrderModal}/>
+  adminPages.payouts=<CommissionPayouts orders={liveOrders} openOrder={order=>setOrderModal({...order,payoutOnly:true})}/>
   const mobilePageIds = mode === 'admin'
     ? ['overview', 'entrepreneurs', 'admin-orders', 'payouts', 'reports']
     : ['home', 'products', 'orders', 'credit', 'profile']
