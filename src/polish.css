@@ -296,17 +296,18 @@ input::placeholder,textarea::placeholder { color:#97a6b2; }
   .credit-page-v2 .brand.inverse,.credit-page-v2 .brand.inverse img { width: 124px; height: 66px; }
   .catalogue-detail-layer { padding:12px; }.catalogue-detail-layer > article { grid-template-columns:1fr; padding:20px; }.catalogue-detail-layer img { height:190px; }
 }
-.dropship-order-line { display:grid; grid-template-columns:minmax(0,1fr) 112px; gap:14px; padding:18px 0; align-items:end; }
+.dropship-order-line { display:block; padding:18px 4px; }
+.dropship-line-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
 .dropship-line-product { min-width:0; align-self:center; }
 .dropship-line-product strong,.dropship-line-product small { display:block; }
-.dropship-line-product strong { color:var(--text); font-size:13px; line-height:1.35; }
+.dropship-line-product strong { color:var(--text); font-size:13px; line-height:1.35; padding-top:2px; }
 .dropship-line-product small { margin-top:4px; color:var(--text-muted); font-size:10px; }
+.dropship-line-controls { display:grid; grid-template-columns:minmax(0,1fr) 112px; gap:14px; margin-top:15px; align-items:start; }
 .stock-request-card .dropship-order-line label { margin:0; color:#31536e; font-size:10px; font-weight:800; }
 .stock-request-card .dropship-order-line input { width:100%!important; height:44px; margin:0; padding:0 11px; border:1px solid var(--border); border-radius:10px; text-align:left; background:#fff; }
-.dropship-selling-price { grid-column:1; }
-.dropship-remove { grid-column:2; align-self:start; min-width:112px; width:auto!important; height:44px!important; display:flex; align-items:center; justify-content:center; gap:5px; font-size:11px; font-weight:800; }
-.dropship-remove span { flex:0; }
-.stock-request-card .dropship-quantity { justify-self:end; width:112px; }
+.dropship-remove { flex:0 0 auto; width:34px!important; height:34px!important; display:grid; place-items:center; border:1px solid transparent!important; border-radius:10px!important; color:#a94a4a!important; background:#fff5f4!important; transition:border-color .16s ease,background .16s ease,transform .16s ease; }
+.dropship-remove:hover { border-color:#f0c9c5!important; background:#fee9e7!important; transform:translateY(-1px); }
+.stock-request-card .dropship-quantity { width:112px; }
 .dropship-stepper { height:44px; margin-top:6px; border:1px solid var(--border); border-radius:11px; background:#fff; display:grid; grid-template-columns:32px 1fr 32px; align-items:center; overflow:hidden; }
 .stock-request-card .dropship-stepper input { height:42px!important; min-width:0; padding:0!important; border:0!important; border-radius:0!important; text-align:center!important; font-weight:800; }
 .dropship-stepper button { width:32px; height:42px; border:0; color:var(--primary); background:var(--primary-soft); font-size:20px; font-weight:650; cursor:pointer; }.dropship-stepper button:hover:not(:disabled) { color:#fff; background:var(--primary); }.dropship-stepper button:disabled { color:#a8bac7; background:#f2f6f8; cursor:not-allowed; }

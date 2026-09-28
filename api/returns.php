@@ -49,7 +49,7 @@ function return_route(PDO $pdo,string $path,string $method): void {
             $pdo->prepare('UPDATE entrepreneur_payouts SET payout_status=? WHERE order_id=?')->execute([$nextPayout,$order['id']]);
             $order['payoutStatus']=$nextPayout;
         }
-        $sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$order['entrepreneurId']&&$entry['status']==='Delivered')$sales+=(float)($entry['camyCost'] ?? $entry['amount']);
+        $sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$order['entrepreneurId']&&$entry['status']==='Delivered')$sales+=catalogue_order_profit($entry);
         $credit=catalogue_credit_for_sales($state['tiers'],$sales);
         foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$order['entrepreneurId']){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
     }else{

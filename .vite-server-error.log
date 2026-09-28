@@ -1,0 +1,124 @@
+3:35:18 PM [vite] http proxy error: /api/auth/me
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2017:16)
+3:35:19 PM [vite] http proxy error: /api/auth/me
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2017:16)
+3:36:37 PM [vite] http proxy error: /api/auth/me
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2017:16)
+3:36:37 PM [vite] http proxy error: /api/auth/me
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2017:16)
+3:37:07 PM [vite] http proxy error: /api/auth/login
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2017:16)
+3:37:58 PM [vite] http proxy error: /api/auth/login
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2017:16)
+3:38:33 PM [vite] http proxy error: /api/health
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2017:16)
+3:38:34 PM [vite] http proxy error: /api/auth/me
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2017:16)
+3:38:34 PM [vite] http proxy error: /api/marketplace/state
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2017:16)
+3:51:28 PM [vite] Internal server error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mExpected `,` or `)` but found `}`
+ - `,` or `)` expected in src/DropshipMarketplace.jsx at 11847..11848
+ - Opened here in src/DropshipMarketplace.jsx at 11811..11812
+
+  Plugin: vite:oxc
+  File: D:/Local Repository/CAMY Entrepreneurs DIGITAL PLATFORM/src/DropshipMarketplace.jsx
+      at transformWithOxc (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4103:19)
+      at TransformPluginContext.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4174:26)
+      at EnvironmentPluginContainer.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:30932:51)
+      at async loadAndTransform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:20671:26)
+      at async viteTransformMiddleware (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:25205:20)
+3:51:28 PM [vite] (client) [console.error] [vite] Failed to reload /src/DropshipMarketplace.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+3:51:28 PM [vite] Internal server error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mExpected `,` or `)` but found `}`
+ - `,` or `)` expected in src/DropshipMarketplace.jsx at 11847..11848
+ - Opened here in src/DropshipMarketplace.jsx at 11811..11812
+
+  Plugin: vite:oxc
+  File: D:/Local Repository/CAMY Entrepreneurs DIGITAL PLATFORM/src/DropshipMarketplace.jsx
+      at transformWithOxc (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4103:19)
+      at TransformPluginContext.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4174:26)
+      at EnvironmentPluginContainer.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:30932:51)
+      at async loadAndTransform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:20671:26)
+      at async viteTransformMiddleware (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:25205:20)
+3:51:29 PM [vite] Internal server error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mExpected `,` or `)` but found `}`
+ - `,` or `)` expected in src/DropshipMarketplace.jsx at 11847..11848
+ - Opened here in src/DropshipMarketplace.jsx at 11811..11812
+
+  Plugin: vite:oxc
+  File: D:/Local Repository/CAMY Entrepreneurs DIGITAL PLATFORM/src/DropshipMarketplace.jsx
+      at transformWithOxc (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4103:19)
+      at TransformPluginContext.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4174:26)
+      at EnvironmentPluginContainer.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:30932:51)
+      at async loadAndTransform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:20671:26)
+      at async viteTransformMiddleware (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:25205:20)
+3:51:29 PM [vite] Internal server error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mExpected `,` or `)` but found `}`
+ - `,` or `)` expected in src/DropshipMarketplace.jsx at 11847..11848
+ - Opened here in src/DropshipMarketplace.jsx at 11811..11812
+
+  Plugin: vite:oxc
+  File: D:/Local Repository/CAMY Entrepreneurs DIGITAL PLATFORM/src/DropshipMarketplace.jsx
+      at transformWithOxc (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4103:19)
+      at TransformPluginContext.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4174:26)
+      at EnvironmentPluginContainer.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:30932:51)
+      at async loadAndTransform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:20671:26)
+      at async viteTransformMiddleware (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:25205:20)
+3:51:29 PM [vite] Internal server error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mExpected `,` or `)` but found `}`
+ - `,` or `)` expected in src/DropshipMarketplace.jsx at 11847..11848
+ - Opened here in src/DropshipMarketplace.jsx at 11811..11812
+
+  Plugin: vite:oxc
+  File: D:/Local Repository/CAMY Entrepreneurs DIGITAL PLATFORM/src/DropshipMarketplace.jsx
+      at transformWithOxc (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4103:19)
+      at TransformPluginContext.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4174:26)
+      at EnvironmentPluginContainer.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:30932:51)
+      at async loadAndTransform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:20671:26)
+      at async viteTransformMiddleware (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:25205:20)
+3:51:29 PM [vite] (client) [console.error] [vite] Failed to reload /src/DropshipMarketplace.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+3:51:29 PM [vite] (client) [console.error] [vite] Failed to reload /src/DropshipMarketplace.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+3:51:29 PM [vite] (client) [console.error] [vite] Failed to reload /src/DropshipMarketplace.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+3:51:29 PM [vite] Internal server error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mExpected `,` or `)` but found `}`
+ - `,` or `)` expected in src/DropshipMarketplace.jsx at 11847..11848
+ - Opened here in src/DropshipMarketplace.jsx at 11811..11812
+
+  Plugin: vite:oxc
+  File: D:/Local Repository/CAMY Entrepreneurs DIGITAL PLATFORM/src/DropshipMarketplace.jsx
+      at transformWithOxc (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4103:19)
+      at TransformPluginContext.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4174:26)
+      at EnvironmentPluginContainer.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:30932:51)
+      at async loadAndTransform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:20671:26)
+      at async viteTransformMiddleware (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:25205:20)
+3:51:29 PM [vite] (client) [console.error] [vite] Failed to reload /src/DropshipMarketplace.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+3:51:29 PM [vite] Internal server error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mExpected `,` or `)` but found `}`
+ - `,` or `)` expected in src/DropshipMarketplace.jsx at 11847..11848
+ - Opened here in src/DropshipMarketplace.jsx at 11811..11812
+
+  Plugin: vite:oxc
+  File: D:/Local Repository/CAMY Entrepreneurs DIGITAL PLATFORM/src/DropshipMarketplace.jsx
+      at transformWithOxc (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4103:19)
+      at TransformPluginContext.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:4174:26)
+      at EnvironmentPluginContainer.transform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:30932:51)
+      at async loadAndTransform (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:20671:26)
+      at async viteTransformMiddleware (file:///D:/Local%20Repository/CAMY%20Entrepreneurs%20DIGITAL%20PLATFORM/node_modules/vite/dist/node/chunks/node.js:25205:20)
+3:51:29 PM [vite] (client) [console.error] [vite] Failed to reload /src/DropshipMarketplace.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)

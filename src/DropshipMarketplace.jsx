@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowRight, BadgeDollarSign, CheckCircle2, CircleDollarSign, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Truck, X } from 'lucide-react'
+import { ArrowRight, BadgeDollarSign, CheckCircle2, CircleDollarSign, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, X } from 'lucide-react'
 import { api } from './api'
 import { creditProgression } from './creditRules'
 
@@ -25,7 +25,7 @@ function statusHelp(order) {
 
 function CreditSensor({ person, tiers = [], orders = [] }) {
   const delivered = orders.filter(order => order.status === 'Delivered')
-  const sales = delivered.reduce((sum, order) => sum + Number(order.camyCost ?? order.amount ?? 0), 0)
+  const sales = delivered.reduce((sum, order) => sum + Number(order.entrepreneurMargin ?? Math.max(0, Number(order.amount || 0) - Number(order.camyCost ?? order.amount ?? 0))), 0)
   const progression = creditProgression(tiers, sales)
   const credit = progression.credit
   const next = progression.next
@@ -33,8 +33,8 @@ function CreditSensor({ person, tiers = [], orders = [] }) {
   const phase = credit > 0 ? 'Phase 2 · Dropship + credit stock' : 'Phase 1 · Trial drop-shipping'
   return <section className="shop-home-stats">
     <article><small>CURRENT CAMY STAGE</small><strong className="phase-value">{phase}</strong><p>{credit > 0 ? 'You can keep drop-shipping and also request CAMY stock on credit. You choose which method suits each sale.' : 'Build verified delivered sales to unlock optional credit stock.'}</p></article>
-    <article><small>VERIFIED CAMY SALES</small><strong>{money(sales)}</strong><p>Uses CAMY product value from successfully delivered orders, not your markup</p></article>
-    <article><small>CURRENT CREDIT LIMIT</small><strong>{credit > 0 ? money(credit) : 'Not unlocked'}</strong><p>{next ? `${money(remaining)} more verified sales unlocks ${money(next.credit)} credit` : 'CAMY Admin must configure a credit tier'}</p><div className="credit-sensor-progress"><i style={{ width: `${progression.progress}%` }}/></div></article>
+    <article><small>VERIFIED PROFIT</small><strong>{money(sales)}</strong><p>Uses your margin from successfully delivered orders</p></article>
+    <article><small>CURRENT CREDIT LIMIT</small><strong>{credit > 0 ? money(credit) : 'Not unlocked'}</strong><p>{next ? `${money(remaining)} more delivered profit unlocks ${money(next.credit)} credit` : 'Credit milestone unavailable'}</p><div className="credit-sensor-progress"><i style={{ width: `${progression.progress}%` }}/></div></article>
   </section>
 }
 
@@ -133,10 +133,9 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
       <aside className={`market-checkout stock-request-card dropship-checkout ${mobileCheckout ? 'mobile-open' : ''}`}>
         <header><span><ShoppingCart size={19}/></span><div><small>COD CLIENT ORDER</small><h2>Order summary</h2></div><button className="mobile-checkout-back" type="button" onClick={() => setMobileCheckout(false)} aria-label="Back to products"><X size={19}/></button></header>
         {selected.length ? selected.map(item => <div className="market-line dropship-order-line" key={item.productId}>
-          <div className="dropship-line-product"><strong>{item.product.name}</strong><small>CAMY cost: {money(item.product.price)} each</small></div>
-          <label className="dropship-quantity">Quantity<span className="dropship-stepper"><button type="button" aria-label={`Reduce quantity for ${item.product.name}`} disabled={Number(item.qty)<=1} onClick={()=>update(item.productId,{qty:Math.max(1,Number(item.qty)-1)})}>−</button><input aria-label={`Quantity for ${item.product.name}`} type="number" min="1" value={item.qty} onChange={event => update(item.productId, { qty: Math.max(1, Number(event.target.value) || 1) })}/><button type="button" aria-label={`Increase quantity for ${item.product.name}`} onClick={()=>update(item.productId,{qty:Number(item.qty)+1})}>+</button></span></label>
-          <label className="dropship-selling-price">Your client price per item<span className="dropship-price-input"><b>Rs.</b><input type="number" min={item.product.price} step="0.01" value={item.sellPrice} onChange={event => update(item.productId, { sellPrice: Number(event.target.value) || 0 })}/></span><small className="dropship-price-help">Your margin: <strong>{money(Math.max(0,(Number(item.sellPrice)-Number(item.product.price))*Number(item.qty)))}</strong></small></label>
-          <button className="dropship-remove" onClick={() => setCart(old => old.filter(entry => String(entry.productId) !== String(item.productId)))} aria-label={`Remove ${item.product.name}`}><X size={15}/><span>Remove</span></button>
+          <div className="dropship-line-heading"><div className="dropship-line-product"><strong>{item.product.name}</strong><small>CAMY cost: {money(item.product.price)} each</small></div><button className="dropship-remove" type="button" onClick={() => setCart(old => old.filter(entry => String(entry.productId) !== String(item.productId)))} aria-label={`Remove ${item.product.name}`} title="Remove item"><Trash2 size={16}/></button></div>
+          <div className="dropship-line-controls"><label className="dropship-selling-price">Your client price per item<span className="dropship-price-input"><b>Rs.</b><input type="number" min={item.product.price} step="0.01" value={item.sellPrice} onChange={event => update(item.productId, { sellPrice: Number(event.target.value) || 0 })}/></span><small className="dropship-price-help">Your margin: <strong>{money(Math.max(0,(Number(item.sellPrice)-Number(item.product.price))*Number(item.qty)))}</strong></small></label>
+          <label className="dropship-quantity">Quantity<span className="dropship-stepper"><button type="button" aria-label={`Reduce quantity for ${item.product.name}`} disabled={Number(item.qty)<=1} onClick={()=>update(item.productId,{qty:Math.max(1,Number(item.qty)-1)})}>−</button><input aria-label={`Quantity for ${item.product.name}`} type="number" min="1" value={item.qty} onChange={event => update(item.productId, { qty: Math.max(1, Number(event.target.value) || 1) })}/><button type="button" aria-label={`Increase quantity for ${item.product.name}`} onClick={()=>update(item.productId,{qty:Number(item.qty)+1})}>+</button></span></label></div>
         </div>) : <div className="stock-cart-empty"><ShoppingCart size={23}/><p>Add products for your client's order.</p></div>}
 
         <div className="customer-fields"><h3>Client delivery details</h3>

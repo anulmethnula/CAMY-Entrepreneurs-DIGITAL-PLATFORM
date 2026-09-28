@@ -40,43 +40,27 @@ function catalogue_tiers(array $tiers): array {
     usort($clean,static fn($a,$b)=>$a['sales']<=>$b['sales']);return $clean;
 }
 function catalogue_credit_progression(array $tiers, float $sales): array {
-    usort($tiers, static fn(array $left, array $right): int => (float)$left['sales'] <=> (float)$right['sales']);
-
-    $credit = 0.0;
-    foreach ($tiers as $tier) {
-        if ((float)$tier['sales'] <= $sales) {
-            $credit = max($credit, (float)$tier['credit']);
-        }
-    }
-
-    $count = count($tiers);
-    if ($count === 0 || $sales < (float)$tiers[$count - 1]['sales']) {
-        return ['credit' => $credit];
-    }
-
-    $last = $tiers[$count - 1];
-    $previous = $count > 1 ? $tiers[$count - 2] : ['sales' => 0, 'credit' => 0];
-    $salesStep = (float)$last['sales'] - (float)$previous['sales'];
-    $creditStep = (float)$last['credit'] - (float)$previous['credit'];
-
-    if ($salesStep <= 0 || $creditStep <= 0) {
-        return ['credit' => $credit];
-    }
-
-    $completedSteps = (int)floor(($sales - (float)$last['sales']) / $salesStep);
+    // Award credit only for complete Rs. 100,000 verified-sales blocks.
+    $salesStep = 100000.0;
+    $creditStep = 10000.0;
+    $completedSteps = (int)floor(max(0.0, $sales) / $salesStep);
 
     return [
-        'credit' => (float)$last['credit'] + ($completedSteps * $creditStep),
-        'nextSales' => (float)$last['sales'] + (($completedSteps + 1) * $salesStep),
-        'nextCredit' => (float)$last['credit'] + (($completedSteps + 1) * $creditStep),
+        'credit' => $completedSteps * $creditStep,
+        'nextSales' => ($completedSteps + 1) * $salesStep,
+        'nextCredit' => ($completedSteps + 1) * $creditStep,
     ];
 }
 function catalogue_credit_for_sales(array $tiers, float $sales): float {
     return round((float)catalogue_credit_progression($tiers, $sales)['credit'], 2);
 }
+function catalogue_order_profit(array $order): float {
+    if(array_key_exists('entrepreneurMargin',$order))return max(0.0,(float)$order['entrepreneurMargin']);
+    return max(0.0,(float)($order['amount'] ?? 0)-(float)($order['camyCost'] ?? $order['amount'] ?? 0));
+}
 function catalogue_credit(array &$state): void {
     foreach($state['entrepreneurs'] as &$person){
-        $sales=0;foreach($state['orders'] as $order)if((string)$order['entrepreneurId']===(string)$person['id']&&$order['status']==='Delivered')$sales+=(float)($order['camyCost'] ?? $order['amount']);
+        $sales=0;foreach($state['orders'] as $order)if((string)$order['entrepreneurId']===(string)$person['id']&&$order['status']==='Delivered')$sales+=catalogue_order_profit($order);
         $credit = catalogue_credit_for_sales($state['tiers'], $sales);
         $person['sales']=round($sales,2);$person['credit']=$credit;
         if(($person['stage'] ?? '')!=='Departed')$person['stage']=$credit>0?'Credit eligible':'Trial seller';

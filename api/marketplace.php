@@ -68,6 +68,15 @@ function market_state(PDO $pdo, bool $lock = false): array {
         $person['initials']=implode('',array_map(static fn($word)=>substr($word,0,1),array_slice(explode(' ',$person['name']),0,2)));
         if($before!==$person)$changed=true;unset($person);
     }
+    // Keep every saved/displayed limit aligned with the fixed CAMY ladder:
+    // each complete Rs. 100,000 of delivered entrepreneur profit unlocks Rs. 10,000.
+    foreach($state['entrepreneurs'] as &$creditPerson){
+        $verifiedSales=0.0;
+        foreach($state['orders'] as $creditOrder)if((string)($creditOrder['entrepreneurId'] ?? '')===(string)($creditPerson['id'] ?? '')&&($creditOrder['status'] ?? '')==='Delivered')$verifiedSales+=catalogue_order_profit($creditOrder);
+        $verifiedSales=round($verifiedSales,2);$fixedCredit=catalogue_credit_for_sales([], $verifiedSales);
+        if((float)($creditPerson['sales'] ?? 0)!==$verifiedSales||(float)($creditPerson['credit'] ?? 0)!==$fixedCredit){$creditPerson['sales']=$verifiedSales;$creditPerson['credit']=$fixedCredit;$changed=true;}
+        if(($creditPerson['stage'] ?? '')!=='Departed'){$fixedStage=$fixedCredit>0?'Credit eligible':'Trial seller';if(($creditPerson['stage'] ?? '')!==$fixedStage){$creditPerson['stage']=$fixedStage;$changed=true;}}
+    }unset($creditPerson);
     foreach($state['requests'] as &$request)if($request['status']==='Pending'&&!empty($request['receipt'])){$request['status']='Payment review';$pdo->prepare('UPDATE stock_supply_requests SET status=? WHERE id=?')->execute(['Payment review',$request['id']]);$changed=true;}unset($request);
     if($changed)market_save($pdo,$state);
     if($ownsTransaction)$pdo->commit();
@@ -178,7 +187,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
         if(empty($state['catalogue_live'])){$pdo->rollBack();response(['message'=>'CAMY Admin must verify and activate the real product catalogue before credit stock can be requested.'],409);}
         $personIndex=null;foreach($state['entrepreneurs'] as $index=>$person)if((string)$person['id']===(string)$user['member_id']){$personIndex=$index;break;}
         if($personIndex===null){$pdo->rollBack();response(['message'=>'Your entrepreneur profile could not be found.'],404);}
-        $person=$state['entrepreneurs'][$personIndex];$credit=round((float)($person['credit'] ?? 0),2);$used=round((float)($person['used'] ?? 0),2);
+        $person=$state['entrepreneurs'][$personIndex];$credit=catalogue_credit_for_sales([], (float)($person['sales'] ?? 0));$used=round((float)($person['used'] ?? 0),2);
         if($credit<=0||($person['stage'] ?? '')==='Departed'||($person['active'] ?? true)===false){$pdo->rollBack();response(['message'=>'Credit stock is available only after you become Credit eligible. Drop-shipping remains available.'],403);}
         $clean=[];$total=0;
         foreach($items as $item){
@@ -309,7 +318,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
                 if($status==='Cancelled')$state['orders'][$index]['clientPaymentStatus']='Cancelled before delivery';
             }
         }
-        $shop=$state['orders'][$index]['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)($entry['camyCost'] ?? $entry['amount']);$credit=catalogue_credit_for_sales($state['tiers'],$sales);foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
+        $shop=$state['orders'][$index]['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=catalogue_order_profit($entry);$credit=catalogue_credit_for_sales($state['tiers'],$sales);foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
         market_save($pdo,$state);
         $management=in_array($user['role'],['admin','manager'],true);
         $responseProducts=$management?$state['products']:array_map(static fn($product)=>array_merge($product,['stock'=>(($product['stock'] ?? 0)>0?1:0)]),$state['products']);

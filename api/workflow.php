@@ -20,6 +20,13 @@ function workflow_items($items,bool $shops=false): array {
     foreach($items as $item){if(!is_array($item))response(['message'=>'Invalid item.'],422);$qty=filter_var($item['qty'] ?? null,FILTER_VALIDATE_INT);if(!$qty||$qty<1||$qty>1000000)response(['message'=>'Quantities must be positive whole numbers.'],422);$key=($shops?(string)($item['shopId'] ?? '').':':'').(string)($item['productId'] ?? '');if(isset($clean[$key]))$clean[$key]['qty']+=$qty;else{$item['qty']=$qty;$clean[$key]=$item;}}
     return array_values($clean);
 }
+function workflow_customer_details(array $data): array {
+    $clean=[];
+    foreach(['name','phone','district','address'] as $key)$clean[$key]=trim((string)($data[$key] ?? ''));
+    $clean['phone']=preg_replace('/[\s-]/','',$clean['phone']);
+    if(!$clean['name']||strlen($clean['name'])>150||!preg_match('/^(?:\+94|0)7\d{8}$/',$clean['phone'])||!$clean['district']||strlen($clean['district'])>80||strlen($clean['address'])<8||strlen($clean['address'])>2000)response(['message'=>'Enter a valid client name, Sri Lankan mobile number, district and complete delivery address.'],422);
+    return $clean;
+}
 function workflow_reserve(array &$state,array $items,?string $shop): void {
     foreach($items as $item){$id=(string)($item['productId'] ?? $item['id']);$found=false;
         if($shop===null){foreach($state['products'] as &$slot)if((string)$slot['id']===$id){if($slot['stock']<$item['qty'])response(['message'=>'Insufficient CAMY stock to approve this request.'],409);$slot['stock']-=$item['qty'];$found=true;break;}unset($slot);}
@@ -65,7 +72,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
         $data=input();
         if(!is_array($data['customer']??null))response(['message'=>'Enter the client delivery details.'],422);
-        $customer=customer_details($data['customer']);
+        $customer=workflow_customer_details($data['customer']);
         $name=trim((string)($customer['name']??''));$phone=preg_replace('/[\\s-]/','',(string)($customer['phone']??''));$district=trim((string)($customer['district']??''));$address=trim((string)($customer['address']??''));$notes=trim((string)($data['customer']['notes']??''));
         if(!$name||strlen($name)>150||!preg_match('/^(?:\\+94|0)7\\d{8}$/',$phone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter a valid client name, Sri Lankan mobile number, district and delivery address.'],422);
         $paymentMethod=strtolower(trim((string)($data['paymentMethod'] ?? 'cod')));
@@ -155,7 +162,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
             $state['orders'][$index]['deliveryConfirmations']['customer']=['id'=>(int)$customer['id'],'name'=>$customer['name'],'at'=>date(DATE_ATOM)];
             $state['orders'][$index]['status']='Delivered';$state['orders'][$index]['updatedAt']=date(DATE_ATOM);$state['orders'][$index]['deliveredAt']=date(DATE_ATOM);
             $pdo->prepare("UPDATE shop_orders SET status='Delivered',delivered_at=COALESCE(delivered_at,NOW()) WHERE id=?")->execute([$order['id']]);
-            $shop=$order['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=(float)($entry['camyCost'] ?? $entry['amount']);
+            $shop=$order['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=catalogue_order_profit($entry);
             $credit=catalogue_credit_for_sales($state['tiers'],$sales);
             foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
             market_save($pdo,$state);

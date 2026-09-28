@@ -7,6 +7,7 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 8080,
     strictPort: true,
+    allowedHosts: ['jacket-blank-maturely.ngrok-free.dev'],
     fs: {
       deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/private/**', '**/api/**', '**/database/**', '**/*.sql', '**/*.log'],
     },
