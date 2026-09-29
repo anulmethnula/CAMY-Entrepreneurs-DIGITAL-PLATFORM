@@ -5,6 +5,9 @@ require_once __DIR__.'/storage.php';
 require_once __DIR__.'/catalogue.php';
 require_once __DIR__.'/returns.php';
 
+function market_safe_settlement(array $record): array { unset($record['receiptPath']); return $record; }
+function market_safe_order(array $record): array { unset($record['invoicePath'],$record['receiptPath'],$record['trackingToken']); return $record; }
+
 function market_state(PDO $pdo, bool $lock = false): array {
     $ownsTransaction=!$pdo->inTransaction();if($ownsTransaction)$pdo->beginTransaction();
     try {
@@ -134,7 +137,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
         // Entrepreneurs receive the complete CAMY product information, but never the
         // warehouse quantity. `stock` is deliberately reduced to an availability flag.
         $entrepreneurProducts=array_map(static fn($product)=>array_merge($product,['stock'=>(($product['stock'] ?? 0)>0?1:0)]),array_values(array_filter($state['products'] ?? [],static fn($product)=>($product['published'] ?? true)===true)));
-        response(['products'=>$entrepreneurProducts,'catalogue_live'=>$state['catalogue_live'] ?? false,'entrepreneurs'=>market_public($state)['entrepreneurs'],'self'=>$self,'tiers'=>$state['tiers'] ?? [],'inventory'=>array_values(array_filter($state['inventory'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'requests'=>array_values(array_filter($state['requests'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'orders'=>array_values(array_filter($state['orders'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'settlements'=>array_values(array_filter($state['settlements'] ?? [],static fn($item)=>(string)$item['entrepreneurId']===$member))]);
+        response(['products'=>$entrepreneurProducts,'catalogue_live'=>$state['catalogue_live'] ?? false,'entrepreneurs'=>market_public($state)['entrepreneurs'],'self'=>$self,'tiers'=>$state['tiers'] ?? [],'inventory'=>array_values(array_filter($state['inventory'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'requests'=>array_values(array_filter($state['requests'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'orders'=>array_map('market_safe_order',array_values(array_filter($state['orders'] ?? [],static fn($item)=>$item['entrepreneurId']===$member))),'settlements'=>array_map('market_safe_settlement',array_values(array_filter($state['settlements'] ?? [],static fn($item)=>(string)$item['entrepreneurId']===$member)))]);
     }
     if (preg_match('#^/marketplace/requests/([^/]+)/receipt$#',$path,$matches) && $method==='GET') {
         $user=current_user($pdo);if(!$user) response(['message'=>'Authentication required.'],401);
@@ -178,6 +181,13 @@ function market_route(PDO $pdo, string $path, string $method): void {
         $state['products']=$incomingProducts;
         $state['catalogue_seeded']=true;
         market_save($pdo,$state);$pdo->commit();response(['ok'=>true,'state'=>$state]);
+    }
+    if(preg_match('#^/marketplace/orders/([^/]+)/invoice$#',$path,$matches)){
+        $user=current_user($pdo);if(!$user)response(['message'=>'Authentication required.'],401);$pdo->beginTransaction();$state=market_state($pdo,$method==='POST');$index=null;foreach($state['orders'] as $key=>$entry)if((string)$entry['id']===(string)$matches[1]){$index=$key;break;}if($index===null){$pdo->rollBack();response(['message'=>'Order not found.'],404);}$order=$state['orders'][$index];
+        if($method==='GET'){
+            if(!in_array($user['role'],['admin','manager'],true)&&(string)($order['entrepreneurId']??'')!==(string)$user['member_id']){$pdo->rollBack();response(['message'=>'You cannot view this invoice.'],403);}$file=__DIR__.'/../private/receipts/'.basename((string)($order['invoicePath']??''));if(!is_file($file)){$pdo->rollBack();response(['message'=>'Invoice not found.'],404);}$pdo->commit();header('Content-Type: '.(mime_content_type($file)?:'application/octet-stream'));header('Content-Disposition: inline; filename="'.basename($file).'"');header('Content-Length: '.filesize($file));readfile($file);exit;
+        }
+        $admin=require_admin($pdo);$data=input();$number=trim((string)($data['invoiceNumber']??''));if(!$number||strlen($number)>100||empty($data['invoice'])){$pdo->rollBack();response(['message'=>'Enter an invoice number and attach the client invoice.'],422);}$file=workflow_receipt(['receipt'=>$data['invoice']],$order['id'].'-invoice');$state['orders'][$index]['invoiceNumber']=$number;$state['orders'][$index]['invoicePath']=$file;$state['orders'][$index]['invoice']='/api/marketplace/orders/'.rawurlencode($order['id']).'/invoice';$state['orders'][$index]['invoiceIssuedAt']=date(DATE_ATOM);$state['orders'][$index]['invoiceIssuedBy']=$admin['id'];$state['orders'][$index]['updatedAt']=date(DATE_ATOM);market_save($pdo,$state);$pdo->commit();$result=$state['orders'][$index];unset($result['invoicePath'],$result['trackingToken'],$result['receiptPath']);response(['order'=>$result,'message'=>'Client invoice issued successfully.']);
     }
     if ($path === '/marketplace/requests' && $method === 'POST') {
         $user=current_user($pdo);if (!$user || $user['role']!=='entrepreneur' || !$user['member_id']) response(['message'=>'Entrepreneur access is required.'],403);
@@ -335,6 +345,8 @@ function market_route(PDO $pdo, string $path, string $method): void {
         market_save($pdo,$state);
         $management=in_array($user['role'],['admin','manager'],true);
         $responseProducts=$management?$state['products']:array_map(static fn($product)=>array_merge($product,['stock'=>(($product['stock'] ?? 0)>0?1:0)]),$state['products']);
-        $pdo->commit();response(['orders'=>array_values(array_filter($state['orders'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['entrepreneurId']===(string)$user['member_id'])),'inventory'=>array_values(array_filter($state['inventory'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['entrepreneurId']===(string)$user['member_id'])),'entrepreneurs'=>array_values(array_filter($state['entrepreneurs'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['id']===(string)$user['member_id'])),'products'=>$responseProducts,'revision'=>$state['revision']]);
+        $responseOrders=array_values(array_filter($state['orders'],static fn($entry)=>$management||(string)$entry['entrepreneurId']===(string)$user['member_id']));
+        if(!$management)$responseOrders=array_map('market_safe_order',$responseOrders);
+        $pdo->commit();response(['orders'=>$responseOrders,'inventory'=>array_values(array_filter($state['inventory'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['entrepreneurId']===(string)$user['member_id'])),'entrepreneurs'=>array_values(array_filter($state['entrepreneurs'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['id']===(string)$user['member_id'])),'products'=>$responseProducts,'revision'=>$state['revision']]);
     }
 }

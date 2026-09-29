@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { ArrowRight, BadgeDollarSign, CheckCircle2, CircleDollarSign, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, X } from 'lucide-react'
+import { ArrowRight, BadgeDollarSign, Banknote, CalendarDays, CheckCircle2, CircleDollarSign, Download, Eye, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, X } from 'lucide-react'
 import { api } from './api'
 import { creditProgression } from './creditRules'
 import { PortalOverlay } from './Dialog'
+import { exportReport } from './reports'
 
 const money = value => `Rs. ${Number(value || 0).toLocaleString('en-LK', { maximumFractionDigits: 2 })}`
 const districts = ['Ampara','Anuradhapura','Badulla','Batticaloa','Colombo','Galle','Gampaha','Hambantota','Jaffna','Kalutara','Kandy','Kegalle','Kilinochchi','Kurunegala','Mannar','Matale','Matara','Monaragala','Mullaitivu','Nuwara Eliya','Polonnaruwa','Puttalam','Ratnapura','Trincomalee','Vavuniya']
@@ -59,7 +60,7 @@ function CreditSensor({ person, tiers = [], orders = [] }) {
   </section>
 }
 
-export function DropshipOrderPage({ products = [], person, notify, catalogueLive, orders = [], tiers = [] }) {
+export function DropshipOrderPage({ products = [], person, notify, catalogueLive, orders = [], tiers = [], setPage }) {
   const [cart, setCart] = useState([])
   const [client, setClient] = useState(blankClient)
   const [busy, setBusy] = useState(false)
@@ -124,11 +125,12 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
     }
   }
 
-  return <div className="content-page market-page stock-buy-page">
+  return <div className="content-page market-page stock-buy-page dropship-order-page">
     <section className="stock-buy-hero">
       <div><small>CAMY DROPSHIP ORDER DESK</small><h1>You sell it.<br/><em>CAMY delivers it.</em></h1><p>Take the order from your client, choose your selling price, and send the client details to CAMY. All client orders are Cash on Delivery. CAMY handles delivery and cash collection.</p></div>
       <div className="stock-buy-steps"><span><i>1</i>Choose product</span><span><i>2</i>Add client details</span><span><i>3</i>CAMY delivers & collects COD</span></div>
     </section>
+    <section className="client-order-shortcut"><div><PackageCheck/><span><strong>Looking for an existing client order?</strong><small>Open the order centre to search, filter and view full delivery details.</small></span></div><button type="button" onClick={()=>setPage?.('orders')}>View my orders <b>{orders.length}</b><ArrowRight/></button></section>
 
     {!catalogueLive && <div className="market-warning">CAMY Admin must activate the verified catalogue before entrepreneurs can submit orders.</div>}
 
@@ -198,6 +200,33 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
       </article>) : <p>No client orders yet. Your submitted orders and CAMY delivery updates will appear here automatically.</p>}
     </section>
   </div>
+}
+
+function CreditRequestCentre({ requests, products, cancellingId, cancelRequest, setPage }) {
+  const [selected,setSelected]=useState(null), [status,setStatus]=useState('All'), [query,setQuery]=useState(''), [from,setFrom]=useState(''), [to,setTo]=useState('')
+  const statuses=['All','Pending','Approved','Dispatched','Cancelled','Rejected']
+  const visible=useMemo(()=>[...requests].filter(request=>(status==='All'||request.status===status)&&(!from||String(request.createdAt||'').slice(0,10)>=from)&&(!to||String(request.createdAt||'').slice(0,10)<=to)&&`${request.id} ${request.status}`.toLowerCase().includes(query.trim().toLowerCase())).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))),[requests,status,query,from,to])
+  const clear=()=>{setStatus('All');setQuery('');setFrom('');setTo('')}
+  if(selected){
+    const request=requests.find(item=>item.id===selected.id)||selected
+    const cancelled=['Cancelled','Rejected'].includes(request.status)
+    const items=(request.items||[]).map(item=>({item,product:products.find(product=>String(product.id)===String(item.productId))}))
+    const units=items.reduce((sum,{item})=>sum+Number(item.qty||0),0), approved=['Approved','Dispatched'].includes(request.status), dispatched=request.status==='Dispatched'
+    return <section className="credit-request-detail-page"><header><button type="button" onClick={()=>setSelected(null)}>← All credit requests</button><div><small>REQUEST NUMBER</small><h2>{request.id}</h2><p>Submitted {requestDate(request.createdAt)}</p></div><span className={`market-status ${String(request.status).toLowerCase()}`}>{request.status}</span></header>
+      {cancelled?<div className="credit-request-closed"><X/><div><small>REQUEST CLOSED</small><h3>{request.status==='Cancelled'?'Cancelled by you':'Rejected by CAMY'}</h3><p>{creditRequestMessage(request.status)}</p><span>Original request value <strong>{money(request.total)}</strong></span><span>Closed {requestDate(request.updatedAt||request.reviewedAt)}</span></div></div>:<>
+        <div className="credit-detail-kpis"><span><small>REQUEST VALUE</small><strong>{money(request.total)}</strong></span><span><small>PRODUCTS</small><strong>{items.length}</strong></span><span><small>TOTAL UNITS</small><strong>{units}</strong></span><span><small>LAST UPDATED</small><strong>{requestDate(request.updatedAt||request.reviewedAt||request.createdAt)}</strong></span></div>
+        <div className="credit-request-products"><div className="credit-request-product-head"><span>Product</span><span>Unit price</span><span>Quantity</span><span>Line total</span></div>{items.map(({item,product},index)=><div className="credit-request-product" key={item.productId||index}><span><img src={product?.image||'/products/classic-set.png'} alt=""/><span><strong>{product?.name||'CAMY product'}</strong><small>{product?.code||item.productId}</small></span></span><span>{money(item.price??product?.price)}</span><span>{item.qty}</span><strong>{money(Number(item.price??product?.price??0)*Number(item.qty||0))}</strong></div>)}</div>
+        <div className="credit-request-progress"><span className="done"><i><CheckCircle2/></i><b>Requested</b><small>{requestDate(request.createdAt)}</small></span><hr className={approved?'done':''}/><span className={approved?'done':''}><i>{approved?<CheckCircle2/>:'2'}</i><b>Approved</b><small>{approved?requestDate(request.approvedAt||request.reviewedAt):'Waiting for CAMY'}</small></span><hr className={dispatched?'done':''}/><span className={dispatched?'done':''}><i>{dispatched?<CheckCircle2/>:'3'}</i><b>Dispatched</b><small>{dispatched?requestDate(request.creditIssuedAt||request.updatedAt):'Not dispatched yet'}</small></span></div>
+        {dispatched&&<section className="credit-repayment-detail"><header><span><CalendarDays/></span><div><small>10-DAY CREDIT REPAYMENT</small><h3>Pay by {request.creditDueAt?requestDate(request.creditDueAt):'10 days after dispatch'}</h3><p>{money(request.creditIssuedAmount??request.total)} was added to your outstanding credit when CAMY dispatched this stock.</p></div></header><div><article><Banknote/><span><strong>Bank transfer</strong><small>Transfer the amount to CAMY, enter the transaction reference and upload the bank receipt. CAMY verifies it before reducing your balance.</small></span></article><article><PackageCheck/><span><strong>Cash at CAMY store</strong><small>Pay at a CAMY store. A CAMY administrator records and verifies the cash payment in the system.</small></span></article></div><button type="button" onClick={()=>setPage?.('credit')}>Open repayment centre <ArrowRight/></button></section>}
+        <footer className="credit-detail-footer"><div><strong>{request.status==='Pending'?'Waiting for CAMY approval':request.status==='Approved'?'Approved — CAMY is preparing dispatch':'Credit stock issued'}</strong><p>{creditRequestMessage(request.status)}</p></div>{request.status==='Pending'&&<button type="button" className="credit-request-cancel" disabled={cancellingId===request.id} onClick={()=>cancelRequest(request)}>{cancellingId===request.id?'Cancelling…':'Cancel request'}</button>}</footer>
+      </>}
+    </section>
+  }
+  return <section className="credit-request-centre"><header><div><small>CREDIT REQUEST HISTORY</small><h2>My credit requests</h2><p>Open a request to view products, CAMY progress and repayment details.</p></div><b>{requests.length} request{requests.length===1?'':'s'}</b></header>
+    <div className="credit-request-tools"><label><Search/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search request number"/></label><select value={status} onChange={event=>setStatus(event.target.value)}>{statuses.map(item=><option key={item}>{item}</option>)}</select><label>From<input type="date" value={from} onChange={event=>setFrom(event.target.value)}/></label><label>To<input type="date" min={from} value={to} onChange={event=>setTo(event.target.value)}/></label><button type="button" onClick={clear}>Clear</button></div>
+    <div className="credit-request-export"><span><Download/></span><div><strong>Download filtered requests</strong><small>{visible.length} request{visible.length===1?'':'s'} · {from||'All dates'} {to?`to ${to}`:''}</small></div><button type="button" disabled={!visible.length} onClick={()=>exportReport(`camy-credit-requests-${from||'all'}-${to||'dates'}.xlsx`,visible.map(request=>({request:request.id,status:request.status,requestedAt:request.createdAt,lastUpdated:request.updatedAt||request.reviewedAt,total:Number(request.total||0),products:(request.items||[]).length,units:(request.items||[]).reduce((sum,item)=>sum+Number(item.qty||0),0),dispatchedAt:request.creditIssuedAt||'',paymentDue:request.creditDueAt||''})))}><Download/> Download Excel</button></div>
+    {visible.length?<div className="credit-request-compact-list">{visible.map(request=>{const units=(request.items||[]).reduce((sum,item)=>sum+Number(item.qty||0),0);return <article className={String(request.status).toLowerCase()} key={request.id}><span><PackageCheck/></span><div><small>REQUEST</small><strong>{request.id}</strong><p>{requestDate(request.createdAt)}</p></div><div><small>VALUE</small><strong>{money(request.total)}</strong><p>{(request.items||[]).length} products · {units} units</p></div><div><small>STATUS</small><span className={`market-status ${String(request.status).toLowerCase()}`}>{request.status}</span></div><div className="credit-request-row-note"><small>NEXT STEP</small><strong>{request.status==='Pending'?'CAMY approval':request.status==='Approved'?'CAMY dispatch':request.status==='Dispatched'?'Repay within 10 days':request.status==='Cancelled'?'No action required':'Request closed'}</strong></div><button type="button" onClick={()=>setSelected(request)}><Eye/> View request</button></article>})}</div>:<div className="credit-request-empty"><PackageOpen/><h3>No matching requests</h3><p>Change the status, search or date filters.</p></div>}
+  </section>
 }
 
 export function CreditStockPage({ products = [], person, requests = [], inventory = [], submit, cancel, notify, catalogueLive, requestsOnly = false, setPage }) {
@@ -280,9 +309,10 @@ export function CreditStockPage({ products = [], person, requests = [], inventor
         <div className="credit-request-summary"><span><small>REQUEST VALUE</small><strong>{money(request.total)}</strong></span><span><small>PRODUCTS</small><strong>{items.length}</strong></span><span><small>TOTAL UNITS</small><strong>{units}</strong></span><span><small>LAST UPDATED</small><strong>{requestDate(request.updatedAt||request.reviewedAt||request.createdAt)}</strong></span></div>
         <div className="credit-request-products"><div className="credit-request-product-head"><span>Product</span><span>Unit price</span><span>Quantity</span><span>Line total</span></div>{items.map(({item,product},index)=><div className="credit-request-product" key={item.productId||index}><span><img src={product?.image||'/products/classic-set.png'} alt=""/><span><strong>{product?.name||'CAMY product'}</strong><small>{product?.code||item.productId}</small></span></span><span>{money(item.price??product?.price)}</span><span>{item.qty}</span><strong>{money(Number(item.price??product?.price??0)*Number(item.qty||0))}</strong></div>)}</div>
         <div className="credit-request-progress" aria-label={`Request status: ${request.status}`}><span className="done"><i><CheckCircle2/></i><b>Requested</b><small>{requestDate(request.createdAt)}</small></span><hr className={approved?'done':''}/><span className={approved?'done':['Rejected','Cancelled'].includes(request.status)?'rejected':''}><i>{approved?<CheckCircle2/>:'2'}</i><b>{request.status==='Rejected'?'Rejected':request.status==='Cancelled'?'Cancelled':'Approved'}</b><small>{['Rejected','Cancelled'].includes(request.status)?'Request closed':approved?requestDate(request.approvedAt||request.reviewedAt):'Waiting for CAMY'}</small></span><hr className={dispatched?'done':''}/><span className={dispatched?'done':''}><i>{dispatched?<CheckCircle2/>:'3'}</i><b>Dispatched</b><small>{dispatched?requestDate(request.creditIssuedAt||request.updatedAt):'Not dispatched yet'}</small></span></div>
-        <footer><div><strong>{request.status==='Pending'?'Approval pending':request.status==='Approved'?'Approved — preparing dispatch':request.status==='Dispatched'?'Stock and credit issued':request.status==='Rejected'?'Request rejected':request.status==='Cancelled'?'Cancelled by you':request.status}</strong><p>{creditRequestMessage(request.status)}</p></div>{request.status==='Pending'&&<button type="button" className="credit-request-cancel" disabled={cancellingId===request.id} onClick={()=>cancelRequest(request)}>{cancellingId===request.id?'Cancelling…':'Cancel request'}</button>}{request.status==='Dispatched'&&<span><small>CREDIT ISSUED</small><strong>{money(request.creditIssuedAmount??request.total)}</strong></span>}</footer>
+        <footer><div><strong>{request.status==='Pending'?'Approval pending':request.status==='Approved'?'Approved — preparing dispatch':request.status==='Dispatched'?'Stock and credit issued':request.status==='Rejected'?'Request rejected':request.status==='Cancelled'?'Cancelled by you':request.status}</strong><p>{creditRequestMessage(request.status)}</p>{request.status==='Dispatched'&&<button type="button" className="credit-payment-link" onClick={()=>setPage?.('credit')}>Choose repayment method <ArrowRight size={14}/></button>}</div>{request.status==='Pending'&&<button type="button" className="credit-request-cancel" disabled={cancellingId===request.id} onClick={()=>cancelRequest(request)}>{cancellingId===request.id?'Cancelling…':'Cancel request'}</button>}{request.status==='Dispatched'&&<span><small>PAY WITHIN 10 DAYS</small><strong>{request.creditDueAt?requestDate(request.creditDueAt):'10 days after dispatch'}</strong><small>{money(request.creditIssuedAmount??request.total)} issued</small></span>}</footer>
       </article>
     })}</div>:<div className="credit-request-empty"><PackageOpen/><h3>No credit stock requests yet</h3><p>Products you submit for CAMY credit will appear here with approval and dispatch updates.</p></div>}</section>
+    {requestsOnly&&<CreditRequestCentre requests={mine} products={products} cancellingId={cancellingId} cancelRequest={cancelRequest} setPage={setPage}/>}
   </div>
 }
 
