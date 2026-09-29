@@ -25,6 +25,20 @@ function profile_is_training_demo(array $state,string $id): bool {
     return true;
 }
 function profiles_route(PDO $pdo,string $path,string $method): void {
+    if($path==='/account/profile/photo' && $method==='PATCH'){
+        $user=current_user($pdo);if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
+        $data=input();$image=(string)($data['image']??'');
+        if($image){
+            if(strlen($image)>2800000||!preg_match('#^data:image/(jpeg|png|webp);base64,(.+)$#s',$image,$parts))response(['message'=>'Use a JPG, PNG or WebP profile photo up to 2 MB.'],422);
+            $bytes=base64_decode($parts[2],true);if(!$bytes||strlen($bytes)>2*1024*1024||!getimagesizefromstring($bytes))response(['message'=>'The selected profile photo is invalid.'],422);
+        }
+        $id=(string)$user['member_id'];$pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
+        foreach($state['entrepreneurs'] as $key=>$person)if((string)($person['id']??'')===$id){$index=$key;break;}
+        if($index===null){$pdo->rollBack();response(['message'=>'Entrepreneur profile not found.'],404);}
+        $pdo->prepare('UPDATE entrepreneurs SET profile_image=? WHERE member_id=?')->execute([$image,$id]);
+        $state['entrepreneurs'][$index]['image']=$image;market_save($pdo,$state);$pdo->commit();
+        response(['image'=>$image,'message'=>$image?'Profile photo updated successfully.':'Profile photo removed successfully.']);
+    }
     if(preg_match('#^/admin/entrepreneurs/([^/]+)$#',$path,$detailsMatch) && $method==='GET'){
         require_admin($pdo);$id=(string)$detailsMatch[1];$state=market_state($pdo);$person=null;
         foreach($state['entrepreneurs'] as $candidate)if((string)$candidate['id']===$id){$person=$candidate;break;}

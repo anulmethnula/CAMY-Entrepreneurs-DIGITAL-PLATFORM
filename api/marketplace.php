@@ -5,7 +5,11 @@ require_once __DIR__.'/storage.php';
 require_once __DIR__.'/catalogue.php';
 require_once __DIR__.'/returns.php';
 
-function market_safe_settlement(array $record): array { unset($record['receiptPath']); return $record; }
+function market_safe_settlement(array $record): array {
+    if(!empty($record['receiptPath'])&&!empty($record['id'])&&empty($record['receipt']))$record['receipt']='/api/marketplace/credit/settlements/'.rawurlencode((string)$record['id']).'/receipt';
+    unset($record['receiptPath']);
+    return $record;
+}
 function market_safe_order(array $record): array { unset($record['invoicePath'],$record['receiptPath'],$record['trackingToken']); return $record; }
 
 function market_state(PDO $pdo, bool $lock = false): array {
@@ -101,7 +105,7 @@ function market_public(array $state): array {
     $realIds=array_map(static fn($person)=>(string)$person['id'],$realEntrepreneurs);
     $publicInventory=array_values(array_filter($state['inventory'] ?? [],static fn($item)=>($item['visible'] ?? true)===true&&in_array((string)$item['entrepreneurId'],$realIds,true)));
     $publishedProducts=array_values(array_filter($state['products'] ?? [],static fn($product)=>($product['published'] ?? true)===true));
-    return ['products'=>array_map(static fn($product)=>array_merge($product,['stock'=>($product['stock'] ?? 0)>0?1:0]),$publishedProducts), 'entrepreneurs'=>array_map(static fn($person)=>['id'=>$person['id'],'name'=>$person['name'],'city'=>$person['city'] ?? 'Sri Lanka','stage'=>$person['stage'] ?? 'Trial seller'], $realEntrepreneurs), 'inventory'=>array_map(static fn($item)=>['entrepreneurId'=>$item['entrepreneurId'],'productId'=>$item['productId'],'qty'=>$item['qty']>0?999999:0,'price'=>$item['price'] ?? null],$publicInventory)];
+    return ['products'=>array_map(static fn($product)=>array_merge($product,['stock'=>($product['stock'] ?? 0)>0?1:0]),$publishedProducts), 'entrepreneurs'=>array_map(static function($person){$name=trim((string)($person['name'] ?? 'CAMY Partner'));$parts=preg_split('/\s+/', $name) ?: [];return ['id'=>$person['id'],'name'=>$name,'initials'=>strtoupper(implode('',array_map(static fn($part)=>substr($part,0,1),array_slice($parts,0,2)))),'city'=>$person['city'] ?? 'Sri Lanka','stage'=>$person['stage'] ?? 'Trial seller','sales'=>round((float)($person['sales'] ?? 0),2)];}, $realEntrepreneurs), 'inventory'=>array_map(static fn($item)=>['entrepreneurId'=>$item['entrepreneurId'],'productId'=>$item['productId'],'qty'=>$item['qty']>0?999999:0,'price'=>$item['price'] ?? null],$publicInventory)];
 }
 require_once __DIR__.'/workflow.php';
 function market_route(PDO $pdo, string $path, string $method): void {

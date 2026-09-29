@@ -359,7 +359,7 @@ export function AdminCreditStockPage({ requests = [], products = [], entrepreneu
   </div>
 }
 
-export function DropshipHome({ person, orders = [], tiers = [], setPage }) {
+function LegacyDropshipHome({ person, orders = [], tiers = [], setPage }) {
   const myOrders = orders.filter(order => String(order.entrepreneurId) === String(person?.id))
   const inProgress = myOrders.filter(order => !['Delivered','Returned'].includes(order.status))
   const delivered = myOrders.filter(order => order.status === 'Delivered')
@@ -378,6 +378,34 @@ export function DropshipHome({ person, orders = [], tiers = [], setPage }) {
     <CreditSensor person={person} tiers={tiers} orders={myOrders}/>
     <section className="shop-home-stats payout-home-stats"><article><small>TOTAL ENTREPRENEUR MARGIN</small><strong>{money(lifetimeMargin)}</strong><p>Margin from successfully delivered drop-ship client orders</p></article><article><small>TRANSFERRED BY CAMY</small><strong>{money(paidMargin)}</strong><p>Recorded payouts with CAMY bank transfer receipts</p></article><article><small>WAITING FOR TRANSFER</small><strong>{money(pendingMargin)}</strong><p>Delivered orders awaiting CAMY payout</p></article></section>
     <section className="market-history"><h2>Recent client orders</h2>{myOrders.length ? myOrders.slice(0,5).map(order => <article key={order.id}><div><strong>{order.id} · {order.customer}</strong><small>{money(order.amount)} · {statusHelp(order)}</small></div><span className="market-status">{order.status}</span></article>) : <p>Create your first COD client order from New client order.</p>}</section>
+  </div>
+}
+
+export function DropshipHome({ person, orders = [], setPage }) {
+  const myOrders=orders.filter(order=>String(order.entrepreneurId)===String(person?.id))
+  const inProgress=myOrders.filter(order=>!['Delivered','Returned','Rejected','Cancelled'].includes(order.status))
+  const delivered=myOrders.filter(order=>order.status==='Delivered')
+  const paidMargin=myOrders.filter(order=>order.payoutStatus==='paid').reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0)
+  const pendingMargin=myOrders.filter(order=>order.payoutStatus==='pending_transfer').reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0)
+  const lifetimeMargin=delivered.reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0)
+  const creditEligible=Number(person?.credit||0)>0
+  const availableCredit=Math.max(0,Number(person?.credit||0)-Number(person?.used||0))
+  const firstName=person?.name?.split(' ')[0]||'Partner'
+  return <div className="content-page entrepreneur-overview">
+    <section className="home-welcome"><div><small>YOUR CAMY BUSINESS</small><h1>Good to see you, {firstName}.</h1><p>Here is the important picture today. Open a section below when you need its full details.</p></div><button type="button" onClick={()=>setPage('products')}><ShoppingCart/> Create client order <ArrowRight/></button></section>
+    <section className="home-essential-stats">
+      <button type="button" onClick={()=>setPage('orders')}><span><Truck/></span><div><small>ACTIVE ORDERS</small><strong>{inProgress.length}</strong><p>{delivered.length} successfully delivered</p></div><ArrowRight/></button>
+      <button type="button" onClick={()=>setPage('credit')}><span><BadgeDollarSign/></span><div><small>YOUR VERIFIED EARNINGS</small><strong>{money(lifetimeMargin)}</strong><p>{money(paidMargin)} transferred by CAMY</p></div><ArrowRight/></button>
+      <button type="button" onClick={()=>setPage('credit-stock')}><span><PackageCheck/></span><div><small>AVAILABLE CREDIT</small><strong>{money(availableCredit)}</strong><p>{creditEligible?'Ready for optional stock requests':'Unlocks through verified earnings'}</p></div><ArrowRight/></button>
+      <button type="button" onClick={()=>setPage('credit')}><span><CircleDollarSign/></span><div><small>WAITING FOR CAMY</small><strong>{money(pendingMargin)}</strong><p>Commission ready for transfer</p></div><ArrowRight/></button>
+    </section>
+    {pendingMargin>0&&<section className="home-attention"><span><BadgeDollarSign/></span><div><small>PAYMENT UPDATE</small><strong>{money(pendingMargin)} is waiting for CAMY transfer</strong><p>Open Your Earnings to see each order and payment status.</p></div><button type="button" onClick={()=>setPage('credit')}>View your earnings <ArrowRight/></button></section>}
+    <section className="home-destinations"><header><small>GO TO</small><h2>What would you like to do?</h2></header><div>
+      <button type="button" onClick={()=>setPage('products')}><span><ShoppingCart/></span><div><strong>Place a client order</strong><small>Choose products and send a COD order to CAMY</small></div><ArrowRight/></button>
+      <button type="button" onClick={()=>setPage('orders')}><span><Truck/></span><div><strong>Track your orders</strong><small>View delivery status, invoices and commission receipts</small></div><ArrowRight/></button>
+      <button type="button" onClick={()=>setPage('credit-stock')}><span><PackageCheck/></span><div><strong>Manage credit stock</strong><small>Request stock or review existing credit requests</small></div><ArrowRight/></button>
+      <button type="button" onClick={()=>setPage('growth')}><span><CircleDollarSign/></span><div><strong>See your growth</strong><small>Check earnings, network position and next milestone</small></div><ArrowRight/></button>
+    </div></section>
   </div>
 }
 
