@@ -414,6 +414,86 @@ input::placeholder,textarea::placeholder { color:#97a6b2; }
 .catalogue-detail-meta b { display:block; margin-bottom:3px; color:#6b8798; font-size:9px; letter-spacing:.06em; text-transform:uppercase; }
 .catalogue-detail-layer h3 { margin:16px 0 0; color:#173f5f; font-size:14px; }
 
+/* Detailed entrepreneur credit-request history */
+.credit-catalogue-tools { margin-bottom:10px; display:grid; grid-template-columns:minmax(240px,1fr) 180px auto; gap:9px; align-items:center; }
+.credit-catalogue-tools label { min-height:44px; padding:0 12px; border:1px solid #d5e3ec; border-radius:11px; display:flex; align-items:center; gap:8px; background:#fff; }
+.credit-catalogue-tools label svg { width:18px; color:#678399; }
+.credit-catalogue-tools input { width:100%; border:0; outline:0; background:transparent; font:inherit; font-size:12px; }
+.credit-catalogue-tools select { height:44px; padding:0 10px; border:1px solid #d5e3ec; border-radius:11px; color:#355c76; background:#fff; font:inherit; font-size:11px; }
+.credit-catalogue-tools>span { color:#678399; font-size:10px; font-weight:800; white-space:nowrap; }
+.credit-category-tabs { margin-bottom:16px; display:flex; gap:7px; overflow-x:auto; padding:2px 1px 8px; scrollbar-width:thin; }
+.credit-category-tabs button { min-height:35px; padding:0 12px; border:1px solid #d5e3ec; border-radius:10px; color:#41667f; background:#fff; font-size:10px; font-weight:800; white-space:nowrap; cursor:pointer; }
+.credit-category-tabs button.active { border-color:#17689e; color:#fff; background:#17689e; box-shadow:0 5px 12px rgba(23,104,158,.16); }
+.credit-catalogue-layout>.stock-request-card { top:92px!important; max-height:calc(100dvh - 112px); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
+.mobile-credit-request { display:none; }
+.credit-request-history { padding:0; overflow:hidden; }
+.credit-request-history-heading { margin:0!important; padding:25px 28px 20px; display:flex; align-items:center; justify-content:space-between; gap:20px; border-bottom:1px solid #e1eaf2; }
+.credit-request-history-heading h2 { margin:4px 0!important; }
+.credit-request-history-heading p { margin:0; color:#6b8293; font-size:12px; }
+.credit-request-history-heading>b { padding:8px 11px; border-radius:10px; color:#215f88; background:#eaf5fc; font-size:11px; white-space:nowrap; }
+.credit-request-list { display:grid; gap:16px; padding:20px; background:#f7fafc; }
+.credit-request-card { overflow:hidden; border:1px solid #dbe7ef; border-radius:18px; background:#fff; box-shadow:0 8px 24px rgba(21,60,85,.05); }
+.credit-request-card>header { padding:18px 20px; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; border-bottom:1px solid #e8eef3; }
+.credit-request-card>header small { color:#6e879a; font-size:9px; font-weight:800; letter-spacing:.1em; }
+.credit-request-card>header h3 { margin:4px 0; color:#173f5f; font-size:17px; }
+.credit-request-card>header p { margin:0; color:#6b8293; font-size:11px; }
+.credit-request-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-bottom:1px solid #e8eef3; background:#fbfdff; }
+.credit-request-summary>span { min-width:0; padding:14px 20px; border-right:1px solid #e8eef3; }
+.credit-request-summary>span:last-child { border-right:0; }
+.credit-request-summary small,.credit-request-summary strong { display:block; }
+.credit-request-summary small { margin-bottom:4px; color:#7990a1; font-size:8px; font-weight:800; letter-spacing:.08em; }
+.credit-request-summary strong { color:#173f5f; font-size:13px; overflow-wrap:anywhere; }
+.credit-request-products { padding:12px 20px; }
+.credit-request-product-head,.credit-request-product { display:grid; grid-template-columns:minmax(220px,1fr) 120px 90px 130px; gap:12px; align-items:center; }
+.credit-request-product-head { padding:4px 8px 8px; color:#8195a5; font-size:9px; font-weight:800; text-transform:uppercase; }
+.credit-request-product { padding:11px 8px; border-top:1px solid #edf1f5; color:#365970; font-size:12px; }
+.credit-request-product>span:first-child { display:flex; align-items:center; gap:11px; min-width:0; }
+.credit-request-product img { width:44px; height:44px; flex:0 0 auto; object-fit:contain; border-radius:9px; background:#f1f6f9; }
+.credit-request-product strong,.credit-request-product small { display:block; }
+.credit-request-product small { margin-top:3px; color:#8093a1; font-size:9px; }
+.credit-request-product>strong { color:#173f5f; text-align:right; }
+.credit-request-progress { padding:18px 28px; display:grid; grid-template-columns:minmax(100px,1fr) minmax(30px,1fr) minmax(100px,1fr) minmax(30px,1fr) minmax(100px,1fr); align-items:start; background:#f7fafc; }
+.credit-request-progress>span { display:grid; justify-items:center; text-align:center; color:#8495a2; }
+.credit-request-progress i { width:30px; height:30px; border:2px solid #cfdbe3; border-radius:50%; background:#fff; display:grid; place-items:center; font-size:10px; font-style:normal; font-weight:800; }
+.credit-request-progress i svg { width:15px; }
+.credit-request-progress b { margin-top:7px; font-size:10px; }
+.credit-request-progress small { margin-top:3px; font-size:8px; line-height:1.35; }
+.credit-request-progress hr { width:100%; margin:14px 0 0; border:0; border-top:2px solid #cfdbe3; }
+.credit-request-progress .done { color:#167157; }
+.credit-request-progress span.done i { border-color:#26a277; color:#fff; background:#26a277; }
+.credit-request-progress hr.done { border-color:#26a277; }
+.credit-request-progress span.rejected { color:#a34848; }
+.credit-request-progress span.rejected i { border-color:#d98c8c; color:#a34848; background:#fff1f1; }
+.credit-request-card>footer { padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:18px; border-top:1px solid #e8eef3; }
+.credit-request-card>footer p { margin:4px 0 0; color:#6b8293; font-size:11px; line-height:1.5; }
+.credit-request-card>footer>span { min-width:150px; padding:10px 12px; border-radius:10px; color:#176e53; background:#eaf8f2; text-align:right; }
+.credit-request-card>footer>span small,.credit-request-card>footer>span strong { display:block; }
+.credit-request-card>footer>span small { font-size:8px; font-weight:800; letter-spacing:.08em; }
+.credit-request-cancel { min-height:40px; padding:0 14px; border:1px solid #e2b7b7; border-radius:10px; color:#9d3f3f; background:#fff5f5; font:inherit; font-size:11px; font-weight:800; white-space:nowrap; cursor:pointer; }
+.credit-request-cancel:hover:not(:disabled) { border-color:#c96d6d; background:#ffeaea; }.credit-request-cancel:disabled { opacity:.55; cursor:wait; }
+.credit-request-empty { padding:44px 24px; color:#6b8293; text-align:center; }
+.credit-request-empty svg { color:#3985b5; }
+.credit-request-empty h3 { margin:10px 0 5px; color:#173f5f; }
+.credit-request-empty p { margin:0; }
+
+@media (max-width:800px) {
+  .credit-catalogue-tools { grid-template-columns:1fr 150px; }.credit-catalogue-tools>span { grid-column:1/-1; }
+  .credit-request-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }.credit-request-summary>span:nth-child(2) { border-right:0; }.credit-request-summary>span:nth-child(-n+2) { border-bottom:1px solid #e8eef3; }
+  .credit-request-products { overflow-x:auto; }.credit-request-product-head,.credit-request-product { min-width:680px; }
+}
+@media (max-width:560px) {
+  .credit-catalogue-tools { grid-template-columns:1fr; }.credit-catalogue-tools>span { grid-column:auto; }
+  .credit-request-history-heading { align-items:flex-start; padding:20px; }.credit-request-list { padding:10px; }.credit-request-card>header { padding:16px; }
+  .credit-request-summary>span { padding:12px 14px; }.credit-request-progress { padding:17px 10px; grid-template-columns:minmax(72px,1fr) 18px minmax(72px,1fr) 18px minmax(72px,1fr); }
+  .credit-request-card>footer { align-items:flex-start; flex-direction:column; }.credit-request-card>footer>span { width:100%; text-align:left; }
+}
+
+@media (max-width:1180px) {
+  .credit-catalogue-layout>.stock-request-card { max-height:none; overflow:visible; }
+  .mobile-credit-request { position:fixed; z-index:120; left:max(14px,env(safe-area-inset-left)); right:max(14px,env(safe-area-inset-right)); bottom:max(76px,calc(env(safe-area-inset-bottom) + 14px)); min-height:58px; padding:9px 14px; border:0; border-radius:16px; color:#fff; background:linear-gradient(135deg,#124c78,#1e7dac); box-shadow:0 16px 40px rgba(8,44,71,.3); display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:11px; text-align:left; cursor:pointer; }
+  .mobile-credit-request span,.mobile-credit-request small,.mobile-credit-request strong { display:block; }.mobile-credit-request small { color:#bfe5f7; font-size:9px; }.mobile-credit-request strong { margin-top:2px; font-size:12px; }.mobile-credit-request b { font-size:13px; }
+}
+
 @media (max-width:700px) {
   .catalogue-detail-layer { padding:0; align-items:start; }
   .catalogue-detail-layer > article { width:100%; max-height:100dvh; min-height:100dvh; grid-template-columns:1fr; gap:16px; padding:54px 20px 28px; border-radius:0; }

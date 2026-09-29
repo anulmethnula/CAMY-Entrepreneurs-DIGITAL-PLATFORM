@@ -205,6 +205,19 @@ function market_route(PDO $pdo, string $path, string $method): void {
         foreach($clean as $item){$code='';foreach($state['products'] as $product)if((string)$product['id']===(string)$item['productId']){$code=(string)($product['code'] ?? $product['id']);break;}$pdo->prepare('INSERT INTO stock_supply_request_items(request_id,product_code,quantity,purchase_price) VALUES(?,?,?,?)')->execute([$request['id'],$code,$item['qty'],$item['price']]);}
         array_unshift($state['requests'],$request);market_save($pdo,$state);$pdo->commit();response(['request'=>$request],201);
     }
+    if (preg_match('#^/marketplace/requests/([^/]+)/cancel$#',$path,$matches) && $method==='POST') {
+        $user=current_user($pdo);if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
+        foreach($state['requests'] as $key=>$request)if((string)$request['id']===(string)$matches[1]){$index=$key;break;}
+        if($index===null){$pdo->rollBack();response(['message'=>'Credit stock request not found.'],404);}
+        $request=$state['requests'][$index];
+        if((string)($request['entrepreneurId']??'')!==(string)$user['member_id']){$pdo->rollBack();response(['message'=>'You cannot cancel another entrepreneur\'s request.'],403);}
+        if(($request['creditMode']??false)!==true){$pdo->rollBack();response(['message'=>'This request is not a credit-stock request.'],409);}
+        if(($request['status']??'')!=='Pending'){$pdo->rollBack();response(['message'=>'Only requests still waiting for CAMY approval can be cancelled.'],409);}
+        $state['requests'][$index]['status']='Cancelled';$state['requests'][$index]['cancelledAt']=date(DATE_ATOM);$state['requests'][$index]['updatedAt']=date(DATE_ATOM);
+        $pdo->prepare("UPDATE stock_supply_requests SET status='Cancelled',reviewed_at=NOW() WHERE id=?")->execute([$request['id']]);
+        market_save($pdo,$state);$pdo->commit();response(['request'=>$state['requests'][$index]]);
+    }
     if (preg_match('#^/marketplace/requests/([^/]+)/edit$#',$path,$matches) && $method==='POST') {
         require_admin($pdo);$data=input();$pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
         foreach($state['requests'] as $key=>$request)if($request['id']===$matches[1]){$index=$key;break;}
@@ -252,7 +265,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
             if(empty($request['reserved'])){unset($person);$pdo->rollBack();response(['message'=>'Approve this request before dispatching it.'],409);}
             if($used+(float)$request['total']>$credit+0.009){unset($person);$pdo->rollBack();response(['message'=>'Dispatch would exceed the entrepreneur\'s current credit limit. Review outstanding settlements or credit rules first.'],409);}
             foreach($request['items'] as $item){$foundInventory=false;foreach($state['inventory'] as &$inventory)if((string)$inventory['entrepreneurId']===(string)$request['entrepreneurId']&&(string)$inventory['productId']===(string)$item['productId']){$inventory['qty']+=$item['qty'];$foundInventory=true;break;}unset($inventory);if(!$foundInventory)$state['inventory'][]=['entrepreneurId'=>$request['entrepreneurId'],'productId'=>$item['productId'],'qty'=>$item['qty'],'price'=>$item['price'],'visible'=>false];}
-            $person['used']=round($used+(float)$request['total'],2);$state['requests'][$found]['creditIssuedAt']=date(DATE_ATOM);$state['requests'][$found]['creditIssuedAmount']=round((float)$request['total'],2);$state['requests'][$found]['dispatchedBy']=$admin['id'];
+            $person['used']=round($used+(float)$request['total'],2);$state['requests'][$found]['creditIssuedAt']=date(DATE_ATOM);$state['requests'][$found]['creditIssuedAmount']=round((float)$request['total'],2);$state['requests'][$found]['creditDueAt']=date(DATE_ATOM,strtotime('+10 days'));$state['requests'][$found]['dispatchedBy']=$admin['id'];
         }
         unset($person);
         $state['requests'][$found]['status']=$next;$state['requests'][$found]['reviewedAt']=date(DATE_ATOM);$state['requests'][$found]['updatedAt']=date(DATE_ATOM);

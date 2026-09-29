@@ -99,7 +99,7 @@ function catalogue_route(PDO $pdo,string $path,string $method): void {
         if($amount>(float)($state['entrepreneurs'][$index]['used'] ?? 0)+0.009)response(['message'=>'The payment exceeds the current outstanding balance.'],422);
         foreach($state['settlements'] as $entry)if((string)$entry['entrepreneurId']===$member && $entry['reference']===$reference && $entry['status']!=='Rejected')response(['message'=>'This payment reference has already been recorded or is awaiting verification.'],409);
         $amount=round($amount,2);$state['entrepreneurs'][$index]['used']=round((float)$state['entrepreneurs'][$index]['used']-$amount,2);
-        $state['settlements'][]=['id'=>'SET-'.bin2hex(random_bytes(5)),'entrepreneurId'=>$member,'amount'=>$amount,'reference'=>$reference,'status'=>'Verified','recordedBy'=>$actor['id'],'createdAt'=>date(DATE_ATOM),'reviewedAt'=>date(DATE_ATOM)];
+        $state['settlements'][]=['id'=>'SET-'.bin2hex(random_bytes(5)),'entrepreneurId'=>$member,'amount'=>$amount,'reference'=>$reference,'method'=>'cash_at_camy','status'=>'Verified','recordedBy'=>$actor['id'],'createdAt'=>date(DATE_ATOM),'reviewedAt'=>date(DATE_ATOM)];
         market_save($pdo,$state);$pdo->commit();response(['state'=>$state]);
     }
     if($path!=='/admin/credit-tiers'||$method!=='POST')return;

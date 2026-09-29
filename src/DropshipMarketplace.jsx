@@ -2,10 +2,31 @@ import { useMemo, useState } from 'react'
 import { ArrowRight, BadgeDollarSign, CheckCircle2, CircleDollarSign, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, X } from 'lucide-react'
 import { api } from './api'
 import { creditProgression } from './creditRules'
+import { PortalOverlay } from './Dialog'
 
 const money = value => `Rs. ${Number(value || 0).toLocaleString('en-LK', { maximumFractionDigits: 2 })}`
 const districts = ['Ampara','Anuradhapura','Badulla','Batticaloa','Colombo','Galle','Gampaha','Hambantota','Jaffna','Kalutara','Kandy','Kegalle','Kilinochchi','Kurunegala','Mannar','Matale','Matara','Monaragala','Mullaitivu','Nuwara Eliya','Polonnaruwa','Puttalam','Ratnapura','Trincomalee','Vavuniya']
 const blankClient = { name: '', phone: '', district: 'Colombo', address: '', notes: '' }
+
+const productFeatures = product => {
+  if (Array.isArray(product?.specs)) return product.specs.filter(Boolean)
+  if (typeof product?.specs === 'string') return product.specs.split(/[,\n]/).map(spec => spec.trim()).filter(Boolean)
+  return []
+}
+
+const requestDate = value => {
+  if (!value) return 'Date unavailable'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleString('en-LK', { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+const creditRequestMessage = status => ({
+  Pending: 'CAMY is reviewing this request. No credit has been issued yet.',
+  Approved: 'CAMY approved the request and reserved the stock. It is waiting for dispatch.',
+  Dispatched: 'CAMY dispatched the stock. This value is now included in your outstanding credit.',
+  Rejected: 'CAMY closed this request without issuing credit.',
+  Cancelled: 'You cancelled this request before CAMY approval. No credit was used.'
+}[status] || 'CAMY will update this request as it moves through the stock process.')
 
 const payoutLabel = order => {
   if (order.payoutStatus === 'paid') return 'Entrepreneur paid'
@@ -156,7 +177,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
       </aside>
     </div>
 
-    {detailProduct&&<div className="catalogue-detail-layer" onMouseDown={()=>setDetailProduct(null)}><article onMouseDown={event=>event.stopPropagation()}><button type="button" className="catalogue-detail-close" onClick={()=>setDetailProduct(null)} aria-label="Close product details"><X/></button><img src={detailProduct.image} alt={detailProduct.name}/><div><small>{detailProduct.category} · {detailProduct.code||'CAMY product'}</small><h2>{detailProduct.name}</h2><strong>{money(detailProduct.price)}</strong><p>{detailProduct.description||'CAMY product available for entrepreneur sales.'}</p><div className="catalogue-detail-meta"><span><b>Product code</b>{detailProduct.code||'Not set'}</span><span><b>Warranty</b>{detailProduct.warranty||'Ask CAMY'}</span><span><b>Availability</b>{Number(detailProduct.stock)>0?`${detailProduct.stock} in stock`:'Currently unavailable'}</span></div><h3>Product features</h3><ul>{(detailProduct.specs?.length?detailProduct.specs:['CAMY quality assured','Available through CAMY']).map(spec=><li key={spec}>{spec}</li>)}</ul><button className="market-primary" disabled={Number(detailProduct.stock)<=0} onClick={()=>{add(detailProduct);setDetailProduct(null)}}>{Number(detailProduct.stock)>0?'Add to client order':'Currently unavailable'} <ArrowRight/></button></div></article></div>}
+    {detailProduct&&<PortalOverlay className="catalogue-detail-layer" onClose={()=>setDetailProduct(null)} label={`${detailProduct.name} details`}><article><button type="button" className="catalogue-detail-close" onClick={()=>setDetailProduct(null)} aria-label="Close product details"><X/></button><img src={detailProduct.image} alt={detailProduct.name}/><div><small>{detailProduct.category} · {detailProduct.code||'CAMY product'}</small><h2>{detailProduct.name}</h2><strong>{money(detailProduct.price)}</strong><p>{detailProduct.description||'CAMY product available for entrepreneur sales.'}</p><div className="catalogue-detail-meta"><span><b>Product code</b>{detailProduct.code||'Not set'}</span><span><b>Warranty</b>{detailProduct.warranty||'Ask CAMY'}</span><span><b>Availability</b>{Number(detailProduct.stock)>0?`${detailProduct.stock} in stock`:'Currently unavailable'}</span></div><h3>Product features</h3><ul>{(productFeatures(detailProduct).length?productFeatures(detailProduct):['CAMY quality assured','Available through CAMY']).map(spec=><li key={spec}>{spec}</li>)}</ul><button className="market-primary" disabled={Number(detailProduct.stock)<=0} onClick={()=>{add(detailProduct);setDetailProduct(null)}}>{Number(detailProduct.stock)>0?'Add to client order':'Currently unavailable'} <ArrowRight/></button></div></article></PortalOverlay>}
     {selected.length > 0 && (
       <button className="mobile-order-cart" type="button" onClick={() => setMobileCheckout(true)}>
         <ShoppingCart size={19}/>
@@ -179,10 +200,14 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   </div>
 }
 
-export function CreditStockPage({ products = [], person, requests = [], inventory = [], submit, notify, catalogueLive }) {
+export function CreditStockPage({ products = [], person, requests = [], inventory = [], submit, cancel, notify, catalogueLive, requestsOnly = false, setPage }) {
   const [cart,setCart]=useState([])
   const [busy,setBusy]=useState(false)
   const [submittedId,setSubmittedId]=useState('')
+  const [cancellingId,setCancellingId]=useState('')
+  const [catalogueQuery,setCatalogueQuery]=useState('')
+  const [category,setCategory]=useState('All products')
+  const [sort,setSort]=useState('Recommended')
   const mine=requests.filter(request=>String(request.entrepreneurId)===String(person?.id) && request.creditMode===true)
   const eligible=Number(person?.credit||0)>0 && person?.stage!=='Departed'
   const used=Number(person?.used||0)
@@ -191,6 +216,15 @@ export function CreditStockPage({ products = [], person, requests = [], inventor
   const selected=cart.map(item=>({...item,product:products.find(product=>String(product.id)===String(item.productId))})).filter(item=>item.product)
   const total=selected.reduce((sum,item)=>sum+Number(item.product.price)*Number(item.qty),0)
   const myInventory=inventory.filter(item=>String(item.entrepreneurId)===String(person?.id) && Number(item.qty)>0)
+  const categories=useMemo(()=>['All products',...Array.from(new Set(products.map(product=>product.category||'Other'))).sort()], [products])
+  const visibleProducts=useMemo(()=>{
+    const term=catalogueQuery.trim().toLowerCase()
+    const filtered=products.filter(product=>(category==='All products'||(product.category||'Other')===category)&&`${product.name||''} ${product.code||''} ${product.category||''} ${product.description||''}`.toLowerCase().includes(term))
+    if(sort==='Price: low to high')return [...filtered].sort((a,b)=>Number(a.price)-Number(b.price))
+    if(sort==='Price: high to low')return [...filtered].sort((a,b)=>Number(b.price)-Number(a.price))
+    if(sort==='Available first')return [...filtered].sort((a,b)=>Number(b.stock>0)-Number(a.stock>0))
+    return filtered
+  },[products,category,catalogueQuery,sort])
 
   const add=product=>setCart(old=>{
     const found=old.find(item=>String(item.productId)===String(product.id))
@@ -210,17 +244,25 @@ export function CreditStockPage({ products = [], person, requests = [], inventor
       }
     }finally{setBusy(false)}
   }
+  const cancelRequest=async request=>{
+    if(cancellingId||!window.confirm(`Cancel credit request ${request.id}? This cannot be undone.`))return
+    setCancellingId(request.id)
+    try{await cancel?.(request.id)}finally{setCancellingId('')}
+  }
 
-  return <div className="content-page market-page stock-buy-page">
+  return <div className={`content-page market-page stock-buy-page ${requestsOnly?'credit-requests-only':'credit-catalogue-page'}`}>
+    {requestsOnly&&<section className="credit-requests-page-head"><button type="button" onClick={()=>setPage?.('credit-stock')}>← Back to credit catalogue</button><div><small>CREDIT STOCK</small><h1>My credit requests</h1><p>Review request details, approval, dispatch, due dates and payment progress in one place.</p></div></section>}
     <section className="stock-buy-hero credit-stock-hero"><div><small>PHASE 2 · OPTIONAL CREDIT STOCK</small><h1>Use credit when it<br/><em>fits your business.</em></h1><p>Credit-eligible entrepreneurs can choose either method at any time: keep placing normal CAMY drop-ship COD orders, or request physical CAMY stock on credit. Using credit stock does not disable drop-shipping.</p></div><div className="stock-buy-steps"><span><i>1</i>Choose stock</span><span><i>2</i>CAMY approves</span><span><i>3</i>Credit balance starts on dispatch</span></div></section>
+    <section className="credit-request-shortcut"><div><PackageCheck/><span><strong>Need to check an existing request?</strong><small>Open request status, products, dispatch and payment details on a separate page.</small></span></div><button type="button" onClick={()=>setPage?.('credit-requests')}>View my requests <b>{mine.length}</b><ArrowRight/></button></section>
 
     <section className="shop-home-stats"><article><small>CREDIT LIMIT</small><strong>{money(person?.credit)}</strong><p>Your current CAMY limit</p></article><article><small>OUTSTANDING</small><strong>{money(used)}</strong><p>Credit already issued to you</p></article><article><small>AVAILABLE FOR NEW REQUESTS</small><strong>{money(available)}</strong><p>{money(activeCommitment)} temporarily reserved by pending/approved requests</p></article></section>
 
     {!eligible&&<section className="credit-stock-lock"><LockKeyhole/><div><h2>Credit stock is not unlocked yet</h2><p>You can continue using drop-shipping normally. Once your verified CAMY sales reach the first configured credit tier, this page unlocks automatically.</p></div></section>}
     {!catalogueLive&&<div className="market-warning">CAMY Admin must activate the real catalogue before credit stock requests can be submitted.</div>}
     {submittedId&&<section className="credit-request-success"><CheckCircle2/><div><strong>Credit request {submittedId} was sent successfully</strong><p>The request basket has been cleared. Stay on this page to see CAMY approval and dispatch updates in My requests below.</p></div><button type="button" onClick={()=>setSubmittedId('')}>Dismiss</button></section>}
+    {eligible&&selected.length>0&&<button className="mobile-credit-request" type="button" onClick={()=>document.querySelector('.credit-catalogue-layout .stock-request-card')?.scrollIntoView({behavior:'smooth',block:'start'})}><ShoppingCart size={19}/><span><small>{selected.reduce((sum,item)=>sum+Number(item.qty||0),0)} units selected</small><strong>View credit request</strong></span><b>{money(total)}</b></button>}
 
-    {eligible&&<div className="stock-buy-layout"><section><div className="stock-catalogue-title"><div><small>CAMY CREDIT CATALOGUE</small><h2>Choose stock to receive</h2></div><span><CircleDollarSign size={16}/> {money(available)} available</span></div><div className="stock-product-grid">{products.map(product=>{
+    {eligible&&<div className="stock-buy-layout credit-catalogue-layout"><section><div className="stock-catalogue-title"><div><small>CAMY CREDIT CATALOGUE</small><h2>Choose stock to receive</h2></div><span><CircleDollarSign size={16}/> {money(available)} available</span></div><div className="credit-catalogue-tools"><label><Search/><input type="search" value={catalogueQuery} onChange={event=>setCatalogueQuery(event.target.value)} placeholder="Search product name, code or category"/></label><select aria-label="Sort credit products" value={sort} onChange={event=>setSort(event.target.value)}><option>Recommended</option><option>Available first</option><option>Price: low to high</option><option>Price: high to low</option></select><span>{visibleProducts.length} of {products.length} products</span></div><nav className="credit-category-tabs" aria-label="Credit product categories">{categories.map(item=><button type="button" className={category===item?'active':''} aria-pressed={category===item} key={item} onClick={()=>setCategory(item)}>{item}</button>)}</nav><div className="stock-product-grid">{visibleProducts.map(product=>{
       const inCart=cart.find(item=>String(item.productId)===String(product.id))
       const availableStock=Number(product.stock)>0
       return <article className="stock-product-card" key={product.id}><button className="stock-product-image" type="button"><img src={product.image} alt={product.name}/><span>{product.category}</span></button><div className="stock-product-copy"><small>{product.code||product.category}</small><h3>{product.name}</h3><p>{product.description||'CAMY product available for credit supply.'}</p><div className="stock-product-meta"><span className={availableStock?'available':'unavailable'}><i/> {availableStock?'Available at CAMY':'Unavailable'}</span><strong>{money(product.price)}</strong></div><button className="market-primary" disabled={!availableStock||Number(product.price)>available} onClick={()=>add(product)}>{inCart?`Add another (${inCart.qty})`:'Add to credit request'} <ArrowRight size={15}/></button></div></article>
@@ -228,7 +270,19 @@ export function CreditStockPage({ products = [], person, requests = [], inventor
 
     <section className="market-history stock-request-history"><div><small>MY CREDIT STOCK</small><h2>Stock currently issued to me</h2></div>{myInventory.length?<div className="credit-inventory-grid">{myInventory.map(item=>{const product=products.find(product=>String(product.id)===String(item.productId));return <article key={item.productId}><strong>{product?.name||'CAMY product'}</strong><span>{item.qty} units</span><small>{product?.code||item.productId}</small></article>})}</div>:<p>No credit stock has been dispatched to you yet.</p>}</section>
 
-    <section className="market-history stock-request-history"><div><small>CREDIT REQUEST HISTORY</small><h2>My requests</h2></div>{mine.length?[...mine].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))).map(request=><article className="stock-tracker-entry" key={request.id}><div><strong>{request.items?.map(item=>`${products.find(product=>String(product.id)===String(item.productId))?.name||'Product'} × ${item.qty}`).join(', ')}</strong><small>{request.id} · {money(request.total)}</small><p>{request.status==='Pending'?'Waiting for CAMY approval.':request.status==='Approved'?'Approved and stock reserved. Waiting for CAMY dispatch.':request.status==='Dispatched'?'Stock dispatched. The request value is now part of your outstanding CAMY credit.':'Request rejected. No credit was used.'}</p></div><span className={`market-status ${String(request.status).toLowerCase()}`}>{request.status}</span></article>):<p>No credit stock requests yet.</p>}</section>
+    <section className="market-history stock-request-history credit-request-history"><div className="credit-request-history-heading"><div><small>CREDIT REQUEST HISTORY</small><h2>My requests</h2><p>Every credit-stock request, its products, value and current progress.</p></div><b>{mine.length} request{mine.length===1?'':'s'}</b></div>{mine.length?<div className="credit-request-list">{[...mine].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))).map(request=>{
+      const items=(request.items||[]).map(item=>({item,product:products.find(product=>String(product.id)===String(item.productId))}))
+      const units=items.reduce((sum,{item})=>sum+Number(item.qty||0),0)
+      const approved=['Approved','Dispatched'].includes(request.status)
+      const dispatched=request.status==='Dispatched'
+      return <article className="credit-request-card" key={request.id}>
+        <header><div><small>REQUEST NUMBER</small><h3>{request.id}</h3><p>Requested {requestDate(request.createdAt)}</p></div><span className={`market-status ${String(request.status).toLowerCase()}`}>{request.status}</span></header>
+        <div className="credit-request-summary"><span><small>REQUEST VALUE</small><strong>{money(request.total)}</strong></span><span><small>PRODUCTS</small><strong>{items.length}</strong></span><span><small>TOTAL UNITS</small><strong>{units}</strong></span><span><small>LAST UPDATED</small><strong>{requestDate(request.updatedAt||request.reviewedAt||request.createdAt)}</strong></span></div>
+        <div className="credit-request-products"><div className="credit-request-product-head"><span>Product</span><span>Unit price</span><span>Quantity</span><span>Line total</span></div>{items.map(({item,product},index)=><div className="credit-request-product" key={item.productId||index}><span><img src={product?.image||'/products/classic-set.png'} alt=""/><span><strong>{product?.name||'CAMY product'}</strong><small>{product?.code||item.productId}</small></span></span><span>{money(item.price??product?.price)}</span><span>{item.qty}</span><strong>{money(Number(item.price??product?.price??0)*Number(item.qty||0))}</strong></div>)}</div>
+        <div className="credit-request-progress" aria-label={`Request status: ${request.status}`}><span className="done"><i><CheckCircle2/></i><b>Requested</b><small>{requestDate(request.createdAt)}</small></span><hr className={approved?'done':''}/><span className={approved?'done':['Rejected','Cancelled'].includes(request.status)?'rejected':''}><i>{approved?<CheckCircle2/>:'2'}</i><b>{request.status==='Rejected'?'Rejected':request.status==='Cancelled'?'Cancelled':'Approved'}</b><small>{['Rejected','Cancelled'].includes(request.status)?'Request closed':approved?requestDate(request.approvedAt||request.reviewedAt):'Waiting for CAMY'}</small></span><hr className={dispatched?'done':''}/><span className={dispatched?'done':''}><i>{dispatched?<CheckCircle2/>:'3'}</i><b>Dispatched</b><small>{dispatched?requestDate(request.creditIssuedAt||request.updatedAt):'Not dispatched yet'}</small></span></div>
+        <footer><div><strong>{request.status==='Pending'?'Approval pending':request.status==='Approved'?'Approved — preparing dispatch':request.status==='Dispatched'?'Stock and credit issued':request.status==='Rejected'?'Request rejected':request.status==='Cancelled'?'Cancelled by you':request.status}</strong><p>{creditRequestMessage(request.status)}</p></div>{request.status==='Pending'&&<button type="button" className="credit-request-cancel" disabled={cancellingId===request.id} onClick={()=>cancelRequest(request)}>{cancellingId===request.id?'Cancelling…':'Cancel request'}</button>}{request.status==='Dispatched'&&<span><small>CREDIT ISSUED</small><strong>{money(request.creditIssuedAmount??request.total)}</strong></span>}</footer>
+      </article>
+    })}</div>:<div className="credit-request-empty"><PackageOpen/><h3>No credit stock requests yet</h3><p>Products you submit for CAMY credit will appear here with approval and dispatch updates.</p></div>}</section>
   </div>
 }
 

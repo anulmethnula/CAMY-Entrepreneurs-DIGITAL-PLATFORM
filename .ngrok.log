@@ -928,3 +928,6 @@ t=2026-09-28T16:54:11+0530 lvl=info msg="join connections" obj=join id=07b7ab04d
 t=2026-09-28T16:54:11+0530 lvl=info msg="join connections" obj=join id=36937a8d7159 l=127.0.0.1:8080 r=112.134.213.5:41066
 t=2026-09-28T16:54:36+0530 lvl=info msg="join connections" obj=join id=2c20e6441b4b l=127.0.0.1:8080 r=[2402:d000:8134:19c5:eca3:b7de:1515:765]:53508
 t=2026-09-28T16:54:36+0530 lvl=info msg="join connections" obj=join id=823e26e4fa90 l=127.0.0.1:8080 r=112.134.213.5:41066
+t=2026-09-28T16:57:06+0530 lvl=info msg="received stop request" obj=app stopReq="{err:<nil> restart:false}"
+t=2026-09-28T16:57:06+0530 lvl=info msg="session closing" obj=tunnels.session err=nil
+t=2026-09-28T16:57:06+0530 lvl=info msg="accept failed" obj=tunnels.session obj=csess id=bd798f2dcc43 err="reconnecting session closed"
