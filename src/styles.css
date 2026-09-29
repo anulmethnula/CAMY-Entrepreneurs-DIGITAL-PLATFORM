@@ -3673,9 +3673,9 @@ input:focus, select:focus, textarea:focus {
 .admin-orders-page .admin-order-table .data-row{
   width:100%;
   min-width:0;
-  grid-template-columns:1.1fr .95fr 1.18fr 1.38fr .88fr .95fr .72fr;
-  gap:12px;
-  padding:15px 18px;
+  grid-template-columns:1.12fr .78fr 1.05fr 1fr .78fr .78fr .9fr .62fr;
+  gap:10px;
+  padding:15px 16px;
 }
 .admin-orders-page .admin-order-table .data-row>span{min-width:0}
 .admin-orders-page .admin-order-table .order-id-cell strong{white-space:normal;overflow-wrap:anywhere}
@@ -3699,11 +3699,12 @@ input:focus, select:focus, textarea:focus {
   .admin-orders-page .admin-order-table .admin-order-delivery{grid-column:2}
   .admin-orders-page .admin-order-table .admin-order-money{grid-column:1;text-align:left!important}
   .admin-orders-page .admin-order-table .order-row>:nth-child(6){grid-column:2;justify-self:start!important}
-  .admin-orders-page .admin-order-table .view-order-btn{grid-column:1 / -1;justify-self:stretch!important;width:100%!important}
+  .admin-orders-page .admin-order-table .admin-commission-cell{grid-column:1}
+  .admin-orders-page .admin-order-table .view-order-btn{grid-column:2;justify-self:stretch!important;width:100%!important}
 }
 @media(max-width:620px){
   .admin-orders-page .admin-order-table .data-row{grid-template-columns:1fr;gap:12px;padding:17px}
-  .admin-orders-page .admin-order-table .order-id-cell,.admin-orders-page .admin-order-table .admin-order-person,.admin-orders-page .admin-order-table .admin-order-client,.admin-orders-page .admin-order-table .admin-order-delivery,.admin-orders-page .admin-order-table .admin-order-money,.admin-orders-page .admin-order-table .order-row>:nth-child(6),.admin-orders-page .admin-order-table .view-order-btn{grid-column:1!important}
+  .admin-orders-page .admin-order-table .order-id-cell,.admin-orders-page .admin-order-table .admin-order-person,.admin-orders-page .admin-order-table .admin-order-client,.admin-orders-page .admin-order-table .admin-order-delivery,.admin-orders-page .admin-order-table .admin-order-money,.admin-orders-page .admin-order-table .order-row>:nth-child(6),.admin-orders-page .admin-order-table .admin-commission-cell,.admin-orders-page .admin-order-table .view-order-btn{grid-column:1!important}
   .admin-orders-page .admin-order-table .order-row>:nth-child(6){justify-self:start!important;text-align:left}
 }
 

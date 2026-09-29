@@ -9,7 +9,7 @@ import { BankDetails, OrderReview } from './Workflow'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import {
-  ArrowRight, BadgeCheck, Banknote, Bell, Box, CalendarDays, Check, ChevronDown,
+  ArrowLeft, ArrowRight, BadgeCheck, Banknote, Bell, Box, CalendarDays, Check, ChevronDown,
   ChevronRight, CircleDollarSign, ClipboardList, CreditCard, Download, Eye, EyeOff, FileBarChart,
   FileText, Gift, Grid2X2, Headphones, Heart, Home, LayoutDashboard, LogOut, MapPin,
   Menu, Minus, PackageCheck, PackageOpen, PackageSearch, Pencil, Phone, Plus,
@@ -817,7 +817,7 @@ function OrderTable({ orders, onOpen, admin=false }) {
   const steps=['Processing','Dispatched','Delivered']
   return <div className={`data-table order-table ${admin?'admin-order-table':''}`}>
     {admin
-      ? <div className="data-row head"><span>Order</span><span>Entrepreneur</span><span>Client</span><span>Delivery</span><span>Money</span><span>Status</span><span>Manage</span></div>
+      ? <div className="data-row head"><span>Order</span><span>Entrepreneur</span><span>Client</span><span>Delivery</span><span>Money</span><span>Fulfilment</span><span>Commission</span><span>Action</span></div>
       : <div className="data-row head"><span>Order</span><span>Customer & product</span><span>Placed</span><span>Value</span><span>Your profit</span><span>Progress</span><span>Details</span></div>}
     {orders.map(order=>{
       const step=steps.indexOf(order.status)
@@ -825,6 +825,13 @@ function OrderTable({ orders, onOpen, admin=false }) {
       const terminal=['Returned','Rejected','Cancelled'].includes(order.status)
       const commissionAmount=Number(order.entrepreneurMargin||0)
       const commissionStatus=order.status==='Delivered'?(order.payoutStatus==='paid'?`Commission paid · ${money(commissionAmount)}`:order.payoutStatus==='not_required'?'No commission due':`Commission pending · ${money(commissionAmount)}`):''
+      const adminCommission=terminal||order.payoutStatus==='not_required'||commissionAmount<=0
+        ? {key:'none',label:'Not payable',detail:terminal?'Order closed':'No commission due'}
+        : order.payoutStatus==='paid'
+          ? {key:'paid',label:'Paid',detail:order.payoutReference||'Transfer recorded'}
+          : order.status==='Delivered'||order.payoutStatus==='pending_transfer'
+            ? {key:'ready',label:'Ready to pay',detail:money(commissionAmount)}
+            : {key:'waiting',label:'Not yet payable',detail:'After delivery'}
       if(admin)return <div className={`data-row order-row status-${String(order.status||'').toLowerCase().replaceAll(' ','-')}`} key={order.id}>
         <span className="order-id-cell"><i><PackageOpen/></i><span><strong>{order.id}</strong><small>{order.orderMode==='dropship'?'COD dropship':'CAMY order'} · {displayDate(order.date)}</small></span></span>
         <span className="admin-order-person"><strong>{order.entrepreneur||'Not assigned'}</strong><small>{order.entrepreneurId||'No member ID'}</small></span>
@@ -832,6 +839,7 @@ function OrderTable({ orders, onOpen, admin=false }) {
         <span className="admin-order-delivery"><strong>{order.district||'District not provided'}</strong><small><MapPin/> {order.address||'Delivery address not provided'}</small></span>
         <span className="admin-order-money"><strong>{money(order.amount)}</strong><small>CAMY {money(order.camyCost??order.amount)}</small><em>Margin {money(order.entrepreneurMargin||0)}</em></span>
         <span><div className="admin-order-status"><Status value={order.status}/><small>{order.status==='Returned'?'Profit cancelled':`${order.clientPaymentMethod==='cod'||order.orderMode==='dropship'?'COD':'CAMY order'} · Open to manage`}</small></div></span>
+        <span className={`admin-commission-cell ${adminCommission.key}`}><strong><i/>{adminCommission.label}</strong><small>{adminCommission.detail}</small></span>
         <button className="view-order-btn" onClick={()=>onOpen(order)} aria-label={`Manage ${order.id}`}><PackageSearch/><span>Manage</span></button>
       </div>
       return <div className={`data-row order-row status-${String(order.status||'').toLowerCase().replaceAll(' ','-')}`} key={order.id}>
@@ -939,22 +947,23 @@ function CommissionPayouts({ orders, openOrder }) {
   const visible=payoutOrders.filter(order=>matchesStatus(order)&&`${order.id} ${order.entrepreneur} ${order.entrepreneurId} ${order.customer} ${order.phone}`.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>String(b.deliveredAt||b.updatedAt||b.date).localeCompare(String(a.deliveredAt||a.updatedAt||a.date)))
   const statusFor=order=>order.payoutStatus==='paid'?'Paid':order.payoutStatus==='reversal_required'?'Needs review':order.payoutStatus==='pending_transfer'?'Ready to pay':'Waiting for delivery'
   return <div className="content-page commission-page">
-    <PageTitle eyebrow="FINANCE WORKSPACE" title="Commission payouts" text="Transfer entrepreneur earnings after CAMY collects the client payment, with every payout linked to its original order."><Button variant="secondary" icon={Download} onClick={()=>exportReport('camy-commission-payouts.xlsx',visible)}>Export payout list</Button></PageTitle>
+    <PageTitle eyebrow="ENTREPRENEUR PAYMENTS" title="Pay entrepreneur commissions" text="See what CAMY must pay for each order, record the payment, and keep its receipt and reference together."><Button variant="secondary" icon={Download} onClick={()=>exportReport('camy-commission-payouts.xlsx',visible)}>Download payment list</Button></PageTitle>
+    <section className="commission-simple-guide"><strong>How commission payment works</strong><span><i>1</i> Customer receives the order</span><b>→</b><span><i>2</i> CAMY collects the payment</span><b>→</b><span><i>3</i> CAMY pays the entrepreneur</span></section>
     <section className="commission-kpis">
-      <article className="ready"><span><Banknote/></span><div><small>READY TO TRANSFER</small><strong>{money(ready.reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0))}</strong><p>{ready.length} payout{ready.length===1?'':'s'} waiting</p></div></article>
-      <article><span><Truck/></span><div><small>WAITING FOR DELIVERY</small><strong>{money(waiting.reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0))}</strong><p>{waiting.length} upcoming payout{waiting.length===1?'':'s'}</p></div></article>
-      <article className="paid"><span><BadgeCheck/></span><div><small>TRANSFERRED</small><strong>{money(paid.reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0))}</strong><p>{paid.length} completed payout{paid.length===1?'':'s'}</p></div></article>
-      <article className="review"><span><ReceiptText/></span><div><small>NEEDS REVIEW</small><strong>{review.length}</strong><p>Returned after payout</p></div></article>
+      <article className="ready" role="button" tabIndex="0" onClick={()=>setFilter('Ready to pay')} onKeyDown={event=>event.key==='Enter'&&setFilter('Ready to pay')}><span><Banknote/></span><div><small>PAY NOW</small><strong>{money(ready.reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0))}</strong><p>{ready.length} entrepreneur payment{ready.length===1?'':'s'} ready</p></div></article>
+      <article role="button" tabIndex="0" onClick={()=>setFilter('Waiting for delivery')} onKeyDown={event=>event.key==='Enter'&&setFilter('Waiting for delivery')}><span><Truck/></span><div><small>PAY AFTER DELIVERY</small><strong>{money(waiting.reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0))}</strong><p>{waiting.length} order{waiting.length===1?' is':'s are'} not delivered yet</p></div></article>
+      <article className="paid" role="button" tabIndex="0" onClick={()=>setFilter('Paid')} onKeyDown={event=>event.key==='Enter'&&setFilter('Paid')}><span><BadgeCheck/></span><div><small>ALREADY PAID</small><strong>{money(paid.reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0))}</strong><p>{paid.length} payment{paid.length===1?'':'s'} completed</p></div></article>
+      <article className="review" role="button" tabIndex="0" onClick={()=>setFilter('Needs review')} onKeyDown={event=>event.key==='Enter'&&setFilter('Needs review')}><span><ReceiptText/></span><div><small>CHECK RETURNS</small><strong>{review.length}</strong><p>Paid orders that were later returned</p></div></article>
     </section>
     <article className="card commission-workspace">
-      <header><label><Search/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search order, entrepreneur, customer, or phone"/></label><div>{['Ready to pay','Waiting for delivery','Paid','Needs review','All'].map(item=><button type="button" className={filter===item?'active':''} key={item} onClick={()=>setFilter(item)}>{item}<b>{item==='Ready to pay'?ready.length:item==='Waiting for delivery'?waiting.length:item==='Paid'?paid.length:item==='Needs review'?review.length:payoutOrders.length}</b></button>)}</div></header>
+      <header><label><Search/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search by order, entrepreneur, customer, or phone"/></label><div>{['Ready to pay','Waiting for delivery','Paid','Needs review','All'].map(item=><button type="button" className={filter===item?'active':''} key={item} onClick={()=>setFilter(item)}>{item==='Ready to pay'?'Pay now':item==='Waiting for delivery'?'Pay after delivery':item==='Paid'?'Already paid':item==='Needs review'?'Check returns':'All payments'}<b>{item==='Ready to pay'?ready.length:item==='Waiting for delivery'?waiting.length:item==='Paid'?paid.length:item==='Needs review'?review.length:payoutOrders.length}</b></button>)}</div></header>
       <div className="commission-list">{visible.map(order=><article className={`commission-row ${statusFor(order).toLowerCase().replaceAll(' ','-')}`} key={order.id}>
         <div className="commission-order"><span><ReceiptText/></span><div><small>ORDER</small><strong>{order.id}</strong><p>{displayDate(order.deliveredAt||order.date)} · {order.product}</p></div></div>
         <div><small>ENTREPRENEUR</small><strong>{order.entrepreneur}</strong><p>{order.entrepreneurId}</p></div>
-        <div><small>CLIENT PAYMENT</small><strong>{money(order.amount)}</strong><p>{order.clientPaymentStatus||'Cash on delivery'}</p></div>
-        <div><small>CAMY VALUE</small><strong>{money(order.camyCost)}</strong><p>Product cost</p></div>
-        <div className="commission-amount"><small>COMMISSION</small><strong>{money(order.entrepreneurMargin)}</strong>{order.payoutStatus==='pending_transfer'&&<p>Pay any time</p>}<Status value={statusFor(order)}/></div>
-        <button type="button" className="commission-open" onClick={()=>openOrder(order)}><span>{order.payoutStatus==='pending_transfer'?'Pay commission':'View order'}</span><ArrowRight/></button>
+        <div><small>CUSTOMER PAID CAMY</small><strong>{money(order.amount)}</strong><p>{order.clientPaymentStatus||'Cash on delivery'}</p></div>
+        <div><small>CAMY PRODUCT AMOUNT</small><strong>{money(order.camyCost)}</strong><p>Amount CAMY keeps</p></div>
+        <div className="commission-amount"><small>PAY ENTREPRENEUR</small><strong>{money(order.entrepreneurMargin)}</strong>{order.payoutStatus==='pending_transfer'&&<p>Ready to pay now</p>}<Status value={statusFor(order)}/></div>
+        <button type="button" className="commission-open" onClick={()=>openOrder(order)}><span>{order.payoutStatus==='pending_transfer'?'Record payment':'View details'}</span><ArrowRight/></button>
       </article>)}</div>
       {!visible.length&&<Empty icon={Banknote} title={payoutOrders.length?'No payouts match this view':'No commission records yet'} text={payoutOrders.length?'Choose another status or clear the search.':'Delivered COD orders with entrepreneur commission will appear here automatically.'}/>}
     </article>
@@ -1311,7 +1320,16 @@ function PendingClientDetailsEditor({ order, onDone }) {
   return <form className="pending-client-form" onSubmit={save}><header><div><small>EDIT BEFORE DISPATCH</small><h3>Client delivery details</h3></div><button type="button" onClick={()=>{setEditing(false);setError('')}}>Cancel</button></header><div><label>Client name<input required maxLength="150" value={draft.name} onChange={event=>setDraft({...draft,name:event.target.value})}/></label><label>Phone number<input required inputMode="tel" value={draft.phone} onChange={event=>setDraft({...draft,phone:event.target.value})}/></label><label>District<input required maxLength="80" value={draft.district} onChange={event=>setDraft({...draft,district:event.target.value})}/></label><label className="wide">Delivery address<textarea required rows="3" maxLength="500" value={draft.address} onChange={event=>setDraft({...draft,address:event.target.value})}/></label><label className="wide">Order note (optional)<textarea rows="2" maxLength="1000" value={draft.notes} onChange={event=>setDraft({...draft,notes:event.target.value})}/></label></div>{error&&<p className="market-error" role="alert">{error}</p>}<Button type="submit" disabled={busy} icon={Check}>{busy?'Saving…':'Save client details'}</Button></form>
 }
 
-function OrderModal({ order, products = [], admin = false, entrepreneur, openEntrepreneur, close, onUpdated, onViewCommission }) {
+function OrderModal({ order: initialOrder, products = [], admin = false, entrepreneur, openEntrepreneur, close, onUpdated, onViewCommission }) {
+  const [order,setOrder]=useState(initialOrder)
+  const [savedMessage,setSavedMessage]=useState('')
+  useEffect(()=>setOrder(initialOrder),[initialOrder])
+  const keepOrderOpen=(updated,message='Changes saved successfully.')=>{
+    if(updated)setOrder(current=>({...updated,...(current.payoutOnly?{payoutOnly:true}:{})}))
+    setSavedMessage(message)
+    message&&window.dispatchEvent(new CustomEvent('camy-finance-message',{detail:message}))
+    onUpdated?.(updated)
+  }
   const items=order.items?.length?order.items:[{name:order.product,qty:order.qty,price:order.qty?Number(order.amount)/Number(order.qty):Number(order.amount)}]
   const dropship=order.orderMode==='dropship'
   const cancelled=order.status==='Cancelled'
@@ -1331,6 +1349,8 @@ function OrderModal({ order, products = [], admin = false, entrepreneur, openEnt
   const progress=['Processing','Dispatched','Delivered']
   const current=progress.indexOf(order.status)
   if(order.payoutOnly)return <Modal onClose={close} wide className="commission-payment-modal"><div className="commission-payment-dialog">
+    <button type="button" className="order-modal-back" onClick={close}><ArrowLeft/> Back to commission payments</button>
+    {savedMessage&&<div className="order-save-confirmation" role="status"><BadgeCheck/><span><strong>Saved successfully</strong><small>{savedMessage} You can review the updated details below.</small></span></div>}
     <header><span><Banknote/></span><div><small>COMMISSION PAYMENT</small><h2>Pay {entrepreneur?.name||order.entrepreneur||'entrepreneur'}</h2><p>Order {order.id} · Delivered {displayDate(order.deliveredAt||order.date)}</p></div></header>
     <section className="commission-order-review">
       <header><div><small>WHY THIS PAYMENT IS DUE</small><h3>Delivered COD order details</h3></div><Status value={order.status}/></header>
@@ -1353,18 +1373,20 @@ function OrderModal({ order, products = [], admin = false, entrepreneur, openEnt
       <div><span><small>Bank</small><strong>{paymentBank.bank||'Not provided'}</strong></span><span><small>Branch</small><strong>{paymentBank.branch||'Not provided'}</strong></span><span><small>Account holder</small><strong>{paymentBank.holder||'Not provided'}</strong></span><span><small>Account number</small><strong>{paymentBank.account||'Not provided'}</strong></span></div>
       {!paymentBankComplete&&<button type="button" onClick={openEntrepreneur}><Pencil/> Complete bank details before transfer</button>}
     </section>
-    <DropshipPayoutPanel compact order={order} admin={admin} entrepreneur={entrepreneur} onEditEntrepreneur={openEntrepreneur} onDone={(updated,message)=>{message&&window.dispatchEvent(new CustomEvent('camy-finance-message',{detail:message}));onUpdated?.(updated);close()}}/>
+    <DropshipPayoutPanel compact order={order} admin={admin} entrepreneur={entrepreneur} onEditEntrepreneur={openEntrepreneur} onDone={keepOrderOpen}/>
   </div></Modal>
   return <Modal onClose={close} wide className="order-detail-shell"><div className="detail-modal order-detail-v3">
+    <button type="button" className="order-modal-back" onClick={close}><ArrowLeft/> Back to orders</button>
+    {savedMessage&&<div className="order-save-confirmation" role="status"><BadgeCheck/><span><strong>Saved successfully</strong><small>{savedMessage} This order remains open so you can verify the update.</small></span></div>}
     <header className="order-hero-v3"><div><span className="modal-kicker">{dropship?'CAMY COD ORDER':'CUSTOMER ORDER'}</span><h2>{order.id}</h2><p>Placed {displayDate(order.date)} · {items.length} product{items.length===1?'':'s'} · {Number(order.qty||0)} unit{Number(order.qty||0)===1?'':'s'}</p></div><Status value={order.status}/></header>
     <section className={`order-glance-v3 ${admin?'':'entrepreneur-glance'}`}><article><span><UserRound/></span><div><small>Client</small><strong>{order.customer||'Not provided'}</strong><a href={order.phone?`tel:${order.phone}`:undefined}>{order.phone||'No phone number'}</a></div></article><article><span><MapPin/></span><div><small>Client delivery</small><strong>{order.district||'District not provided'}</strong><p>{order.address||'Delivery address not provided'}</p></div></article>{admin&&<article><span><Store/></span><div><small>Entrepreneur who placed the sale</small><strong>{order.entrepreneur||'Not assigned'}</strong><p>{order.entrepreneurId||'No member ID'}</p><button type="button" onClick={openEntrepreneur}>Open entrepreneur profile <ArrowRight/></button></div></article>}</section>{dropship&&<section className="order-client-meta-v3 concise"><span><small>Payment</small><strong>Cash on Delivery</strong></span><span><small>Order note</small><strong>{order.notes||'No special note'}</strong></span></section>}
-    {dropship&&!admin&&['Pending','Processing'].includes(order.status)&&<PendingClientDetailsEditor order={order} onDone={(updated,message)=>{message&&window.dispatchEvent(new CustomEvent('camy-finance-message',{detail:message}));onUpdated?.(updated);close()}}/>}
+    {dropship&&!admin&&['Pending','Processing'].includes(order.status)&&<PendingClientDetailsEditor order={order} onDone={keepOrderOpen}/>}
     <section className="ordered-products-v3"><header><div><small>{returned?'RETURNED PRODUCTS':'ORDER BASKET'}</small><h3>{returned?'Products returned in this order':'Products in this order'}</h3></div><b>{items.length} item{items.length===1?'':'s'}</b></header><div>{items.map((item,index)=>{const product=products.find(entry=>String(entry.id)===String(item.id||item.productId));const base=Number(item.camyPrice??product?.price??item.price);const sell=Number(item.price);const qty=Number(item.qty||0);return <article key={item.id||item.productId||index}><div className="product-main-v3">{product?.image?<img src={product.image} alt=""/>:<span><PackageOpen/></span>}<div><small>{product?.code||item.category||'CAMY PRODUCT'}</small><strong>{item.name||product?.name||'CAMY product'}</strong></div></div>{dropship&&!closed&&<dl><div><dt>CAMY price</dt><dd>{money(base)}</dd></div><div><dt>Client price</dt><dd>{money(sell)}</dd></div><div><dt>Quantity</dt><dd>{qty}</dd></div><div><dt>{profitLabel}</dt><dd className="positive">{money((sell-base)*qty)}</dd></div></dl>}{closed&&<dl><div><dt>Quantity</dt><dd>{qty}</dd></div></dl>}<strong className="line-total-v3"><small>{returned?'Returned value':cancelled?'Cancelled order value':'Line total'}</small>{money(sell*qty)}</strong></article>})}</div></section>
     <section className={`order-total-v3 ${closed?'cancelled-total':''}`}><div><small>{returned?'RETURNED ORDER VALUE':cancelled?'CANCELLED ORDER VALUE':'CLIENT ORDER TOTAL'}</small><strong>{money(order.amount)}</strong></div>{dropship&&!closed&&<><span><small>CAMY value</small><strong>{money(camyCost)}</strong></span><span className="profit"><small>{profitLabel}</small><strong>{money(margin)}</strong></span></>}</section>
-    {dropship&&!closed&&<OrderInvoicePanel order={order} admin={admin} onDone={(updated,message)=>{message&&window.dispatchEvent(new CustomEvent('camy-finance-message',{detail:message}));onUpdated?.(updated);close()}}/>}
+    {dropship&&!closed&&<OrderInvoicePanel order={order} admin={admin} onDone={keepOrderOpen}/>}
     {!dropship&&<section className="supply-payment"><h3>Payment information</h3><p>Payment reference: <strong>{order.reference||'Not submitted'}</strong></p>{order.bankDetails&&<BankDetails bank={order.bankDetails}/>} {!order.receipt&&<p>No payment receipt submitted yet.</p>}</section>}
-    {dropship&&!closed&&<DropshipPayoutPanel order={order} admin={admin} entrepreneur={entrepreneur} onEditEntrepreneur={openEntrepreneur} onViewCommission={!admin?onViewCommission:undefined} onDone={(updated,message)=>{message&&window.dispatchEvent(new CustomEvent('camy-finance-message',{detail:message}));onUpdated?.(updated);close()}}/>}
-    <section className="fulfilment-panel-v3"><header><div><small>FULFILMENT</small><h3>{returned?'Return status':dropship&&!admin?'Order tracking':'Next order action'}</h3></div>{!closed&&<div className="mini-progress-v3">{progress.map((step,index)=><span className={current>=index?'done':''} key={step}><i>{current>index?<Check/>:index+1}</i>{step}</span>)}</div>}</header><OrderReview key={order.id+order.status} order={order} readOnly={dropship&&!admin} onDone={()=>{onUpdated?.();close()}}/></section>
+    {dropship&&!closed&&<DropshipPayoutPanel order={order} admin={admin} entrepreneur={entrepreneur} onEditEntrepreneur={openEntrepreneur} onViewCommission={!admin?onViewCommission:undefined} onDone={keepOrderOpen}/>}
+    <section className="fulfilment-panel-v3"><header><div><small>FULFILMENT</small><h3>{returned?'Return status':dropship&&!admin?'Order tracking':'Next order action'}</h3></div>{!closed&&<div className="mini-progress-v3">{progress.map((step,index)=><span className={current>=index?'done':''} key={step}><i>{current>index?<Check/>:index+1}</i>{step}</span>)}</div>}</header><OrderReview key={order.id+order.status} order={order} readOnly={dropship&&!admin} onDone={(status,updated)=>keepOrderOpen(updated,`Order updated to ${status}.`)}/></section>
     {returned?<div className="order-terminal-v3">This order was returned. Warehouse stock was restored and the profit for this order was cancelled.</div>:['Rejected','Cancelled'].includes(order.status)&&<div className="order-terminal-v3">This order is {order.status.toLowerCase()}. Reserved warehouse stock has been restored.</div>}
   </div></Modal>
 }
