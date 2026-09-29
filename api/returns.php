@@ -44,8 +44,7 @@ function return_route(PDO $pdo,string $path,string $method): void {
         $return['status']='Received';$return['receivedAt']=date(DATE_ATOM);$return['refundStatus']='Pending';$return['refundAmount']=(float)$order['amount'];
         $order['status']='Returned';$pdo->prepare("UPDATE shop_orders SET status='Returned' WHERE id=?")->execute([$order['id']]);
         if($dropship){
-            $payout=$pdo->prepare('SELECT payout_status FROM entrepreneur_payouts WHERE order_id=? FOR UPDATE');$payout->execute([$order['id']]);$payoutStatus=(string)($payout->fetchColumn() ?: '');
-            $nextPayout=$payoutStatus==='paid'?'reversal_required':'cancelled';
+            $nextPayout='cancelled';
             $pdo->prepare('UPDATE entrepreneur_payouts SET payout_status=? WHERE order_id=?')->execute([$nextPayout,$order['id']]);
             $order['payoutStatus']=$nextPayout;
         }

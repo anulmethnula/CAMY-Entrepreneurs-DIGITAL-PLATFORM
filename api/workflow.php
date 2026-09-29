@@ -8,7 +8,7 @@ function workflow_transition(string $old,string $next,bool $supply): void {
     if($supply){
         $allowed=['Pending'=>['Approved','Rejected'],'Approved'=>['Dispatched','Rejected'],'Dispatched'=>[],'Rejected'=>[]];
     }else{
-        $allowed=['Pending'=>['Awaiting payment','Rejected','Cancelled'],'Awaiting payment'=>['Rejected','Cancelled'],'Payment review'=>['Processing','Awaiting payment','Cancelled'],'Processing'=>['Dispatched','Rejected','Cancelled'],'Dispatched'=>['Delivered','Returned','Cancelled'],'Delivered'=>['Returned']];
+        $allowed=['Pending'=>['Processing','Awaiting payment','Rejected','Cancelled'],'Awaiting payment'=>['Rejected','Cancelled'],'Payment review'=>['Processing','Awaiting payment','Cancelled'],'Processing'=>['Dispatched','Rejected','Cancelled'],'Dispatched'=>['Delivered','Returned','Cancelled'],'Delivered'=>['Returned'],'Cancelled'=>['Processing']];
     }
     if(!in_array($next,$allowed[$old] ?? [],true))response(['message'=>'This action is not available at the current stage.'],409);
 }
@@ -23,8 +23,8 @@ function workflow_items($items,bool $shops=false): array {
 function workflow_customer_details(array $data): array {
     $clean=[];
     foreach(['name','phone','district','address'] as $key)$clean[$key]=trim((string)($data[$key] ?? ''));
-    $clean['phone']=preg_replace('/[\s-]/','',$clean['phone']);
-    if(!$clean['name']||strlen($clean['name'])>150||!preg_match('/^(?:\+94|0)7\d{8}$/',$clean['phone'])||!$clean['district']||strlen($clean['district'])>80||strlen($clean['address'])<8||strlen($clean['address'])>2000)response(['message'=>'Enter a valid client name, Sri Lankan mobile number, district and complete delivery address.'],422);
+    $clean['phone']=preg_replace('/[\s()-]/','',$clean['phone']);
+    if(!$clean['name']||strlen($clean['name'])>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$clean['phone'])||!$clean['district']||strlen($clean['district'])>80||strlen($clean['address'])<8||strlen($clean['address'])>2000)response(['message'=>'Enter a valid client name, Sri Lankan phone number, district and complete delivery address.'],422);
     return $clean;
 }
 function workflow_reserve(array &$state,array $items,?string $shop): void {
@@ -45,6 +45,14 @@ function workflow_receipt(array $data,string $id): string {
     $dir=__DIR__.'/../private/receipts';if(!is_dir($dir)&&!mkdir($dir,0700,true))throw new RuntimeException('Could not create receipt storage.');
     $file=$id.'-'.bin2hex(random_bytes(8)).'.'.['image/png'=>'png','image/jpeg'=>'jpg','image/webp'=>'webp','application/pdf'=>'pdf'][$parts[1]];
     if(file_put_contents($dir.'/'.$file,$bytes)===false)throw new RuntimeException('Could not save receipt.');return $file;
+}
+function workflow_invoice_document(string $raw,string $id): string {
+    if(!preg_match('#^data:(image/(?:png|jpeg|webp)|application/pdf);base64,(.+)$#s',$raw,$parts))response(['message'=>'Upload a JPG, PNG, WebP or PDF invoice.'],422);
+    $bytes=base64_decode($parts[2],true);if($bytes===false||$bytes==='')response(['message'=>'The invoice file could not be read.'],422);
+    if((str_starts_with($parts[1],'image/')&&((getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Invoice content does not match the selected file type.'],422);
+    $dir=__DIR__.'/../private/receipts';if(!is_dir($dir)&&!mkdir($dir,0700,true))throw new RuntimeException('Could not create invoice storage.');
+    $file=$id.'-'.bin2hex(random_bytes(8)).'.'.['image/png'=>'png','image/jpeg'=>'jpg','image/webp'=>'webp','application/pdf'=>'pdf'][$parts[1]];
+    if(file_put_contents($dir.'/'.$file,$bytes)===false)throw new RuntimeException('Could not save the invoice file.');return $file;
 }
 function workflow_route(PDO $pdo,string $path,string $method): void {
     if($path==='/admin/manual-order'&&$method==='POST'){
@@ -72,9 +80,9 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
         $data=input();
         if(!is_array($data['customer']??null))response(['message'=>'Enter the client delivery details.'],422);
-        $customer=workflow_customer_details($data['customer']);
-        $name=trim((string)($customer['name']??''));$phone=preg_replace('/[\\s-]/','',(string)($customer['phone']??''));$district=trim((string)($customer['district']??''));$address=trim((string)($customer['address']??''));$notes=trim((string)($data['customer']['notes']??''));
-        if(!$name||strlen($name)>150||!preg_match('/^(?:\\+94|0)7\\d{8}$/',$phone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter a valid client name, Sri Lankan mobile number, district and delivery address.'],422);
+        $customer=$data['customer'];
+        $name=trim((string)($customer['name']??''));$phone=trim((string)($customer['phone']??''));$cleanPhone=preg_replace('/[\s()-]/','',$phone);$district=trim((string)($customer['district']??''));$address=trim((string)($customer['address']??''));$notes=trim((string)($customer['notes']??''));
+        if(!$name||strlen($name)>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter the client name, a valid Sri Lankan phone number, district and delivery address.'],422);
         $paymentMethod=strtolower(trim((string)($data['paymentMethod'] ?? 'cod')));
         if($paymentMethod!=='cod')response(['message'=>'CAMY client orders are Cash on Delivery only. No client bank receipt is accepted.'],422);
         $items=workflow_items($data['items']??[]);
@@ -97,20 +105,33 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
         $entrepreneurName=(string)$user['full_name'];
         $order=[
-            'id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,
+            'id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'deliveryAddress'=>$address,'address'=>trim($address.($address!==''?', ':'').$district),'notes'=>$notes,
             'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,
             'amount'=>$clientTotal,'camyCost'=>$camyCost,'entrepreneurMargin'=>$margin,
             'clientPaymentMethod'=>'cod','clientPaymentStatus'=>'Collect on delivery',
             'payoutAmount'=>$margin,'payoutStatus'=>$margin>0?'pending_delivery':'not_required',
-            'date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>true,
+            'date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Pending','trackingToken'=>$token,'reserved'=>true,
             'entrepreneur'=>$entrepreneurName,'entrepreneurId'=>(string)$user['member_id'],'source'=>'shop','orderMode'=>'dropship','createdBy'=>'Entrepreneur'
         ];
         $state['orders'][]=$order;
-        $pdo->prepare("INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status) VALUES(?,?,?,?, 'Processing')")->execute([$id,$groupId,$user['member_id'],$clientTotal]);
+        $pdo->prepare("INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status) VALUES(?,?,?,?, 'Pending')")->execute([$id,$groupId,$user['member_id'],$clientTotal]);
         $pdo->prepare("INSERT INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount) VALUES(?,?,?,?,?,?)")->execute([$id,$user['member_id'],'cod',$clientTotal,$camyCost,$margin]);
         foreach($selected as $item){$code='';foreach($state['products'] as $product)if((string)$product['id']===(string)$item['id']){$code=(string)($product['code']??$product['id']);break;}$pdo->prepare('INSERT INTO shop_order_items(order_id,product_code,quantity,sell_price) VALUES(?,?,?,?)')->execute([$id,$code,$item['qty'],$item['price']]);}
         market_save($pdo,$state);$pdo->commit();
         $safe=$order;unset($safe['trackingToken'],$safe['receiptPath']);response(['order'=>$safe],201);
+    }
+    if(preg_match('#^/marketplace/orders/([^/]+)/client-details$#',$path,$clientDetailsMatch)&&$method==='PATCH'){
+        $user=current_user($pdo);if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
+        $data=input();$orderId=(string)$clientDetailsMatch[1];
+        $name=trim((string)($data['name']??''));$phone=trim((string)($data['phone']??''));$cleanPhone=preg_replace('/[\s()-]/','',$phone);$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
+        if(!$name||strlen($name)>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter the client name, a valid Sri Lankan phone number, district and delivery address.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;foreach($state['orders'] as $key=>$candidate)if((string)$candidate['id']===$orderId){$index=$key;break;}
+        if($index===null){$pdo->rollBack();response(['message'=>'Order not found.'],404);}$order=$state['orders'][$index];
+        if(($order['orderMode']??'')!=='dropship'||(string)$order['entrepreneurId']!==(string)$user['member_id']){$pdo->rollBack();response(['message'=>'You cannot edit this order.'],403);}
+        if(!in_array(($order['status']??''),['Pending','Processing'],true)){$pdo->rollBack();response(['message'=>'Client details can only be edited before CAMY dispatches the order.'],409);}
+        $state['orders'][$index]=array_merge($order,['customer'=>$name,'phone'=>$phone,'district'=>$district,'deliveryAddress'=>$address,'address'=>trim($address.($address!==''?', ':'').$district),'notes'=>$notes,'updatedAt'=>date(DATE_ATOM)]);
+        $pdo->prepare('UPDATE customer_order_groups SET customer_name=?,customer_phone=?,district=?,delivery_address=? WHERE id=?')->execute([$name,$phone,$district,$address,$order['groupId']]);
+        market_save($pdo,$state);$pdo->commit();$saved=$state['orders'][$index];unset($saved['trackingToken'],$saved['receiptPath']);response(['order'=>$saved,'message'=>'Client details updated before dispatch.']);
     }
     if(preg_match('#^/marketplace/orders/([^/]+)/payout-receipt$#',$path,$payoutReceipt)&&$method==='GET'){
         $user=current_user($pdo);if(!$user)response(['message'=>'Authentication required.'],401);
@@ -184,23 +205,23 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
     }
     if($path==='/marketplace/credit/settlements' && $method==='POST'){
         $user=current_user($pdo);if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
-        $data=input();$amount=filter_var($data['amount'] ?? null,FILTER_VALIDATE_FLOAT);$reference=trim((string)($data['reference'] ?? ''));
-        if($amount===false||!is_finite($amount)||$amount<=0||$amount>100000000||!$reference||strlen($reference)>100||empty($data['receipt']))response(['message'=>'Enter a valid settlement amount, bank reference and receipt.'],422);
+        $data=input();$requestId=trim((string)($data['requestId'] ?? ''));$amount=filter_var($data['amount'] ?? null,FILTER_VALIDATE_FLOAT);$reference=trim((string)($data['reference'] ?? ''));
+        if(!$requestId||$amount===false||!is_finite($amount)||$amount<=0||$amount>100000000||!$reference||strlen($reference)>100||empty($data['receipt']))response(['message'=>'Choose a credit-stock purchase and attach its full payment reference and receipt.'],422);
         $pdo->beginTransaction();$state=market_state($pdo,true);$personIndex=null;foreach($state['entrepreneurs'] as $index=>$person)if((string)$person['id']===(string)$user['member_id']){$personIndex=$index;break;}
-        if($personIndex===null)response(['message'=>'Your entrepreneur account could not be found.'],404);$outstanding=(float)($state['entrepreneurs'][$personIndex]['used'] ?? 0);if($outstanding<=0)response(['message'=>'There is no outstanding credit balance to settle.'],409);if($amount>$outstanding+0.009)response(['message'=>'Settlement cannot exceed the current outstanding balance.'],422);
-        $pending=0;foreach($state['settlements'] as $entry)if((string)$entry['entrepreneurId']===(string)$user['member_id']){
+        if($personIndex===null)response(['message'=>'Your entrepreneur account could not be found.'],404);$outstanding=(float)($state['entrepreneurs'][$personIndex]['used'] ?? 0);if($outstanding<=0)response(['message'=>'There is no outstanding credit balance to settle.'],409);
+        $creditRequest=null;foreach($state['requests'] as $entry)if((string)($entry['id'] ?? '')===$requestId){$creditRequest=$entry;break;}if(!$creditRequest||(string)($creditRequest['entrepreneurId'] ?? '')!==(string)$user['member_id']||($creditRequest['creditMode'] ?? false)!==true||($creditRequest['status'] ?? '')!=='Dispatched')response(['message'=>'Choose one of your dispatched credit-stock purchases.'],422);$required=round((float)($creditRequest['creditIssuedAmount'] ?? $creditRequest['total'] ?? 0),2);if(abs((float)$amount-$required)>0.009)response(['message'=>'Pay the full stock price of '.number_format($required,2,'.','').' for this credit purchase.'],422);
+        foreach($state['settlements'] as $entry)if((string)$entry['entrepreneurId']===(string)$user['member_id']){
             if($entry['reference']===$reference && $entry['status']!=='Rejected')response(['message'=>'This payment reference has already been submitted.'],409);
-            if($entry['status']==='Pending verification')$pending+=(float)$entry['amount'];
+            if((string)($entry['requestId'] ?? '')===$requestId&&$entry['status']!=='Rejected')response(['message'=>'A payment for this stock purchase is already waiting for review or has been paid.'],409);
         }
-        if($amount+$pending>$outstanding+0.009)response(['message'=>'This amount plus pending settlements exceeds your outstanding balance. Wait for pending payments to be verified.'],422);
-        $id='SET-'.bin2hex(random_bytes(5));$receiptPath=workflow_receipt($data,$id.'-credit');$record=['id'=>$id,'entrepreneurId'=>(string)$user['member_id'],'amount'=>round($amount,2),'reference'=>$reference,'method'=>'bank_transfer','receiptPath'=>$receiptPath,'receipt'=>'/api/marketplace/credit/settlements/'.$id.'/receipt','receiptName'=>basename((string)($data['receiptName']??'receipt')),'status'=>'Pending verification','createdAt'=>date(DATE_ATOM)];$state['settlements'][]=$record;market_save($pdo,$state);$pdo->commit();unset($record['receiptPath']);response(['settlement'=>$record],201);
+        $id='SET-'.bin2hex(random_bytes(5));$receiptPath=workflow_receipt($data,$id.'-credit');$record=['id'=>$id,'requestId'=>$requestId,'entrepreneurId'=>(string)$user['member_id'],'amount'=>$required,'reference'=>$reference,'method'=>'bank_transfer','receiptPath'=>$receiptPath,'receipt'=>'/api/marketplace/credit/settlements/'.$id.'/receipt','receiptName'=>basename((string)($data['receiptName']??'receipt')),'status'=>'Pending verification','creditDueAt'=>$creditRequest['creditDueAt'] ?? null,'createdAt'=>date(DATE_ATOM)];$state['settlements'][]=$record;market_save($pdo,$state);$pdo->commit();unset($record['receiptPath']);response(['settlement'=>$record],201);
     }
     if(preg_match('#^/marketplace/credit/settlements/([^/]+)/receipt$#',$path,$matches)&&$method==='GET'){
         $user=current_user($pdo);if(!$user)response(['message'=>'Authentication required.'],401);$state=market_state($pdo);$record=null;foreach($state['settlements']??[] as $entry)if((string)$entry['id']===(string)$matches[1]){$record=$entry;break;}if(!$record)response(['message'=>'Settlement not found.'],404);if(!in_array($user['role'],['admin','manager'],true)&&(string)($record['entrepreneurId']??'')!==(string)$user['member_id'])response(['message'=>'You cannot view this receipt.'],403);$file=__DIR__.'/../private/receipts/'.basename((string)($record['receiptPath']??''));if(!is_file($file))response(['message'=>'Receipt not found.'],404);header('Content-Type: '.(mime_content_type($file)?:'application/octet-stream'));header('Content-Disposition: inline; filename="'.basename($file).'"');header('Content-Length: '.filesize($file));readfile($file);exit;
     }
     if(preg_match('#^/marketplace/credit/settlements/([^/]+)/(verify|reject)$#',$path,$matches)&&$method==='POST'){
         require_admin($pdo);$pdo->beginTransaction();$state=market_state($pdo,true);$index=null;foreach($state['settlements'] ?? [] as $key=>$item)if($item['id']===$matches[1]){$index=$key;break;}if($index===null)response(['message'=>'Settlement not found.'],404);$settlement=$state['settlements'][$index];if($settlement['status']!=='Pending verification')response(['message'=>'Settlement has already been reviewed.'],409);
-        $next=$matches[2]==='verify'?'Verified':'Rejected';$state['settlements'][$index]['status']=$next;$state['settlements'][$index]['reviewedAt']=date(DATE_ATOM);if($next==='Verified')foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$settlement['entrepreneurId']){if((float)$settlement['amount']>(float)($person['used'] ?? 0)+0.009)response(['message'=>'The outstanding balance changed. Review this payment before verification.'],409);$person['used']=max(0,round((float)($person['used'] ?? 0)-(float)$settlement['amount'],2));break;}unset($person);
+        $next=$matches[2]==='verify'?'Verified':'Rejected';$state['settlements'][$index]['status']=$next;$state['settlements'][$index]['reviewedAt']=date(DATE_ATOM);if($next==='Verified'){foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$settlement['entrepreneurId']){if((float)$settlement['amount']>(float)($person['used'] ?? 0)+0.009)response(['message'=>'The outstanding balance changed. Review this payment before verification.'],409);$person['used']=max(0,round((float)($person['used'] ?? 0)-(float)$settlement['amount'],2));break;}unset($person);foreach($state['requests'] as &$creditRequest)if((string)($creditRequest['id'] ?? '')===(string)($settlement['requestId'] ?? '')){$creditRequest['creditRepaymentStatus']='Paid';$creditRequest['creditPaidAt']=date(DATE_ATOM);$creditRequest['creditSettlementId']=$settlement['id'];break;}unset($creditRequest);}elseif(!empty($settlement['requestId']))foreach($state['requests'] as &$creditRequest)if((string)($creditRequest['id'] ?? '')===(string)$settlement['requestId']){$creditRequest['creditRepaymentStatus']='Payment due';break;}unset($creditRequest);
         market_save($pdo,$state);$pdo->commit();response(['state'=>$state]);
     }
     if($path==='/marketplace/bank'&&$method==='POST'){

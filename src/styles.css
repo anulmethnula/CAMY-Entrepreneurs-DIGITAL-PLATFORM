@@ -3362,6 +3362,42 @@ input:focus, select:focus, textarea:focus {
 .order-total-v3 > span strong { margin-top:4px; font-size:13px; }
 .order-total-v3 > span.profit strong { color:#83e1ba; }
 .payout-panel-v3 { margin:16px 24px 0; padding:20px; border:1px solid #d6e5ee; border-radius:20px; background:linear-gradient(145deg,#fff,#f4f9fc); box-shadow:0 12px 30px rgba(13,51,80,.06); }
+.entrepreneur-commission-card { margin:18px 24px 0; padding:20px; border:1px solid #cfe3dd; border-radius:20px; background:linear-gradient(145deg,#fff,#f2faf7); box-shadow:0 12px 30px rgba(19,92,72,.07); }
+.entrepreneur-commission-card > header { display:grid; grid-template-columns:48px minmax(0,1fr) auto; align-items:center; gap:14px; }
+.entrepreneur-commission-card > header > span { width:48px; height:48px; border-radius:15px; color:#fff; background:linear-gradient(135deg,#167d88,#28a780); display:grid; place-items:center; box-shadow:0 9px 20px rgba(23,129,113,.2); }
+.entrepreneur-commission-card > header > span svg { width:21px; }
+.entrepreneur-commission-card > header small { color:#168064; font-size:9px; font-weight:850; letter-spacing:.12em; }
+.entrepreneur-commission-card > header h3 { margin:4px 0 3px; color:#123b55; font-size:27px; line-height:1; }
+.entrepreneur-commission-card > header p { margin:0; color:#6b817e; font-size:10px; }
+.commission-state-chip { padding:8px 12px; border:1px solid #c9dfd6; border-radius:999px; color:#237358; background:#edf8f3; display:flex; align-items:center; gap:7px; font-size:10px; font-weight:850; white-space:nowrap; }
+.commission-state-chip i { width:7px; height:7px; border-radius:50%; background:#2aaa7c; }
+.commission-state-chip.waiting { color:#8b681e; border-color:#eadbb6; background:#fff9eb; }
+.commission-state-chip.waiting i { background:#d09a2e; }
+.entrepreneur-commission-proof { margin-top:17px; padding:14px; border:1px solid #d5e6df; border-radius:14px; background:#fff; display:grid; grid-template-columns:38px minmax(0,1fr) auto; align-items:center; gap:12px; }
+.entrepreneur-commission-proof > span { width:38px; height:38px; border-radius:12px; color:#178060; background:#e8f7f1; display:grid; place-items:center; }
+.entrepreneur-commission-proof > span svg { width:17px; }
+.entrepreneur-commission-proof small,.entrepreneur-commission-proof strong,.entrepreneur-commission-proof p { display:block; }
+.entrepreneur-commission-proof small { color:#168064; font-size:8px; font-weight:850; letter-spacing:.1em; }
+.entrepreneur-commission-proof strong { margin-top:3px; color:#214a42; font-size:12px; }
+.entrepreneur-commission-proof p { margin:3px 0 0; color:#7a8e89; font-size:9px; }
+.entrepreneur-commission-proof .btn { min-height:0; margin:0; padding:7px 4px; border:0!important; border-radius:0; color:#176c96; background:transparent!important; box-shadow:none!important; white-space:nowrap; }
+.entrepreneur-commission-proof .btn:hover { color:#0f5276; text-decoration:underline; transform:none; }
+.commission-proof-actions { display:flex; align-items:center; justify-content:flex-end; gap:16px; }
+.commission-proof-actions .commission-detail-link { margin:0; }
+.commission-detail-link { width:auto; min-height:0; margin:13px 2px 0 auto; padding:7px 2px; border:0; border-radius:0; color:#176c96; background:transparent; display:flex; align-items:center; justify-content:flex-end; gap:8px; font-size:11px; font-weight:850; cursor:pointer; }
+.commission-detail-link:hover { color:#0f5276; text-decoration:underline; }
+.commission-detail-link svg { width:15px; }
+.commission-journey { position:relative; margin-top:18px; padding:15px; border:1px solid #d7e5e1; border-radius:14px; background:#fff; }
+.commission-track { position:absolute; z-index:0; top:27px; left:13%; right:13%; height:3px; margin:0; background:#dfe9e5; display:grid; grid-template-columns:repeat(4,1fr); }
+.commission-track i.complete { background:#2ca67e; }
+.commission-steps { position:relative; z-index:1; display:grid; grid-template-columns:repeat(4,1fr); gap:8px; text-align:center; }
+.commission-steps span b { width:25px; height:25px; margin:0 auto 8px; border:3px solid #fff; border-radius:50%; color:#fff; background:#b8c8c2; display:grid; place-items:center; box-sizing:content-box; }
+.commission-steps span.complete b { background:#2ca67e; }
+.commission-steps svg { width:13px; }
+.commission-steps strong,.commission-steps small { display:block; }
+.commission-steps strong { color:#2b4d45; font-size:9px; }
+.commission-steps small { margin-top:3px; color:#81918d; font-size:8px; }
+@media(max-width:620px){.entrepreneur-commission-card{margin-inline:12px;padding:15px}.entrepreneur-commission-card>header{grid-template-columns:42px 1fr}.entrepreneur-commission-card>header>span{width:42px;height:42px}.commission-state-chip{grid-column:2;justify-self:start}.entrepreneur-commission-proof{grid-template-columns:34px 1fr}.commission-proof-actions{grid-column:2;align-items:flex-start;flex-direction:column;gap:2px}.commission-detail-link{margin-left:0;justify-content:flex-start}.commission-steps{grid-template-columns:1fr 1fr;gap:14px}.commission-track{display:none}}
 .payout-panel-v3 > header { display:grid; grid-template-columns:46px 1fr auto; align-items:center; gap:12px; }
 .payout-panel-v3 > header > span:first-child { width:44px; height:44px; border-radius:14px; color:#fff; background:linear-gradient(135deg,#166f9e,#29a581); display:grid; place-items:center; box-shadow:0 8px 18px rgba(23,121,119,.18); }
 .payout-panel-v3 > header svg { width:20px; }
@@ -3414,9 +3450,9 @@ input:focus, select:focus, textarea:focus {
 .payout-form-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .payout-form-fields > label:first-child { color:#3c5e76; font-size:9px; font-weight:800; }
 .payout-form-fields input:not([type=file]) { width:100%; height:52px; margin-top:6px; padding:0 13px; border:1px solid #ccdae5; border-radius:12px; color:#153b57; background:#f9fbfd; font:inherit; font-size:11px; }
-.receipt-upload-v3 { min-height:76px; padding:11px 12px; border:1px dashed #a9c7dc; border-radius:12px; color:#2874a7; background:#f3f9fd; cursor:pointer; display:flex; align-items:center; gap:10px; }
+.receipt-upload-v3 { position:relative; min-height:76px; padding:11px 12px; border:1px dashed #a9c7dc; border-radius:12px; color:#2874a7; background:#f3f9fd; cursor:pointer; display:flex; align-items:center; gap:10px; overflow:hidden; }
 .receipt-upload-v3.selected { border-style:solid; border-color:#71c0a2; color:#167557; background:#f0faf5; }
-.receipt-upload-v3 input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+.receipt-upload-v3 input { position:absolute; z-index:2; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
 .receipt-upload-v3 > svg { width:21px; flex:0 0 auto; }
 .receipt-upload-v3 strong,.receipt-upload-v3 small { display:block; }
 .receipt-upload-v3 strong { font-size:10px; }
@@ -3692,6 +3728,7 @@ input:focus, select:focus, textarea:focus {
 .profile-form label.field-invalid{color:#a63333}
 .profile-form label.field-invalid input{border-color:#d95c5c;background:#fff8f8;box-shadow:0 0 0 3px rgba(217,92,92,.1)}
 .profile-form label.field-invalid small{display:block;margin-top:6px;color:#a63333;font-size:10px;line-height:1.4}
+.profile-summary > .btn:last-child::after { content:' · +94 77 716 5336'; }
 @media(max-width:620px){.profile-card-actions>svg{display:none}.profile-card-actions button{padding-inline:10px}.profile-card-actions button:disabled{font-size:0}.profile-card-actions button:disabled svg{width:17px;height:17px}}
 @media(max-width:1050px){.admin-orders-page .admin-order-table .data-row{min-height:0}.admin-orders-page .admin-order-table .data-row small,.admin-orders-page .admin-order-table .admin-order-client em,.admin-orders-page .admin-order-table .admin-order-money em{font-size:12px}}
 @media(max-width:620px){.admin-orders-page .admin-order-table .order-id-cell strong{font-size:16px}.admin-orders-page .admin-order-table .admin-order-person strong,.admin-orders-page .admin-order-table .admin-order-client strong,.admin-orders-page .admin-order-table .admin-order-delivery strong,.admin-orders-page .admin-order-table .admin-order-money strong{font-size:15px}}
@@ -3893,6 +3930,33 @@ input:focus, select:focus, textarea:focus {
 .credit-request-success strong,.credit-request-success p { display:block; }
 .credit-request-success p { margin:4px 0 0; color:#527b6c; font-size:11px; }
 .credit-request-success button { min-height:38px; padding:0 14px; border:1px solid #a9d7c4; border-radius:10px; color:#176e53; background:#fff; font:inherit; font-weight:800; cursor:pointer; }
+.customer-fields input.field-invalid,.customer-fields textarea.field-invalid { border-color:#d95c5c; background:#fff8f8; box-shadow:0 0 0 3px rgba(217,92,92,.1); }
+.customer-fields .field-validation-message { display:block; margin-top:6px; color:#a63333; font-size:10px; font-weight:700; line-height:1.45; }
+.dropship-submit-error { margin:14px 0 10px; padding:12px 13px; border:1px solid #efb9b3; border-radius:12px; color:#a63333; background:#fff3f1; display:flex; align-items:flex-start; gap:9px; }
+.dropship-submit-error > svg { width:18px; height:18px; flex:0 0 auto; margin-top:1px; }
+.dropship-submit-error strong,.dropship-submit-error small { display:block; }
+.dropship-submit-error strong { font-size:11px; }
+.dropship-submit-error small { margin-top:3px; color:#8f4a43; font-size:10px; line-height:1.45; }
+.pending-client-edit { margin:16px 0; padding:16px 18px; border:1px solid #c9dfed; border-radius:16px; background:#f2f8fc; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.pending-client-edit small { color:#2478ae; font-size:9px; font-weight:850; letter-spacing:.09em; }
+.pending-client-edit strong { display:block; margin-top:4px; color:#173b57; }
+.pending-client-edit p { margin:4px 0 0; color:#688095; font-size:10px; }
+.pending-client-edit button { min-height:40px; padding:0 14px; border:1px solid #b9d5e7; border-radius:10px; color:#1f6f9f; background:#fff; display:flex; align-items:center; gap:7px; font-weight:800; white-space:nowrap; }
+.pending-client-edit button svg { width:15px; }
+.pending-client-form { margin:16px 0; padding:18px; border:1px solid #c9dfed; border-radius:16px; background:#f7fbfd; }
+.pending-client-form header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.pending-client-form header small { color:#2478ae; font-size:9px; font-weight:850; letter-spacing:.09em; }
+.pending-client-form h3 { margin:4px 0 0; }
+.pending-client-form header button { border:0; color:#60798d; background:transparent; font-weight:750; }
+.pending-client-form > div { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px; }
+.pending-client-form label { color:#365a73; font-size:10px; font-weight:800; }
+.pending-client-form label.wide { grid-column:1/-1; }
+.pending-client-form input,.pending-client-form textarea { width:100%; margin-top:6px; padding:10px 11px; border:1px solid #cbdde8; border-radius:10px; background:#fff; font:inherit; resize:vertical; }
+.pending-client-form > .btn { margin-top:14px; }
+.commission-table-status { display:block; max-width:130px; margin-top:1px; font-size:9px; font-weight:850; line-height:1.35; white-space:normal; }
+.commission-table-status.pending { color:#a86b12; }
+.commission-table-status.paid { color:#14815d; }
+@media(max-width:620px){.pending-client-edit{align-items:stretch;flex-direction:column}.pending-client-edit button{justify-content:center}.pending-client-form>div{grid-template-columns:1fr}.pending-client-form label.wide{grid-column:auto}}
 @media(max-width:620px){.credit-request-success{grid-template-columns:32px 1fr}.credit-request-success button{grid-column:1/-1;width:100%}}
 .credit-admin-action-status { margin:14px 0; padding:14px 16px; border:1px solid #c9ddeb; border-radius:14px; color:#255a7e; background:#eef6fb; display:grid; grid-template-columns:34px 1fr auto; align-items:center; gap:11px; }
 .credit-admin-action-status > svg { width:22px; animation:spin 1s linear infinite; }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowRight, BadgeDollarSign, Banknote, CalendarDays, CheckCircle2, CircleDollarSign, Download, Eye, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, X } from 'lucide-react'
+import { AlertCircle, ArrowRight, BadgeDollarSign, Banknote, CalendarDays, CheckCircle2, CircleDollarSign, Download, Eye, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, X } from 'lucide-react'
 import { api } from './api'
 import { creditProgression } from './creditRules'
 import { PortalOverlay } from './Dialog'
@@ -69,6 +69,8 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   const [catalogueQuery, setCatalogueQuery] = useState('')
   const [detailProduct, setDetailProduct] = useState(null)
   const [mobileCheckout, setMobileCheckout] = useState(false)
+  const [submitAttempted, setSubmitAttempted] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const categories = useMemo(() => ['All products', ...Array.from(new Set(products.map(product => product.category).filter(Boolean)))], [products])
   const visibleProducts = useMemo(() => products.filter(product => (category === 'All products' || product.category === category) && `${product.name} ${product.code||''} ${product.category||''} ${product.description||''}`.toLowerCase().includes(catalogueQuery.trim().toLowerCase())), [products, category, catalogueQuery])
@@ -81,7 +83,17 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   const camyCost = selected.reduce((sum, item) => sum + Number(item.product.price) * Number(item.qty), 0)
   const clientTotal = selected.reduce((sum, item) => sum + Number(item.sellPrice) * Number(item.qty), 0)
   const estimatedMargin = clientTotal - camyCost
-  const validClient = client.name.trim() && /^(?:\+94|0)7\d{8}$/.test(client.phone.replace(/[\s-]/g, '')) && client.address.trim()
+  const lowPriceItem = selected.find(item => Number(item.sellPrice) < Number(item.product.price))
+  const cleanPhone = client.phone.replace(/[\s()-]/g, '')
+  const validPhone = /^(?:0\d{9}|\+94\d{9})$/.test(cleanPhone)
+  const validationError = (
+    !client.name.trim() ? 'Enter the client name before placing the order.'
+      : !validPhone ? 'Enter a Sri Lankan phone number as 10 digits starting with 0, or use +94 followed by 9 digits.'
+      : !client.address.trim() ? 'Enter the client delivery address before placing the order.'
+        : lowPriceItem ? `The client price for ${lowPriceItem.product.name} cannot be lower than the CAMY price.`
+          : ''
+  )
+  const formError = submitAttempted ? validationError || submitError : ''
 
   const refresh = () => {
     setRefreshing(true)
@@ -98,11 +110,22 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
 
   const update = (productId, patch) => setCart(old => old.map(item => String(item.productId) === String(productId) ? { ...item, ...patch } : item))
 
+  const updateSellPrice = (productId, value) => {
+    const numericText = value.replace(/[^\d.]/g, '')
+    const [whole = '', ...decimalParts] = numericText.split('.')
+    const cleanWhole = whole.replace(/^0+(?=\d)/, '')
+    const cleanValue = decimalParts.length
+      ? `${cleanWhole || '0'}.${decimalParts.join('').slice(0, 2)}`
+      : cleanWhole
+    update(productId, { sellPrice: cleanValue })
+  }
+
   const submit = async () => {
+    setSubmitAttempted(true)
+    setSubmitError('')
     if (!catalogueLive) return notify?.('CAMY catalogue is not active yet.')
     if (!selected.length) return notify?.('Add at least one product.')
-    if (!validClient) return notify?.('Enter the client name, valid Sri Lankan mobile number and delivery address.')
-    if (selected.some(item => Number(item.sellPrice) < Number(item.product.price))) return notify?.('Client selling price cannot be lower than the CAMY price.')
+    if (!client.name.trim() || !validPhone || !client.address.trim() || lowPriceItem) return
     setBusy(true)
     try {
       const result = await api('/marketplace/dropship-orders', {
@@ -113,13 +136,16 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
           items: selected.map(item => ({ productId: item.product.id, qty: Number(item.qty), sellPrice: Number(item.sellPrice) }))
         })
       })
-      notify?.(`${result.order.id} sent to CAMY as Cash on Delivery. Your margin is ${money(result.order.entrepreneurMargin)} and is transferred after successful delivery and collection.`)
+      notify?.(`${result.order.id} sent to CAMY as Cash on Delivery. Your profit is ${money(result.order.entrepreneurMargin)} and is transferred after successful delivery and collection.`)
       setCart([])
       setClient(blankClient)
+      setSubmitAttempted(false)
+      setSubmitError('')
       setMobileCheckout(false)
       window.dispatchEvent(new Event('camy-business-updated'))
+      window.setTimeout(() => setPage?.('orders'), 1400)
     } catch (error) {
-      notify?.(error.message)
+      setSubmitError(error.message || 'The order could not be submitted. Please try again.')
     } finally {
       setBusy(false)
     }
@@ -157,15 +183,15 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
         <header><span><ShoppingCart size={19}/></span><div><small>COD CLIENT ORDER</small><h2>Order summary</h2></div><button className="mobile-checkout-back" type="button" onClick={() => setMobileCheckout(false)} aria-label="Back to products"><X size={19}/></button></header>
         {selected.length ? selected.map(item => <div className="market-line dropship-order-line" key={item.productId}>
           <div className="dropship-line-heading"><div className="dropship-line-product"><strong>{item.product.name}</strong><small>CAMY cost: {money(item.product.price)} each</small></div><button className="dropship-remove" type="button" onClick={() => setCart(old => old.filter(entry => String(entry.productId) !== String(item.productId)))} aria-label={`Remove ${item.product.name}`} title="Remove item"><Trash2 size={16}/></button></div>
-          <div className="dropship-line-controls"><label className="dropship-selling-price">Your client price per item<span className="dropship-price-input"><b>Rs.</b><input type="number" min={item.product.price} step="0.01" value={item.sellPrice} onChange={event => update(item.productId, { sellPrice: Number(event.target.value) || 0 })}/></span><small className="dropship-price-help">Your margin: <strong>{money(Math.max(0,(Number(item.sellPrice)-Number(item.product.price))*Number(item.qty)))}</strong></small></label>
+          <div className="dropship-line-controls"><label className="dropship-selling-price">Your client price per item<span className="dropship-price-input"><b>Rs.</b><input type="text" inputMode="decimal" autoComplete="off" value={item.sellPrice} onChange={event => updateSellPrice(item.productId,event.target.value)} onBlur={() => { if (item.sellPrice === '') update(item.productId,{sellPrice:String(item.product.price)}) }} aria-label={`Client selling price for ${item.product.name}`}/></span><small className="dropship-price-help">My profit: <strong>{money(Math.max(0,(Number(item.sellPrice)-Number(item.product.price))*Number(item.qty)))}</strong></small></label>
           <label className="dropship-quantity">Quantity<span className="dropship-stepper"><button type="button" aria-label={`Reduce quantity for ${item.product.name}`} disabled={Number(item.qty)<=1} onClick={()=>update(item.productId,{qty:Math.max(1,Number(item.qty)-1)})}>−</button><input aria-label={`Quantity for ${item.product.name}`} type="number" min="1" value={item.qty} onChange={event => update(item.productId, { qty: Math.max(1, Number(event.target.value) || 1) })}/><button type="button" aria-label={`Increase quantity for ${item.product.name}`} onClick={()=>update(item.productId,{qty:Number(item.qty)+1})}>+</button></span></label></div>
         </div>) : <div className="stock-cart-empty"><ShoppingCart size={23}/><p>Add products for your client's order.</p></div>}
 
         <div className="customer-fields"><h3>Client delivery details</h3>
-          <label>Client name<input value={client.name} onChange={event => setClient(old => ({...old, name:event.target.value}))} placeholder="Full name"/></label>
-          <div><label>Mobile number<input value={client.phone} onChange={event => setClient(old => ({...old, phone:event.target.value}))} placeholder="07X XXX XXXX"/></label>
+          <label>Client name<input className={submitAttempted&&!client.name.trim()?'field-invalid':''} aria-invalid={submitAttempted&&!client.name.trim()} required value={client.name} onChange={event => setClient(old => ({...old, name:event.target.value}))} placeholder="Full name"/>{submitAttempted&&!client.name.trim()&&<small className="field-validation-message">Enter the client name.</small>}</label>
+          <div><label>Phone number<input className={submitAttempted&&!validPhone?'field-invalid':''} aria-invalid={submitAttempted&&!validPhone} inputMode="tel" value={client.phone} onChange={event => setClient(old => ({...old, phone:event.target.value}))} placeholder="0771234567 or +94771234567"/>{submitAttempted&&!validPhone&&<small className="field-validation-message">Use 10 digits starting with 0, or +94 followed by 9 digits.</small>}</label>
           <label>District<select value={client.district} onChange={event => setClient(old => ({...old, district:event.target.value}))}>{districts.map(district => <option key={district}>{district}</option>)}</select></label></div>
-          <label>Delivery address<textarea rows="3" value={client.address} onChange={event => setClient(old => ({...old, address:event.target.value}))} placeholder="House number, street, town"/></label>
+          <label>Delivery address<textarea className={submitAttempted&&!client.address.trim()?'field-invalid':''} aria-invalid={submitAttempted&&!client.address.trim()} required rows="3" value={client.address} onChange={event => setClient(old => ({...old, address:event.target.value}))} placeholder="House number, street, town"/>{submitAttempted&&!client.address.trim()&&<small className="field-validation-message">Enter the client's delivery address.</small>}</label>
           <label>Order note (optional)<textarea rows="2" value={client.notes} onChange={event => setClient(old => ({...old, notes:event.target.value}))} placeholder="Colour, preferred call time, delivery note..."/></label>
         </div>
 
@@ -173,8 +199,9 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
         <div className="dropship-money-rule"><BadgeDollarSign/><div><strong>You choose the client price.</strong><p>CAMY keeps the CAMY product cost. After successful delivery and COD collection, CAMY transfers the difference to your saved bank account and records the transfer receipt.</p></div></div>
         <div className="market-total"><span>CAMY product cost</span><strong>{money(camyCost)}</strong></div>
         <div className="market-total"><span>Client COD total</span><strong>{money(clientTotal)}</strong></div>
-        <div className="market-total"><span>Estimated entrepreneur margin</span><strong>{money(estimatedMargin)}</strong></div>
-        <button className="market-primary" disabled={!catalogueLive || !selected.length || !validClient || busy} onClick={submit}>{busy ? 'Sending to CAMY…' : 'Place COD order with CAMY'} <ArrowRight size={17}/></button>
+        <div className="market-total"><span>My profit</span><strong>{money(estimatedMargin)}</strong></div>
+        {formError&&<div className="dropship-submit-error" role="alert"><AlertCircle/><span><strong>Check the order details</strong><small>{formError}</small></span></div>}
+        <button className="market-primary" disabled={!catalogueLive || !selected.length || busy} onClick={submit}>{busy ? 'Sending to CAMY…' : 'Place COD order with CAMY'} <ArrowRight size={17}/></button>
         <footer><Truck size={15}/> CAMY handles fulfilment, delivery and cash collection.</footer>
       </aside>
     </div>
@@ -195,7 +222,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
     <section className="market-history stock-request-history">
       <div><small>DELIVERY UPDATES</small><h2>My CAMY orders</h2><button className="market-primary" onClick={refresh} disabled={refreshing}><RefreshCw size={15}/> {refreshing ? 'Refreshing…' : 'Refresh'}</button></div>
       {orders.length ? [...orders].sort((a,b)=>String(b.createdAt||b.date).localeCompare(String(a.createdAt||a.date))).map(order => <article className="stock-tracker-entry dropship-money-entry" key={order.id}>
-        <div><strong>{order.id} · {order.customer}</strong><small>{(order.items || []).map(item => `${item.name} × ${item.qty}`).join(', ')}</small><p>{statusHelp(order)}</p><div className="order-money-mini"><span>Client COD <b>{money(order.amount)}</b></span><span>CAMY cost <b>{money(order.camyCost ?? order.amount)}</b></span><span>Your margin <b>{money(order.entrepreneurMargin)}</b></span><span>Payment <b>COD</b></span><span>Payout <b>{payoutLabel(order)}</b></span>{order.payoutReceipt&&<a href={order.payoutReceipt} target="_blank" rel="noreferrer"><FileText/> View CAMY transfer receipt</a>}</div></div>
+        <div><strong>{order.id} · {order.customer}</strong><small>{(order.items || []).map(item => `${item.name} × ${item.qty}`).join(', ')}</small><p>{statusHelp(order)}</p><div className="order-money-mini"><span>Client COD <b>{money(order.amount)}</b></span><span>CAMY cost <b>{money(order.camyCost ?? order.amount)}</b></span><span>My profit <b>{money(order.entrepreneurMargin)}</b></span><span>Payment <b>COD</b></span><span>Payout <b>{payoutLabel(order)}</b></span>{order.payoutReceipt&&<a href={order.payoutReceipt} target="_blank" rel="noreferrer"><FileText/> View CAMY transfer receipt</a>}</div></div>
         <span className={`market-status ${String(order.status).toLowerCase()}`}>{order.status}</span>
       </article>) : <p>No client orders yet. Your submitted orders and CAMY delivery updates will appear here automatically.</p>}
     </section>
@@ -397,7 +424,7 @@ export function DropshipHome({ person, orders = [], setPage }) {
       <button type="button" onClick={()=>setPage('orders')}><span><Truck/></span><div><small>ACTIVE ORDERS</small><strong>{inProgress.length}</strong><p>{delivered.length} successfully delivered</p></div><ArrowRight/></button>
       <button type="button" onClick={()=>setPage('credit')}><span><BadgeDollarSign/></span><div><small>YOUR VERIFIED EARNINGS</small><strong>{money(lifetimeMargin)}</strong><p>{money(paidMargin)} transferred by CAMY</p></div><ArrowRight/></button>
       <button type="button" onClick={()=>setPage('credit-stock')}><span><PackageCheck/></span><div><small>AVAILABLE CREDIT</small><strong>{money(availableCredit)}</strong><p>{creditEligible?'Ready for optional stock requests':'Unlocks through verified earnings'}</p></div><ArrowRight/></button>
-      <button type="button" onClick={()=>setPage('credit')}><span><CircleDollarSign/></span><div><small>WAITING FOR CAMY</small><strong>{money(pendingMargin)}</strong><p>Commission ready for transfer</p></div><ArrowRight/></button>
+      <button type="button" onClick={()=>setPage('credit')}><span><CircleDollarSign/></span><div><small>Recivable Commission</small><strong>{money(pendingMargin)}</strong><p>Commission ready for transfer</p></div><ArrowRight/></button>
     </section>
     {pendingMargin>0&&<section className="home-attention"><span><BadgeDollarSign/></span><div><small>PAYMENT UPDATE</small><strong>{money(pendingMargin)} is waiting for CAMY transfer</strong><p>Open Your Earnings to see each order and payment status.</p></div><button type="button" onClick={()=>setPage('credit')}>View your earnings <ArrowRight/></button></section>}
     <section className="home-destinations"><header><small>GO TO</small><h2>What would you like to do?</h2></header><div>
