@@ -569,10 +569,66 @@ input::placeholder,textarea::placeholder { color:#97a6b2; }
 .credit-request-cancel:hover:not(:disabled) { border-color:#c96d6d; background:#ffeaea; }.credit-request-cancel:disabled { opacity:.55; cursor:wait; }
 .credit-payment-link { margin-top:8px; padding:0; border:0; color:#176a9c; background:transparent; display:flex; align-items:center; gap:5px; font:inherit; font-size:11px; font-weight:800; cursor:pointer; }
 .settlement-receipt-upload span { margin-top:6px; padding:12px; border:1px dashed #9ebfd5; border-radius:10px; color:#35627e; background:#f5fbff; display:block; }
-.entrepreneur-shell .order-status-tabs button:nth-child(2),.entrepreneur-shell .order-status-tabs button:nth-child(3),.entrepreneur-shell .order-status-tabs button:nth-child(4),.entrepreneur-shell .order-status-tabs button:nth-child(9),.entrepreneur-shell .order-status-tabs button:nth-child(10) { display:none; }
 .order-export-panel { margin:14px 0; padding:18px 20px; border:1px solid #d6e5ee; border-radius:16px; background:linear-gradient(135deg,#f7fbfe,#edf7fc); display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"intro download" "quick dates"; align-items:center; gap:16px 22px; }.order-export-panel>div:first-child { grid-area:intro; display:flex; align-items:center; gap:12px; }.order-export-panel>div:first-child>span { width:44px; height:44px; flex:0 0 auto; border-radius:13px; color:#fff; background:#176d9e; display:grid; place-items:center; }.order-export-panel>div:first-child svg { width:18px; }.order-export-panel small,.order-export-panel strong,.order-export-panel p { display:block; }.order-export-panel small { color:#24739f; font-size:9px; font-weight:850; letter-spacing:.09em; }.order-export-panel strong { margin-top:3px; color:#173e5b; font-size:14px; }.order-export-panel p { margin:4px 0 0; color:#6b8495; font-size:10px; }.order-export-panel nav { grid-area:quick; display:flex; flex-wrap:wrap; gap:6px; }.order-export-panel nav button { min-height:38px; padding:0 12px; border:1px solid #d3e2eb; border-radius:9px; color:#3e637c; background:#fff; font-size:9px; font-weight:800; cursor:pointer; white-space:nowrap; }.order-export-panel nav button:hover { border-color:#2679a9; color:#176a9b; background:#f7fcff; }.order-export-panel .order-date-fields { grid-area:dates; display:grid; grid-template-columns:repeat(2,minmax(150px,1fr)); gap:10px; }.order-export-panel .order-date-fields label { min-width:0; display:block; color:#42647d; font-size:9px; font-weight:800; }.order-export-panel .order-date-fields input { width:100%; height:40px; margin-top:5px; }.order-export-panel>.btn { grid-area:download; min-height:44px; padding-inline:18px; white-space:nowrap; }
 .entrepreneur-shell .orders-page-v2 .order-result-bar>button { min-height:38px; padding:0 13px; border:1px solid #d5e2ea; border-radius:10px; color:#557086; background:#fff; font:inherit; font-size:10px; font-weight:800; cursor:pointer; }.entrepreneur-shell .orders-page-v2 .order-result-bar>button:hover { border-color:#9fc5dc; color:#176a9d; background:#f3faff; }
-.entrepreneur-shell .orders-page-v2 .order-table .data-row { grid-template-columns:150px minmax(260px,1.5fr) 125px 125px 135px 104px; min-width:980px; }.entrepreneur-shell .orders-page-v2 .order-id-cell>span { min-width:0; }.entrepreneur-shell .orders-page-v2 .order-id-cell strong { overflow-wrap:anywhere; line-height:1.35; }
+
+/* Compact entrepreneur order filters and stronger table readability */
+.entrepreneur-shell .orders-page-v2 .order-tools { padding:14px 18px 11px; background:#fff; }
+.entrepreneur-shell .orders-page-v2 .order-search input,
+.entrepreneur-shell .orders-page-v2 .order-tools>select { font-size:13px; }
+.entrepreneur-shell .orders-page-v2 .order-status-tabs { padding:0 18px 12px; background:#fff; }
+.entrepreneur-shell .orders-page-v2 .order-status-tabs button { min-height:42px; padding-inline:14px; font-size:12px; }
+.entrepreneur-shell .orders-page-v2 .order-status-tabs button b { font-size:10px; }
+.entrepreneur-shell .orders-page-v2 .order-status-tabs button:nth-child(3):not(.active) { color:#9a650f; background:#fff7e5; }
+.entrepreneur-shell .orders-page-v2 .order-status-tabs button:nth-child(4):not(.active) { color:#176a9d; background:#eaf5fc; }
+.entrepreneur-shell .orders-page-v2 .order-status-tabs button:nth-child(5):not(.active) { color:#167653; background:#e9f8f1; }
+.entrepreneur-shell .orders-page-v2 .order-status-tabs button:nth-child(6):not(.active) { color:#a44747; background:#fff0ee; }
+.entrepreneur-shell .orders-page-v2 .order-export-panel { margin:0; padding:12px 18px; border-width:0 0 1px; border-radius:0; grid-template-columns:minmax(245px,1fr) auto auto auto; grid-template-areas:"intro quick dates download"; gap:12px; background:linear-gradient(90deg,#f2f9fd 0%,#f8fbfd 55%,#fff8f4 100%); }
+.entrepreneur-shell .orders-page-v2 .order-export-panel>div:first-child { gap:10px; }
+.entrepreneur-shell .orders-page-v2 .order-export-panel>div:first-child>span { width:38px; height:38px; border-radius:11px; background:linear-gradient(135deg,#176d9e,#2a94b4); }
+.entrepreneur-shell .orders-page-v2 .order-export-panel small { font-size:10px; }
+.entrepreneur-shell .orders-page-v2 .order-export-panel strong { font-size:13px; }
+.entrepreneur-shell .orders-page-v2 .order-export-panel p { margin-top:2px; font-size:10px; }
+.entrepreneur-shell .orders-page-v2 .order-export-panel nav { flex-wrap:nowrap; }
+.entrepreneur-shell .orders-page-v2 .order-export-panel nav button { min-height:36px; padding-inline:10px; font-size:10px; }
+.entrepreneur-shell .orders-page-v2 .order-export-panel .order-date-fields { grid-template-columns:repeat(2,132px); gap:8px; }
+.entrepreneur-shell .orders-page-v2 .order-export-panel .order-date-fields label { font-size:10px; }
+.entrepreneur-shell .orders-page-v2 .order-export-panel .order-date-fields input { height:37px; margin-top:3px; font-size:11px; }
+.entrepreneur-shell .orders-page-v2 .order-export-panel>.btn { min-height:40px; padding-inline:14px; font-size:11px; background:#176d9e; color:#fff; }
+.entrepreneur-shell .orders-page-v2 .order-result-bar { min-height:48px; padding:7px 18px; background:#fff; }
+.entrepreneur-shell .orders-page-v2 .order-result-bar>span { font-size:12px; }
+.entrepreneur-shell .orders-page-v2 .order-result-bar>span strong { color:#0f6e9f; font-size:16px; }
+.entrepreneur-shell .orders-page-v2 .order-table .data-row.head { color:#174d72; background:#eaf4fa; font-size:11px; letter-spacing:.025em; }
+.entrepreneur-shell .orders-page-v2 .order-table .data-row:not(.head)>span>strong { color:#15334d; font-size:12px; }
+.entrepreneur-shell .orders-page-v2 .order-table .data-row:not(.head) small { font-size:10px; }
+.entrepreneur-shell .orders-page-v2 .order-table .order-customer-cell em { color:#55788f; font-size:9px; }
+
+@media (max-width:1250px) {
+  .entrepreneur-shell .orders-page-v2 .order-export-panel { grid-template-columns:1fr auto; grid-template-areas:"intro download" "quick dates"; }
+}
+.entrepreneur-shell .orders-page-v2 .order-table .data-row { grid-template-columns:minmax(150px,1.05fr) minmax(210px,1.55fr) 108px 102px 125px minmax(145px,1fr) 104px; min-width:1080px; gap:13px; padding:16px 18px; }
+.entrepreneur-shell .orders-page-v2 .order-table .data-row.head { min-height:52px; padding-block:0; }
+.entrepreneur-shell .orders-page-v2 .order-table .data-row>span { min-width:0; }
+.entrepreneur-shell .orders-page-v2 .order-table .order-id-cell { gap:11px; }
+.entrepreneur-shell .orders-page-v2 .order-table .order-id-cell>span { min-width:0; }
+.entrepreneur-shell .orders-page-v2 .order-table .order-id-cell strong { overflow-wrap:anywhere; line-height:1.35; }
+.entrepreneur-shell .orders-page-v2 .order-table .order-customer-cell strong { line-height:1.35; }
+.entrepreneur-shell .orders-page-v2 .order-table .order-customer-cell small { line-height:1.4; }
+.entrepreneur-shell .orders-page-v2 .order-table .order-date-cell,.entrepreneur-shell .orders-page-v2 .order-table .order-value-cell,.entrepreneur-shell .orders-page-v2 .order-table .order-profit-cell { align-self:center; }
+.entrepreneur-shell .orders-page-v2 .order-table .order-value-cell strong { font-variant-numeric:tabular-nums; white-space:nowrap; }
+.entrepreneur-shell .orders-page-v2 .order-table .order-profit-cell strong { color:#16805e; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.entrepreneur-shell .orders-page-v2 .order-table .order-profit-cell.not-earned strong { color:#a2615a; }
+.entrepreneur-shell .orders-page-v2 .order-table .profit-status { width:max-content; max-width:125px; min-height:25px; margin-top:7px; padding:4px 8px; border:1px solid transparent; border-radius:999px; display:inline-flex; align-items:center; gap:5px; font-size:8px; font-style:normal; font-weight:850; line-height:1.2; white-space:nowrap; }
+.entrepreneur-shell .orders-page-v2 .order-table .profit-status i { width:6px; height:6px; flex:0 0 auto; border-radius:50%; background:currentColor; }
+.entrepreneur-shell .orders-page-v2 .order-table .profit-status.paid { border-color:#bce4d3; color:#137457; background:#eaf8f2; }
+.entrepreneur-shell .orders-page-v2 .order-table .profit-status.pending { border-color:#efd99f; color:#94630f; background:#fff8e7; }
+.entrepreneur-shell .orders-page-v2 .order-table .profit-status.delivery-pending { border-color:#c9dfed; color:#26709d; background:#edf7fc; }
+.entrepreneur-shell .orders-page-v2 .order-table .profit-status.not-eligible { border-color:#edd2cf; color:#a2534b; background:#fff1ef; }
+.entrepreneur-shell .orders-page-v2 .order-table .order-progress-cell { align-self:center; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; }
+.entrepreneur-shell .orders-page-v2 .order-table .compact-progress { width:100%; min-height:48px; justify-content:center; }
+.entrepreneur-shell .orders-page-v2 .order-table .commission-table-status { max-width:150px; line-height:1.35; }
+.entrepreneur-shell .orders-page-v2 .order-table .view-order-btn { width:104px!important; justify-self:end; white-space:nowrap; }
+.entrepreneur-shell .orders-page-v2 .order-table .data-row.head>span:last-child { justify-self:end; width:104px; text-align:center; }
 .order-invoice-panel { margin:20px 24px 0; padding:20px; border:1px solid #d7e5ee; border-radius:18px; background:#fff; }
 .order-glance-v3.entrepreneur-glance { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .order-client-meta-v3.concise { grid-template-columns:minmax(190px,.55fr) minmax(280px,1.45fr); }
@@ -626,3 +682,250 @@ input::placeholder,textarea::placeholder { color:#97a6b2; }
   .catalogue-detail-close { position:fixed; top:10px; right:10px; }
   .product-detail-meta,.shop-detail-meta { grid-template-columns:1fr; }
 }
+.entrepreneur-shell .credit-catalogue-layout { gap:24px; }
+.entrepreneur-shell .credit-catalogue-layout>section { min-width:0; }
+.entrepreneur-shell .credit-catalogue-layout .stock-catalogue-title { padding:17px 19px; border:1px solid #d5e5ee; border-radius:16px; background:linear-gradient(135deg,#fff,#f1f8fc); }
+.entrepreneur-shell .credit-catalogue-layout .stock-catalogue-title h2 { color:#123b59; font-size:25px; }
+.entrepreneur-shell .credit-catalogue-tools { margin:12px 0; padding:11px; border:1px solid #dce8ef; border-radius:14px; background:#f7fafc; }
+.entrepreneur-shell .credit-category-tabs { margin-bottom:14px; padding-bottom:4px; display:flex; gap:8px; overflow-x:auto; }
+.entrepreneur-shell .credit-category-tabs button { min-height:39px; padding:0 13px; border:1px solid #d3e2eb; border-radius:10px; color:#46677e; background:#fff; font:inherit; font-size:11px; font-weight:800; white-space:nowrap; cursor:pointer; }
+.entrepreneur-shell .credit-category-tabs button.active { border-color:#176e9e; color:#fff; background:linear-gradient(135deg,#15577f,#2388aa); box-shadow:0 7px 16px rgba(23,110,158,.18); }
+.entrepreneur-shell .credit-product-card { border-color:#cfdfe9; border-radius:21px; box-shadow:0 10px 26px rgba(17,58,84,.07); }
+.entrepreneur-shell .credit-product-card:hover { border-color:#9fc8dc; }
+.entrepreneur-shell .credit-product-card.details-open { grid-column:span 2; display:grid; grid-template-columns:minmax(250px,.8fr) minmax(320px,1.2fr); border-color:#83b9d2; box-shadow:0 18px 38px rgba(17,75,107,.13); }
+.entrepreneur-shell .credit-product-card.details-open .stock-product-image { height:100%; min-height:310px; border-right:1px solid #d8e7ef; border-bottom:0; }
+.entrepreneur-shell .credit-product-card .stock-product-image { height:220px; background:linear-gradient(145deg,#f5fafc,#e8f3f8); }
+.entrepreneur-shell .credit-product-card .stock-product-image i { transition:.18s ease; }
+.entrepreneur-shell .credit-product-card .stock-product-image:hover i { color:#fff; background:#176f9e; transform:scale(1.06); }
+.entrepreneur-shell .credit-product-card .stock-product-copy { padding:18px 19px 19px; }
+.entrepreneur-shell .credit-product-card .stock-product-copy>small { color:#26759e; font-size:10px; font-weight:850; }
+.entrepreneur-shell .credit-product-card .stock-product-copy h3 { min-height:auto; margin:7px 0; color:#102f49; font-size:18px; line-height:1.35; }
+.entrepreneur-shell .credit-product-card .stock-product-copy>p { height:auto; min-height:48px; margin:0; color:#5f788b; font-size:12px; line-height:1.65; overflow:visible; }
+.credit-product-details { margin:14px 0 2px; padding:14px; border:1px solid #d6e5ed; border-radius:13px; background:#f6fafc; }
+.credit-product-details>div { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.credit-product-details>div>span { padding:10px 11px; border-radius:10px; background:#fff; }
+.credit-product-details small,.credit-product-details strong { display:block; }
+.credit-product-details small { color:#7290a3; font-size:8px; font-weight:850; letter-spacing:.07em; }
+.credit-product-details strong { margin-top:4px; color:#173f59; font-size:11px; }
+.credit-product-details>p { margin:11px 0 0!important; min-height:0!important; color:#4e6d81!important; font-size:11px!important; }
+.credit-product-details ul { margin:11px 0 0; padding:10px 0 0 18px; border-top:1px solid #dce7ed; color:#526f82; font-size:11px; line-height:1.7; }
+.credit-product-actions { display:grid; grid-template-columns:minmax(105px,.8fr) minmax(145px,1.2fr); gap:9px; }
+.credit-product-actions button { min-height:45px; border-radius:11px; font-family:inherit; }
+.credit-product-actions .market-primary { padding:0 12px; justify-content:center; font-size:10px; }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card { border:1px solid #c9dde8!important; border-radius:22px!important; background:#fff; box-shadow:0 20px 46px rgba(12,52,79,.12); }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card header { margin:-20px -20px 16px; padding:18px 20px; border-radius:21px 21px 0 0; background:linear-gradient(135deg,#edf7fc,#f8fcfe); }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card .market-line { padding:12px 0; border-bottom:1px solid #e5edf2; }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card .market-total { margin-top:15px; padding:15px; border-radius:12px; background:#eaf4fa; }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card .market-total strong { color:#0f476a; font-size:18px; }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card .credit-safe-note { margin-top:12px; padding:14px; border:1px solid #c3e0d2; border-radius:12px; color:#176c50; background:#eff9f4; font-size:11px; line-height:1.6; }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card>.market-primary { width:100%; min-height:52px; justify-content:center; background:linear-gradient(135deg,#155b84,#2185a9); box-shadow:0 10px 22px rgba(23,105,151,.2); }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card>.market-primary:disabled { color:#7891a3; background:#dce8ee; box-shadow:none; opacity:1; cursor:not-allowed; }
+@media(max-width:1050px){.entrepreneur-shell .credit-product-card.details-open{grid-column:auto;grid-template-columns:minmax(220px,.8fr) minmax(300px,1.2fr)}}
+@media(max-width:650px){.entrepreneur-shell .credit-product-card.details-open{display:block}.entrepreneur-shell .credit-product-card.details-open .stock-product-image{height:220px;min-height:0;border-right:0;border-bottom:1px solid #d8e7ef}.credit-product-details>div,.credit-product-actions{grid-template-columns:1fr}.entrepreneur-shell .credit-catalogue-layout .stock-catalogue-title{align-items:flex-start;flex-direction:column}}
+
+/* Credit stock catalogue — cohesive page composition */
+.entrepreneur-shell .credit-catalogue-page { max-width:1500px; }
+.entrepreneur-shell .credit-stock-page-actions { margin-bottom:14px; padding:13px 16px; border-color:#d8e5ed; box-shadow:0 7px 18px rgba(17,55,80,.04); }
+.entrepreneur-shell .credit-stock-page-actions small { font-size:9px; letter-spacing:.08em; }
+.entrepreneur-shell .credit-stock-page-actions strong { font-size:13px; }
+.entrepreneur-shell .credit-stock-page-actions button { background:#155f88; }
+.entrepreneur-shell .credit-stock-hero { min-height:190px; padding:27px 31px; border-radius:21px; }
+.entrepreneur-shell .credit-stock-hero h1 { margin:9px 0; font-size:32px; }
+.entrepreneur-shell .credit-stock-hero p { max-width:650px; font-size:12px; }
+.entrepreneur-shell .credit-stock-hero .stock-buy-steps { min-width:240px; padding:14px; }
+.entrepreneur-shell .shop-home-stats { margin-top:14px; gap:12px; }
+.entrepreneur-shell .shop-home-stats article { min-height:92px; padding:15px 18px; border-radius:15px; }
+.entrepreneur-shell .shop-home-stats article strong { margin:5px 0; font-size:20px; }
+.entrepreneur-shell .credit-catalogue-layout { grid-template-columns:minmax(0,1fr) 330px; margin-top:18px; }
+.entrepreneur-shell .credit-catalogue-layout .stock-catalogue-title { margin:0; padding:15px 17px; }
+.entrepreneur-shell .credit-catalogue-layout .stock-catalogue-title h2 { font-size:22px; }
+.entrepreneur-shell .credit-catalogue-tools { margin:10px 0; padding:9px; }
+.entrepreneur-shell .credit-catalogue-tools label,.entrepreneur-shell .credit-catalogue-tools select { min-height:41px; height:41px; }
+.entrepreneur-shell .credit-category-tabs { margin-bottom:11px; }
+.entrepreneur-shell .credit-category-tabs button { min-height:36px; }
+.entrepreneur-shell .credit-catalogue-layout .stock-product-grid { gap:12px; }
+.entrepreneur-shell .credit-product-card { display:flex; min-height:330px; flex-direction:column; border-radius:17px; box-shadow:0 6px 18px rgba(17,58,84,.055); }
+.entrepreneur-shell .credit-product-card:hover { transform:translateY(-2px); box-shadow:0 12px 26px rgba(17,58,84,.1); }
+.entrepreneur-shell .credit-product-card .stock-product-image { height:155px; flex:0 0 auto; padding:14px; }
+.entrepreneur-shell .credit-product-card .stock-product-image img { max-width:92%; max-height:92%; }
+.entrepreneur-shell .credit-product-card .stock-product-copy { height:100%; padding:14px 15px 15px; display:flex; flex-direction:column; }
+.entrepreneur-shell .credit-product-card .stock-product-copy h3 { margin:5px 0; font-size:16px; }
+.entrepreneur-shell .credit-product-card .stock-product-copy>p { min-height:38px; max-height:38px; font-size:10px; line-height:1.55; overflow:hidden; }
+.credit-product-facts { margin:10px 0 0; display:flex; gap:7px; }
+.credit-product-facts>span { min-width:0; padding:7px 9px; border-radius:8px; background:#f2f7fa; }
+.credit-product-facts small,.credit-product-facts strong { display:block; }
+.credit-product-facts small { color:#7b92a2; font-size:7px; font-weight:850; letter-spacing:.07em; }
+.credit-product-facts strong { margin-top:2px; overflow:hidden; color:#31566f; font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
+.entrepreneur-shell .credit-product-card .stock-product-meta { margin:10px 0; }
+.entrepreneur-shell .credit-product-card .stock-product-meta strong { color:#113e5d; font-size:15px; }
+.entrepreneur-shell .credit-product-card .credit-product-actions { margin-top:auto; grid-template-columns:100px minmax(0,1fr); gap:7px; }
+.entrepreneur-shell .credit-product-card .credit-product-actions button { min-height:40px; }
+.entrepreneur-shell .credit-product-card .stock-details { font-size:10px; }
+.entrepreneur-shell .credit-product-card .credit-product-actions .market-primary { min-width:0; font-size:9px; }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card { top:82px!important; padding:18px!important; border-radius:18px!important; box-shadow:0 12px 30px rgba(12,52,79,.09); }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card header { margin:-18px -18px 14px; padding:16px 18px; border-radius:17px 17px 0 0; }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card header h2 { font-size:17px!important; }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card .stock-cart-empty { min-height:105px; display:grid; place-content:center; }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card .credit-safe-note { padding:12px; font-size:10px; }
+.entrepreneur-shell .credit-catalogue-layout>.stock-request-card>.market-primary { min-height:48px; }
+.credit-product-dialog-overlay { position:fixed; z-index:500; inset:0; padding:24px; background:rgba(7,26,42,.68); backdrop-filter:blur(5px); display:grid; place-items:center; }
+.credit-product-dialog { width:min(880px,100%); max-height:90dvh; overflow:auto; border:1px solid rgba(255,255,255,.7); border-radius:24px; background:#fff; box-shadow:0 28px 90px rgba(4,24,39,.34); display:grid; grid-template-columns:minmax(280px,.85fr) minmax(360px,1.15fr); position:relative; }
+.credit-product-dialog-close { position:absolute; z-index:2; top:15px; right:15px; width:42px; height:42px; border:1px solid #d4e2eb; border-radius:12px; color:#214e69; background:#fff; display:grid; place-items:center; cursor:pointer; box-shadow:0 6px 16px rgba(16,55,80,.1); }
+.credit-product-dialog-close svg { width:19px; }
+.credit-product-dialog-image { min-height:470px; padding:38px; background:linear-gradient(145deg,#f4f9fc,#e5f1f7); display:grid; place-items:center; position:relative; }
+.credit-product-dialog-image img { width:100%; height:100%; max-height:370px; object-fit:contain; }
+.credit-product-dialog-image>span { position:absolute; top:20px; left:20px; padding:7px 10px; border-radius:9px; color:#185d84; background:#fff; font-size:10px; font-weight:850; }
+.credit-product-dialog-copy { padding:42px 36px 34px; }
+.credit-product-dialog-copy>small { color:#2678a1; font-size:10px; font-weight:850; letter-spacing:.08em; }
+.credit-product-dialog-copy h2 { margin:7px 48px 9px 0; color:#102f49; font-size:27px; line-height:1.2; }
+.credit-product-dialog-copy>p { margin:0; color:#60798b; font-size:12px; line-height:1.7; }
+.credit-product-dialog-stats { margin:20px 0; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.credit-product-dialog-stats>span { min-width:0; padding:12px; border:1px solid #dce7ee; border-radius:11px; background:#f7fafc; }
+.credit-product-dialog-stats small,.credit-product-dialog-stats strong { display:block; }
+.credit-product-dialog-stats small { color:#7b91a1; font-size:8px; font-weight:850; letter-spacing:.06em; }
+.credit-product-dialog-stats strong { margin-top:5px; color:#173e59; font-size:12px; overflow-wrap:anywhere; }
+.credit-product-specs { margin-bottom:20px; padding-top:17px; border-top:1px solid #e1eaf0; }
+.credit-product-specs h3 { margin:0 0 10px; color:#173e59; font-size:14px; }
+.credit-product-specs ul { margin:0; padding:0; display:grid; gap:8px; list-style:none; }
+.credit-product-specs li { color:#526f81; display:flex; align-items:flex-start; gap:8px; font-size:11px; line-height:1.5; }
+.credit-product-specs li svg { width:15px; flex:0 0 auto; color:#1b9870; }
+.credit-product-dialog-copy>.market-primary { width:100%; min-height:48px; justify-content:center; }
+@media(max-width:1050px){.entrepreneur-shell .credit-catalogue-layout{grid-template-columns:1fr}.entrepreneur-shell .credit-catalogue-layout>.stock-request-card{position:static!important}.credit-product-dialog{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.entrepreneur-shell .credit-stock-hero{padding:22px 18px}.entrepreneur-shell .credit-stock-hero h1{font-size:27px}.entrepreneur-shell .credit-product-card .stock-product-image{height:180px}.credit-product-dialog-overlay{padding:8px}.credit-product-dialog{max-height:96dvh;grid-template-columns:1fr;border-radius:18px}.credit-product-dialog-image{min-height:230px;padding:35px}.credit-product-dialog-copy{padding:25px 20px}.credit-product-dialog-copy h2{font-size:22px}.credit-product-dialog-stats{grid-template-columns:1fr}.credit-product-dialog-close{top:11px;right:11px}}
+
+/* Premium entrepreneur profile */
+.entrepreneur-shell[data-page="profile"] .content-page { max-width:1500px; }
+.entrepreneur-shell[data-page="profile"] .page-title { min-height:158px; margin-bottom:22px; padding:30px 38px; border-radius:24px; background:radial-gradient(circle at 88% 15%,rgba(89,179,222,.18),transparent 24%),linear-gradient(120deg,#0b2942 0%,#104766 58%,#185f80 100%); box-shadow:0 18px 42px rgba(8,41,64,.17); overflow:hidden; position:relative; }
+.entrepreneur-shell[data-page="profile"] .page-title::before { content:''; position:absolute; inset:0 auto 0 0; width:5px; background:linear-gradient(#43c6e7,#39bd94); }
+.entrepreneur-shell[data-page="profile"] .page-title>div { position:relative; z-index:1; }
+.entrepreneur-shell[data-page="profile"] .page-title>div>span { width:max-content; padding:6px 11px; border:1px solid rgba(111,213,238,.28); border-radius:999px; color:#78d9ef; background:rgba(5,29,47,.2); font-size:10px; }
+.entrepreneur-shell[data-page="profile"] .page-title h1 { margin:10px 0 7px; color:#fff; font-size:34px; letter-spacing:-.045em; }
+.entrepreneur-shell[data-page="profile"] .page-title p { color:#c8dde9; font-size:13px; }
+.entrepreneur-shell[data-page="profile"] .page-title>.btn { min-width:160px; min-height:48px; border-color:rgba(255,255,255,.22); color:#123c58; background:#fff; box-shadow:0 9px 22px rgba(4,28,45,.16); }
+.entrepreneur-shell[data-page="profile"] .profile-layout { grid-template-columns:340px minmax(0,1fr); gap:22px; align-items:start; }
+.entrepreneur-shell[data-page="profile"] .profile-summary { padding:0 25px 25px; border:1px solid #d3e2eb; border-radius:24px; box-shadow:0 16px 38px rgba(12,50,76,.09); position:sticky; top:88px; }
+.entrepreneur-shell[data-page="profile"] .profile-cover { height:108px; margin:0 -25px 63px; background:radial-gradient(circle at 78% 22%,rgba(120,224,239,.3),transparent 25%),linear-gradient(130deg,#0e3655,#176f91 65%,#25a59f); }
+.entrepreneur-shell[data-page="profile"] .profile-cover::after { content:''; position:absolute; right:-35px; top:-45px; width:145px; height:145px; border:1px solid rgba(255,255,255,.15); border-radius:50%; box-shadow:0 0 0 25px rgba(255,255,255,.035); }
+.entrepreneur-shell[data-page="profile"] .profile-avatar { width:98px; height:98px; bottom:-49px; border:5px solid #fff; border-radius:26px; background:linear-gradient(145deg,#dff6fb,#91d9e7); box-shadow:0 14px 30px rgba(7,43,65,.22); }
+.entrepreneur-shell[data-page="profile"] .profile-avatar img,.entrepreneur-shell[data-page="profile"] .profile-avatar>span { border-radius:21px; }
+.entrepreneur-shell[data-page="profile"] .profile-photo-action { right:-9px; bottom:-8px; border-color:#fff; color:#fff; background:#15749a; }
+.entrepreneur-shell[data-page="profile"] .profile-photo-tools { margin:0 0 18px; }
+.entrepreneur-shell[data-page="profile"] .profile-photo-tools label,.entrepreneur-shell[data-page="profile"] .profile-photo-tools button { min-height:34px; border-radius:10px; font-size:9px; }
+.entrepreneur-shell[data-page="profile"] .profile-summary h2 { color:#102f49; font-size:22px; letter-spacing:-.025em; }
+.entrepreneur-shell[data-page="profile"] .profile-summary h2 svg { color:#1683b2; }
+.entrepreneur-shell[data-page="profile"] .profile-summary>p { margin:7px 0; color:#6a8191; font-size:10px; }
+.entrepreneur-shell[data-page="profile"] .profile-joined { margin-top:13px; padding:8px 11px; color:#265d7d; background:#edf6fb; }
+.entrepreneur-shell[data-page="profile"] .profile-summary>b { margin-top:11px; padding:8px 11px; color:#147052; background:#eaf8f2; }
+.entrepreneur-shell[data-page="profile"] .profile-live-stats { margin:21px 0!important; padding:18px 0!important; background:linear-gradient(90deg,#fff,#f8fbfd,#fff); }
+.entrepreneur-shell[data-page="profile"] .profile-live-stats strong { color:#123b57; font-size:20px!important; }
+.entrepreneur-shell[data-page="profile"] .profile-live-stats small { margin-top:5px!important; color:#778b99!important; font-size:8px!important; }
+.entrepreneur-shell[data-page="profile"] .profile-summary>.btn { min-height:47px; border-radius:12px; color:#146991; background:#eaf5fb; font-size:11px; }
+.entrepreneur-shell[data-page="profile"] .form-stack { gap:18px; }
+.entrepreneur-shell[data-page="profile"] .form-stack>.card,.entrepreneur-shell[data-page="profile"] .profile-security-card { border:1px solid #d5e3ec; border-radius:22px; box-shadow:0 10px 28px rgba(15,55,80,.065); }
+.entrepreneur-shell[data-page="profile"] .profile-security-card { padding:22px 25px; background:linear-gradient(135deg,#fff,#f1f8fc); }
+.entrepreneur-shell[data-page="profile"] .profile-security-icon { background:linear-gradient(145deg,#145d88,#20a09a); }
+.entrepreneur-shell[data-page="profile"] .profile-security-head h2 { font-size:21px; }
+.entrepreneur-shell[data-page="profile"] .profile-security-head .btn { min-height:44px; border-color:#c9dce8; background:#fff; }
+.entrepreneur-shell[data-page="profile"] .profile-form { padding:25px 27px; }
+.entrepreneur-shell[data-page="profile"] .profile-form .card-head { padding-bottom:18px; border-bottom:1px solid #e2eaf0; }
+.entrepreneur-shell[data-page="profile"] .profile-form .card-head span,.entrepreneur-shell[data-page="profile"] .membership-card .card-head span { color:#17739f; font-size:9px; letter-spacing:.12em; }
+.entrepreneur-shell[data-page="profile"] .profile-form .card-head h2,.entrepreneur-shell[data-page="profile"] .membership-card .card-head h2 { margin-top:6px; color:#123752; font-size:22px; }
+.entrepreneur-shell[data-page="profile"] .profile-card-actions>svg { width:22px; color:#7d94a4; }
+.entrepreneur-shell[data-page="profile"] .profile-card-actions button { min-height:41px; padding:0 14px; border:1px solid #bad7e7; border-radius:10px; color:#176b97; background:#eff8fc; font-weight:800; }
+.entrepreneur-shell[data-page="profile"] .profile-form>div:nth-child(2) { margin-top:20px; gap:18px; }
+.entrepreneur-shell[data-page="profile"] .profile-form label { color:#294c65; font-size:11px; font-weight:800; }
+.entrepreneur-shell[data-page="profile"] .profile-form input { height:50px; margin-top:7px; padding:0 14px; border-color:#cbdce7; border-radius:11px; color:#102f49; background:#fff; font-size:12px; font-weight:650; }
+.entrepreneur-shell[data-page="profile"] .profile-form input:disabled { border-color:#d9e4eb; color:#27465c; background:#f7f9fa; opacity:1; }
+.entrepreneur-shell[data-page="profile"] .profile-form input:focus { border-color:#3d98c2; box-shadow:0 0 0 4px rgba(43,143,188,.1); outline:0; }
+.entrepreneur-shell[data-page="profile"] .profile-form.is-editing { border-color:#7dbbd7; box-shadow:0 0 0 4px rgba(52,139,190,.08),0 16px 34px rgba(15,55,80,.08); }
+.entrepreneur-shell[data-page="profile"] .secure { padding:14px 16px; border:1px solid #cbe3ee; color:#37677f; background:#f0f9fc; font-size:10px; }
+.entrepreneur-shell[data-page="profile"] .membership-card { padding:24px 27px; }
+.entrepreneur-shell[data-page="profile"] .membership-card>.card-head { padding-bottom:17px; border-bottom:1px solid #e2eaf0; }
+.entrepreneur-shell[data-page="profile"] .membership-card>div:last-child { grid-template-columns:repeat(4,1fr); gap:9px; }
+.entrepreneur-shell[data-page="profile"] .membership-card>div:last-child>span:nth-child(3) { display:block; }
+.entrepreneur-shell[data-page="profile"] .membership-card>div:last-child>span { min-height:75px; padding:14px; border-color:#dce7ed; background:linear-gradient(145deg,#f9fbfc,#f1f7fa); }
+.entrepreneur-shell[data-page="profile"] .membership-card small { font-size:8px; font-weight:800; letter-spacing:.05em; }
+.entrepreneur-shell[data-page="profile"] .membership-card strong { font-size:12px; }
+.entrepreneur-shell[data-page="profile"] .leave-company-card { padding:22px 25px; border-color:#eadbd4; border-radius:20px; background:linear-gradient(120deg,#fff,#fff8f5); box-shadow:none; }
+@media(max-width:1100px){.entrepreneur-shell[data-page="profile"] .profile-layout{grid-template-columns:300px minmax(0,1fr)}.entrepreneur-shell[data-page="profile"] .membership-card>div:last-child{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:850px){.entrepreneur-shell[data-page="profile"] .profile-layout{grid-template-columns:1fr}.entrepreneur-shell[data-page="profile"] .profile-summary{position:static}.entrepreneur-shell[data-page="profile"] .page-title{padding:25px}.entrepreneur-shell[data-page="profile"] .page-title h1{font-size:29px}}
+@media(max-width:600px){.entrepreneur-shell[data-page="profile"] .page-title{min-height:0;border-radius:18px}.entrepreneur-shell[data-page="profile"] .profile-form,.entrepreneur-shell[data-page="profile"] .membership-card{padding:19px}.entrepreneur-shell[data-page="profile"] .profile-form .card-head{align-items:flex-start;gap:12px;flex-direction:column}.entrepreneur-shell[data-page="profile"] .profile-card-actions{width:100%;justify-content:space-between}.entrepreneur-shell[data-page="profile"] .profile-card-actions button{flex:1}.entrepreneur-shell[data-page="profile"] .membership-card>div:last-child{grid-template-columns:1fr}}
+
+/* Premium orders workspace — visual treatment only */
+.entrepreneur-shell[data-page="orders"] .orders-page-v2 { max-width:1500px; padding-top:24px; }
+.entrepreneur-shell[data-page="orders"] .order-workspace { border:1px solid #ccdce7; border-radius:22px; background:#fff; box-shadow:0 18px 45px rgba(10,45,70,.09); }
+.entrepreneur-shell[data-page="orders"] .order-tools { padding:20px 22px 12px; grid-template-columns:minmax(320px,1fr) 170px; gap:13px; background:#fff; }
+.entrepreneur-shell[data-page="orders"] .order-search { min-height:50px; padding:0 16px; border-color:#cbdce7; border-radius:13px; background:#f9fbfc; transition:.18s ease; }
+.entrepreneur-shell[data-page="orders"] .order-search:focus-within { border-color:#3188b3; background:#fff; box-shadow:0 0 0 4px rgba(49,136,179,.1); }
+.entrepreneur-shell[data-page="orders"] .order-search svg { color:#397797; }
+.entrepreneur-shell[data-page="orders"] .order-search input { color:#153b55; font-size:13px; }
+.entrepreneur-shell[data-page="orders"] .order-tools>select { height:50px; margin:0; padding:0 14px; border-color:#cbdce7; border-radius:13px; color:#173e59; background:#fff; font-size:12px; font-weight:750; }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs { padding:0 22px 16px; gap:8px; border-bottom:0; background:#fff; }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button { min-height:42px; padding:0 14px; border:1px solid transparent; border-radius:11px; color:#526e81; background:#f4f7f9; font-size:11px; transition:.16s ease; }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button:hover { transform:translateY(-1px); border-color:#c6dce8; color:#195e84; background:#eef7fb; }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button.active { border-color:#164b70; color:#fff; background:linear-gradient(135deg,#113b5b,#176b96); box-shadow:0 8px 18px rgba(17,66,98,.2); }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button b { min-width:24px; height:24px; color:#557084; background:#e5edf2; font-size:9px; }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button.active b { color:#fff; background:rgba(255,255,255,.17); }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button:nth-child(3):not(.active),
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button:nth-child(4):not(.active),
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button:nth-child(5):not(.active),
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button:nth-child(6):not(.active) { border-color:transparent; }
+.entrepreneur-shell[data-page="orders"] .order-export-panel { margin:0; padding:14px 22px; border-top:1px solid #dfebf1; border-bottom:1px solid #d8e6ee; border-radius:0; grid-template-columns:minmax(255px,1fr) auto auto auto; grid-template-areas:"intro quick dates download"; gap:14px; background:linear-gradient(100deg,#f2f8fb 0%,#f8fbfc 58%,#fff9f5 100%); }
+.entrepreneur-shell[data-page="orders"] .order-export-panel>div:first-child>span { width:40px; height:40px; border-radius:11px; background:linear-gradient(145deg,#17678f,#2698b1); box-shadow:0 7px 16px rgba(22,111,151,.18); }
+.entrepreneur-shell[data-page="orders"] .order-export-panel small { color:#23769d; font-size:9px; }
+.entrepreneur-shell[data-page="orders"] .order-export-panel strong { color:#153d59; font-size:13px; }
+.entrepreneur-shell[data-page="orders"] .order-export-panel p { color:#6d8393; font-size:9px; }
+.entrepreneur-shell[data-page="orders"] .order-export-panel nav { gap:6px; }
+.entrepreneur-shell[data-page="orders"] .order-export-panel nav button { min-height:38px; padding:0 11px; border-color:#cfdee7; border-radius:9px; color:#365f78; font-size:9px; }
+.entrepreneur-shell[data-page="orders"] .order-export-panel nav button:hover { border-color:#67a8c8; background:#fff; box-shadow:0 4px 10px rgba(24,91,126,.08); }
+.entrepreneur-shell[data-page="orders"] .order-export-panel .order-date-fields { grid-template-columns:repeat(2,150px); }
+.entrepreneur-shell[data-page="orders"] .order-export-panel .order-date-fields label { color:#41667d; font-size:9px; }
+.entrepreneur-shell[data-page="orders"] .order-export-panel .order-date-fields input { height:39px; border-color:#cfdee7; border-radius:9px; background:#fff; }
+.entrepreneur-shell[data-page="orders"] .order-export-panel>.btn { min-height:42px; border-radius:10px; color:#fff; background:linear-gradient(135deg,#14648f,#1f83aa); box-shadow:0 7px 16px rgba(20,100,143,.18); }
+.entrepreneur-shell[data-page="orders"] .order-result-bar { min-height:54px; padding:9px 22px; border-bottom:0; background:#fff; }
+.entrepreneur-shell[data-page="orders"] .order-result-bar>span { color:#60788a; font-size:11px; }
+.entrepreneur-shell[data-page="orders"] .order-result-bar>span strong { color:#126d99; font-size:18px; }
+.entrepreneur-shell[data-page="orders"] .order-result-bar>button { min-height:38px; border-color:#d1dfe8; border-radius:10px; color:#526f82; background:#f8fafb; font-size:9px; }
+.entrepreneur-shell[data-page="orders"] .order-table { border-top:1px solid #dbe7ee; background:#f7fafc; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row { margin:0 10px; padding-inline:14px; border-bottom:1px solid #e1e9ee; background:#fff; transition:background .16s ease,box-shadow .16s ease,transform .16s ease; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row.head { margin:0; padding-inline:24px; color:#315b75; background:#eaf3f8; font-size:9px; font-weight:850; letter-spacing:.055em; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head):hover { z-index:1; border-color:transparent; border-radius:12px; background:#fbfdfe; box-shadow:0 7px 18px rgba(17,57,82,.08); transform:translateY(-1px); }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head)>span>strong { color:#143a55; font-size:11px; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head) small { color:#718899; font-size:9px; }
+.entrepreneur-shell[data-page="orders"] .order-id-cell>i { width:38px; height:38px; border-radius:11px; color:#176f9c; background:#e8f4fa; }
+.entrepreneur-shell[data-page="orders"] .order-row::before { top:18px; bottom:18px; width:3px; }
+.entrepreneur-shell[data-page="orders"] .order-customer-cell em { color:#608197; }
+.entrepreneur-shell[data-page="orders"] .profit-status { border-color:#c2dceb!important; color:#17658f; background:#eef8fc; }
+.entrepreneur-shell[data-page="orders"] .order-profit-cell strong { font-size:12px!important; }
+.entrepreneur-shell[data-page="orders"] .view-order-btn { min-width:102px; min-height:40px; border-color:#bed6e5!important; border-radius:10px; color:#195e86!important; background:#edf6fb!important; }
+.entrepreneur-shell[data-page="orders"] .view-order-btn:hover { background:linear-gradient(135deg,#164f76,#247da6)!important; }
+@media(max-width:1250px){.entrepreneur-shell[data-page="orders"] .order-export-panel{grid-template-columns:1fr auto;grid-template-areas:"intro download" "quick dates"}}
+@media(max-width:760px){.entrepreneur-shell[data-page="orders"] .orders-page-v2{padding-top:12px}.entrepreneur-shell[data-page="orders"] .order-workspace{border-radius:16px}.entrepreneur-shell[data-page="orders"] .order-tools{grid-template-columns:1fr;padding:15px}.entrepreneur-shell[data-page="orders"] .order-status-tabs{padding:0 15px 14px}.entrepreneur-shell[data-page="orders"] .order-export-panel{padding:14px 15px;grid-template-columns:1fr;grid-template-areas:"intro" "quick" "dates" "download"}.entrepreneur-shell[data-page="orders"] .order-export-panel .order-date-fields{grid-template-columns:1fr 1fr}.entrepreneur-shell[data-page="orders"] .order-result-bar{padding-inline:15px}}
+
+/* Orders final visual pass */
+.entrepreneur-shell[data-page="orders"] .order-workspace { overflow:hidden; border-color:#c9d9e4; background:#f4f8fa; box-shadow:0 20px 55px rgba(8,39,61,.12); }
+.entrepreneur-shell[data-page="orders"] .order-tools { padding:22px 24px 14px; background:radial-gradient(circle at 92% -20%,rgba(65,163,194,.25),transparent 32%),linear-gradient(125deg,#0d2d47,#124c6b 62%,#176c87); }
+.entrepreneur-shell[data-page="orders"] .order-search { border-color:rgba(255,255,255,.22); background:rgba(255,255,255,.97); box-shadow:0 8px 20px rgba(3,25,40,.14); }
+.entrepreneur-shell[data-page="orders"] .order-tools>select { border-color:rgba(255,255,255,.24); background:#fff; box-shadow:0 8px 20px rgba(3,25,40,.12); }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs { padding:0 24px 20px; background:linear-gradient(125deg,#0d2d47,#124c6b 62%,#176c87); }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button { color:#d6e7ef; background:rgba(255,255,255,.08); }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button:hover { border-color:rgba(255,255,255,.18); color:#fff; background:rgba(255,255,255,.13); }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button.active { border-color:rgba(255,255,255,.65); color:#123a55; background:#fff; box-shadow:0 9px 20px rgba(2,24,39,.2); }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button b { color:#dcecf3; background:rgba(255,255,255,.13); }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button.active b { color:#17658d; background:#e6f2f8; }
+.entrepreneur-shell[data-page="orders"] .order-status-tabs button:nth-child(n):not(.active) { color:#d6e7ef; background:rgba(255,255,255,.08); }
+.entrepreneur-shell[data-page="orders"] .order-export-panel { margin:14px 16px 0; padding:14px 16px; border:1px solid #d3e2ea; border-radius:15px; background:#fff; box-shadow:0 7px 18px rgba(13,52,77,.05); }
+.entrepreneur-shell[data-page="orders"] .order-result-bar { margin:0 16px; padding:10px 5px; background:transparent; }
+.entrepreneur-shell[data-page="orders"] .order-result-bar>button { background:#fff; }
+.entrepreneur-shell[data-page="orders"] .order-table { margin:0 16px 16px; overflow:hidden; border:1px solid #d4e2ea; border-radius:15px; background:#fff; box-shadow:0 8px 22px rgba(12,48,72,.055); }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row.head { min-height:54px; color:#416377; background:#edf3f6; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row { margin:0; padding-inline:22px; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head) { min-height:96px!important; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head):hover { border-radius:0; background:#f5fafc; box-shadow:inset 4px 0 #2485ad; transform:none; }
+.entrepreneur-shell[data-page="orders"] .order-id-cell>span>strong { color:#0f4262!important; font-size:12px!important; letter-spacing:.01em; }
+.entrepreneur-shell[data-page="orders"] .order-customer-cell>strong { font-size:12px!important; }
+.entrepreneur-shell[data-page="orders"] .order-date-cell>strong,
+.entrepreneur-shell[data-page="orders"] .order-value-cell>strong { font-size:11px!important; }
+.entrepreneur-shell[data-page="orders"] .order-profit-cell>strong { color:#127655!important; font-size:12px!important; }
+.entrepreneur-shell[data-page="orders"] .status-pill { min-height:31px; padding:0 11px; }
+@media(max-width:1250px){.entrepreneur-shell[data-page="orders"] .order-export-panel{margin-inline:12px}.entrepreneur-shell[data-page="orders"] .order-result-bar{margin-inline:12px}.entrepreneur-shell[data-page="orders"] .order-table{margin:0 12px 12px}}

@@ -27,6 +27,13 @@ function workflow_customer_details(array $data): array {
     if(!$clean['name']||strlen($clean['name'])>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$clean['phone'])||!$clean['district']||strlen($clean['district'])>80||strlen($clean['address'])<8||strlen($clean['address'])>2000)response(['message'=>'Enter a valid client name, Sri Lankan phone number, district and complete delivery address.'],422);
     return $clean;
 }
+function workflow_next_order_id(array $state): string {
+    $highest=1000;
+    foreach(($state['orders'] ?? []) as $order){
+        if(preg_match('/^CMY-(\d+)$/',(string)($order['id'] ?? ''),$match))$highest=max($highest,(int)$match[1]);
+    }
+    return 'CMY-'.str_pad((string)($highest+1),4,'0',STR_PAD_LEFT);
+}
 function workflow_reserve(array &$state,array $items,?string $shop): void {
     foreach($items as $item){$id=(string)($item['productId'] ?? $item['id']);$found=false;
         if($shop===null){foreach($state['products'] as &$slot)if((string)$slot['id']===$id){if($slot['stock']<$item['qty'])response(['message'=>'Insufficient CAMY stock to approve this request.'],409);$slot['stock']-=$item['qty'];$found=true;break;}unset($slot);}
@@ -66,7 +73,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $selected=[];$clientTotal=0;$camyCost=0;$count=0;
         foreach($requested as $entry){$product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($entry['productId']??'')){$product=$candidate;break;}$qty=(int)$entry['qty'];$sell=filter_var($entry['sellPrice']??null,FILTER_VALIDATE_FLOAT);if(!$product||($product['published']??true)!==true||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A selected product is hidden or does not have enough warehouse stock.'],409);}$base=round((float)$product['price'],2);if($sell===false||!is_finite($sell)||$sell<$base||$sell>100000000){$pdo->rollBack();response(['message'=>'Every client selling price must be at least its CAMY product price.'],422);}$sell=round((float)$sell,2);$selected[]=['id'=>$product['id'],'productId'=>$product['id'],'name'=>$product['name'],'qty'=>$qty,'price'=>$sell,'camyPrice'=>$base,'image'=>$product['image']??'','category'=>$product['category']??'Other'];$clientTotal+=$sell*$qty;$camyCost+=$base*$qty;$count+=$qty;}
         $clientTotal=round($clientTotal,2);$camyCost=round($camyCost,2);$margin=round($clientTotal-$camyCost,2);
-        workflow_reserve($state,$selected,null);$groupId='DROP-'.bin2hex(random_bytes(5));$id='CMY-'.bin2hex(random_bytes(5));$token=bin2hex(random_bytes(24));
+        workflow_reserve($state,$selected,null);$groupId='DROP-'.bin2hex(random_bytes(5));$id=workflow_next_order_id($state);$token=bin2hex(random_bytes(24));
         $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
         $order=['id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,'amount'=>$clientTotal,'camyCost'=>$camyCost,'entrepreneurMargin'=>$margin,'clientPaymentMethod'=>'cod','clientPaymentStatus'=>'Collect on delivery','payoutAmount'=>$margin,'payoutStatus'=>$margin>0?'pending_delivery':'not_required','date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>true,'entrepreneur'=>$entrepreneur['name'],'entrepreneurId'=>$member,'source'=>'shop','orderMode'=>'dropship','createdBy'=>'CAMY Admin','createdByUserId'=>$admin['id']];
         $state['orders'][]=$order;
@@ -101,7 +108,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         }
         $clientTotal=round($clientTotal,2);$camyCost=round($camyCost,2);$margin=round($clientTotal-$camyCost,2);
         workflow_reserve($state,$selected,null);
-        $groupId='DROP-'.bin2hex(random_bytes(5));$id='CMY-'.bin2hex(random_bytes(5));$token=bin2hex(random_bytes(24));
+        $groupId='DROP-'.bin2hex(random_bytes(5));$id=workflow_next_order_id($state);$token=bin2hex(random_bytes(24));
         $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
         $entrepreneurName=(string)$user['full_name'];
         $order=[
