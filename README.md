@@ -48,7 +48,7 @@ Outstanding credit decreases
 
 No upfront payment or stock-purchase receipt is required for the Phase 2 credit request.
 
-Only one dispatched credit-stock order may remain unpaid. Tier 1 has 21 days to settle and higher tiers have 10 days. Entrepreneurs may request extra time; CAMY Admin approves or rejects the requested deadline. Another credit-stock order cannot be requested or dispatched until CAMY verifies the full payment for the current order.
+Multiple credit-stock orders may remain unpaid as long as their combined outstanding value stays within the entrepreneur's credit limit. Tier 1 has 21 days to settle each order and higher tiers have 10 days. Entrepreneurs may request extra time; CAMY Admin approves or rejects the requested deadline. An unpaid order does not hide the catalogue or prevent a new request from reaching CAMY Admin.
 
 ## Local XAMPP setup
 

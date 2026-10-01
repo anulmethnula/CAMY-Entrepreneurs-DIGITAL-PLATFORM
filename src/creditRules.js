@@ -1,43 +1,42 @@
 const number = value => Number(value || 0)
 
-export const CREDIT_SALES_STEP = 100000
-export const CREDIT_LIMIT_STEP = 10000
+function configuredTiers(tiers = []) {
+  return (Array.isArray(tiers) ? tiers : [])
+    .map((tier, index) => ({
+      ...tier,
+      id: tier?.id ?? `tier-${index + 1}`,
+      sales: Math.max(0, number(tier?.sales)),
+      credit: Math.max(0, number(tier?.credit)),
+    }))
+    .filter(tier => Number.isFinite(tier.sales) && Number.isFinite(tier.credit))
+    .sort((a, b) => a.sales - b.sales)
+}
 
-export function creditProgression(_tiers = [], salesValue = 0) {
+export function creditProgression(tiers = [], salesValue = 0) {
   const sales = Math.max(0, number(salesValue))
-  const completedSteps = Math.floor(sales / CREDIT_SALES_STEP)
-  const credit = completedSteps * CREDIT_LIMIT_STEP
-  const active = completedSteps > 0
-    ? { id: `standard-${completedSteps}`, sales: completedSteps * CREDIT_SALES_STEP, credit }
-    : null
-  const next = {
-    id: `standard-${completedSteps + 1}`,
-    sales: (completedSteps + 1) * CREDIT_SALES_STEP,
-    credit: (completedSteps + 1) * CREDIT_LIMIT_STEP,
-  }
+  const configured = configuredTiers(tiers)
+  const active = [...configured].reverse().find(tier => sales >= tier.sales) || null
+  const next = configured.find(tier => sales < tier.sales) || null
   const baseSales = active?.sales || 0
+  const interval = next ? next.sales - baseSales : 0
+  const rawProgress = next
+    ? (interval > 0 ? ((sales - baseSales) / interval) * 100 : 100)
+    : (configured.length ? 100 : 0)
 
   return {
     sales,
-    credit,
+    credit: active?.credit || 0,
     active,
     next,
-    progress: ((sales - baseSales) / CREDIT_SALES_STEP) * 100,
-    remaining: next.sales - sales,
-    configured: [],
+    progress: Math.max(0, Math.min(100, rawProgress)),
+    remaining: next ? Math.max(0, next.sales - sales) : 0,
+    configured,
     projected: [],
   }
 }
 
-export const creditForSales = (_tiers, sales) => creditProgression([], sales).credit
+export const creditForSales = (tiers, sales) => creditProgression(tiers, sales).credit
 
-export function visibleCreditLadder(_tiers, salesValue = 0) {
-  const sales = Math.max(0, number(salesValue))
-  const completedSteps = Math.floor(sales / CREDIT_SALES_STEP)
-  const rowCount = Math.max(4, completedSteps + 1)
-
-  return Array.from({ length: rowCount }, (_, index) => {
-    const step = index + 1
-    return { id: `standard-${step}`, sales: step * CREDIT_SALES_STEP, credit: step * CREDIT_LIMIT_STEP }
-  })
+export function visibleCreditLadder(tiers = []) {
+  return configuredTiers(tiers)
 }

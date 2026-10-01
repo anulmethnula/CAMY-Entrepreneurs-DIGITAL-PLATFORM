@@ -1,0 +1,166 @@
+/* Commission wallet and commission detail presentation only. */
+.entrepreneur-shell .commission-ledger-page,
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card){
+  --commission-ink:#102f46;
+  --commission-muted:#607b8c;
+  --commission-line:#dce7ed;
+  --commission-accent:#087d99;
+  gap:22px!important;
+  padding-bottom:48px;
+  color:var(--commission-ink);
+}
+.entrepreneur-shell .commission-ledger-hero{
+  min-height:0!important;
+  padding:28px 30px 30px!important;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:24px!important;
+  background:radial-gradient(circle at 94% 0,rgba(72,202,199,.22),transparent 38%),linear-gradient(115deg,#0b2c44 0%,#114765 55%,#126e82 100%)!important;
+  box-shadow:0 18px 40px rgba(17,60,82,.13)!important;
+}
+.entrepreneur-shell .commission-ledger-hero:after{opacity:.35}
+.entrepreneur-shell .commission-back{
+  min-height:34px;padding:0 11px;border:1px solid rgba(213,240,246,.28);
+  border-radius:9px;color:#e3f6f8;background:rgba(255,255,255,.07);
+  font-size:12px;transition:background .18s ease,border-color .18s ease;
+}
+.entrepreneur-shell .commission-back:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.55)}
+.entrepreneur-shell .commission-hero-badge{font-size:11px}
+.entrepreneur-shell .commission-hero-layout{margin-top:22px;grid-template-columns:minmax(0,1fr) minmax(240px,290px);align-items:center}
+.entrepreneur-shell .commission-hero-copy>span{font-size:11px;letter-spacing:.14em}
+.entrepreneur-shell .commission-hero-copy h1{margin:8px 0 10px!important;font-size:clamp(32px,3vw,44px)!important;line-height:1.12;letter-spacing:-.035em}
+.entrepreneur-shell .commission-hero-copy p{max-width:580px!important;color:#d5eaf0!important;font-size:14px!important;line-height:1.55}
+.entrepreneur-shell .commission-balance{
+  position:static;width:auto;min-width:0;padding:19px 21px;border-color:rgba(217,245,248,.24);
+  background:rgba(255,255,255,.085);box-shadow:inset 0 1px rgba(255,255,255,.08);
+}
+.entrepreneur-shell .commission-balance small{font-size:10px;letter-spacing:.08em}
+.entrepreneur-shell .commission-balance strong{font-size:30px;letter-spacing:-.03em}
+.entrepreneur-shell .commission-balance span{font-size:11px}
+.entrepreneur-shell .commission-summary-grid{margin-top:24px!important;gap:12px!important}
+.entrepreneur-shell .commission-summary-grid article{min-height:104px!important;padding:17px!important;border-color:rgba(218,244,248,.2);background:rgba(2,30,47,.22)!important}
+.entrepreneur-shell .commission-summary-icon{width:44px!important;height:44px!important}
+.entrepreneur-shell .commission-summary-grid small{font-size:12px;color:#c4dce6}
+.entrepreneur-shell .commission-summary-grid strong{margin:5px 0 2px;font-size:23px!important;letter-spacing:-.025em}
+.entrepreneur-shell .commission-summary-grid p{font-size:11px!important;color:#bdd3dc}
+.entrepreneur-shell .commission-ledger-panel{padding:28px!important;border:1px solid var(--commission-line)!important;border-radius:22px!important;box-shadow:0 12px 32px rgba(15,58,83,.045)!important}
+.entrepreneur-shell .commission-ledger-toolbar{padding-bottom:20px;align-items:center!important}
+.entrepreneur-shell .commission-ledger-toolbar>div>span{font-size:11px;letter-spacing:.12em}
+.entrepreneur-shell .commission-ledger-toolbar h2{margin:5px 0 4px;font-size:28px!important;letter-spacing:-.025em}
+.entrepreneur-shell .commission-ledger-toolbar p{font-size:13px;color:var(--commission-muted)}
+.entrepreneur-shell .commission-ledger-toolbar>strong{min-width:92px;padding:10px 14px;font-size:21px}
+.entrepreneur-shell .commission-ledger-toolbar>strong small{font-size:10px}
+.entrepreneur-shell .commission-filter-boxes{margin:20px 0 16px;gap:10px}
+.entrepreneur-shell .commission-filter-boxes>button{min-height:78px;padding:12px;border-radius:13px;gap:9px;transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.entrepreneur-shell .commission-filter-boxes>button>span:nth-child(2) strong{font-size:13px}
+.entrepreneur-shell .commission-filter-boxes>button>span:nth-child(2) small{font-size:10px;line-height:1.3}
+.entrepreneur-shell .commission-filter-boxes>button>b{font-size:11px}
+.entrepreneur-shell .commission-filter-panel{margin-bottom:18px;padding:15px;gap:12px;border-radius:14px;background:#f5f9fb;grid-template-columns:minmax(230px,1.6fr) minmax(150px,.75fr) minmax(150px,.75fr) auto}
+.entrepreneur-shell .commission-filter-panel label>span{margin-bottom:7px;font-size:11px;color:#4b697b}
+.entrepreneur-shell .commission-filter-panel input{height:45px;font-size:13px;border-radius:10px}
+.entrepreneur-shell .commission-filter-panel input::placeholder{color:#8ca1ad}
+.entrepreneur-shell .commission-search-filter svg{top:13px}
+.entrepreneur-shell .commission-filter-panel>button{height:45px;font-size:12px}
+.entrepreneur-shell .commission-ledger-list{gap:10px!important}
+.entrepreneur-shell .commission-ledger-row{min-height:94px!important;padding:16px 18px!important;gap:15px;border-radius:14px!important;grid-template-columns:46px minmax(155px,1.35fr) minmax(110px,.8fr) minmax(130px,.85fr) minmax(135px,.85fr) 34px!important;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.entrepreneur-shell .commission-row-main small,.entrepreneur-shell .commission-ledger-row>span>small{font-size:10px;line-height:1.3}
+.entrepreneur-shell .commission-row-main strong{margin:5px 0 3px;font-size:15px}
+.entrepreneur-shell .commission-row-main em{font-size:11px}
+.entrepreneur-shell .commission-row-reference strong{max-width:100%;font-size:12px}
+.entrepreneur-shell .commission-row-amount strong{font-size:20px;white-space:nowrap}
+.entrepreneur-shell .commission-empty p{font-size:13px}
+.entrepreneur-shell .commission-empty button{min-height:40px;font-size:12px;cursor:pointer}
+.entrepreneur-shell .commission-ledger-page button:focus-visible,
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) button:focus-visible,
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) a:focus-visible{outline:3px solid #55bed2;outline-offset:3px}
+
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-page-head{
+  min-height:0;padding:27px 30px;border-radius:22px;
+  background:linear-gradient(110deg,#0b2c44,#165e7b);box-shadow:0 16px 36px rgba(13,59,83,.11);
+  grid-template-columns:auto minmax(0,1fr);gap:24px;
+}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-page-head>button{min-height:42px;white-space:nowrap;transition:background .18s ease,border-color .18s ease}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-page-head>button:hover{background:rgba(255,255,255,.18);border-color:#fff}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-page-head small{font-size:11px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-page-head h1{font-size:clamp(26px,2.5vw,35px);letter-spacing:-.025em}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-page-head p{font-size:13px;line-height:1.5}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero{padding:25px 28px;grid-template-columns:minmax(220px,.75fr) minmax(0,2fr);gap:22px;border-radius:20px;background:linear-gradient(115deg,#0e354e,#1a6480)}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero>div>small{font-size:11px;letter-spacing:.08em}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero>div>strong{font-size:clamp(31px,3vw,42px);letter-spacing:-.035em}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero dl{gap:10px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero dl span{min-height:76px;padding:14px;border-radius:12px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero dt{font-size:10px;color:#c7e3ec}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero dd{font-size:13px;line-height:1.3}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-card,
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-payment-proof{padding:27px;border-radius:20px;border-color:var(--commission-line);box-shadow:0 10px 28px rgba(15,58,83,.045)}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-card header small{font-size:11px;letter-spacing:.08em}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-card h2{font-size:25px;letter-spacing:-.025em}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-client{margin:22px 0;gap:12px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-client span{padding:16px;border:1px solid #e6eef2;border-radius:12px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-client small{font-size:11px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-client strong{font-size:13px;overflow-wrap:anywhere}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-product-head{padding:13px 0;font-size:10px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-products article{padding:17px 0}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-products img{width:46px;height:46px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-products article>div>strong{font-size:13px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-products small{font-size:10px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-products article>span strong{font-size:12px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-payment-proof h2{font-size:21px}
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-payment-proof p,
+.entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-payment-proof em{font-size:12px;line-height:1.5}
+@media(max-width:1240px){
+  .entrepreneur-shell .commission-ledger-row{grid-template-columns:44px minmax(140px,1.3fr) minmax(105px,.8fr) minmax(125px,.8fr) 34px!important}
+  .entrepreneur-shell .commission-row-reference{display:none}
+  .entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero{grid-template-columns:1fr}
+}
+@media(max-width:950px){
+  .entrepreneur-shell .commission-hero-layout{grid-template-columns:1fr;align-items:stretch}
+  .entrepreneur-shell .commission-balance{width:100%}
+  .entrepreneur-shell .commission-filter-boxes{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .entrepreneur-shell .commission-filter-panel{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .entrepreneur-shell .commission-search-filter{grid-column:1/-1}
+  .entrepreneur-shell .commission-ledger-row{grid-template-columns:44px minmax(0,1fr) minmax(105px,.8fr) 34px!important}
+  .entrepreneur-shell .commission-row-state{display:none}
+  .entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero dl{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  .entrepreneur-shell .commission-ledger-page,.entrepreneur-shell .standalone-money-page:has(.money-detail-card){gap:14px!important;padding-bottom:25px}
+  .entrepreneur-shell .commission-ledger-hero{padding:20px!important;border-radius:18px!important}
+  .entrepreneur-shell .commission-hero-layout{gap:14px}
+  .entrepreneur-shell .commission-hero-copy h1{font-size:31px!important}
+  .entrepreneur-shell .commission-hero-copy p{font-size:13px!important}
+  .entrepreneur-shell .commission-balance{padding:16px}
+  .entrepreneur-shell .commission-summary-grid{grid-template-columns:1fr!important;gap:8px!important;margin-top:14px!important}
+  .entrepreneur-shell .commission-summary-grid article{min-height:76px!important;padding:12px 14px!important}
+  .entrepreneur-shell .commission-ledger-panel{padding:17px!important;border-radius:18px!important}
+  .entrepreneur-shell .commission-ledger-toolbar h2{font-size:24px!important}
+  .entrepreneur-shell .commission-ledger-toolbar p{font-size:12px}
+  .entrepreneur-shell .commission-filter-boxes{gap:8px}
+  .entrepreneur-shell .commission-filter-boxes>button{min-height:66px;padding:9px;grid-template-columns:32px minmax(0,1fr) auto}
+  .entrepreneur-shell .commission-filter-boxes>button>span:nth-child(2) small{display:none}
+  .entrepreneur-shell .commission-filter-panel{padding:12px;gap:10px}
+  .entrepreneur-shell .commission-filter-panel>button{grid-column:1/-1}
+  .entrepreneur-shell .commission-ledger-row{min-height:0!important;padding:14px!important;grid-template-columns:40px minmax(0,1fr) 32px!important;gap:10px}
+  .entrepreneur-shell .commission-row-icon{width:40px;height:40px}
+  .entrepreneur-shell .commission-row-state{display:block;grid-column:2}
+  .entrepreneur-shell .commission-row-reference{display:block;grid-column:2;min-width:0}
+  .entrepreneur-shell .commission-row-reference strong{margin-top:3px;font-size:11px}
+  .entrepreneur-shell .commission-row-amount{grid-column:2;text-align:left}
+  .entrepreneur-shell .commission-row-action{grid-column:3;grid-row:1/5}
+  .entrepreneur-shell .commission-row-amount strong{font-size:18px}
+  .entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-page-head{padding:20px;grid-template-columns:1fr;gap:15px}
+  .entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-page-head>button{width:max-content}
+  .entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero,
+  .entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-card,
+  .entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-payment-proof{padding:19px;border-radius:17px}
+  .entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-client{grid-template-columns:1fr;gap:8px}
+}
+@media(max-width:430px){
+  .entrepreneur-shell .commission-filter-boxes{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .entrepreneur-shell .commission-filter-boxes>button{grid-template-columns:28px minmax(0,1fr) auto;gap:6px}
+  .entrepreneur-shell .commission-filter-boxes>button>span:first-child{width:28px;height:28px}
+  .entrepreneur-shell .commission-filter-boxes>button>span:nth-child(2) strong{font-size:11px}
+  .entrepreneur-shell .commission-filter-panel{grid-template-columns:1fr}
+  .entrepreneur-shell .commission-filter-panel label{grid-column:1}
+  .entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero dl{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){.entrepreneur-shell .commission-ledger-page button,.entrepreneur-shell .standalone-money-page:has(.money-detail-card) button{transition:none!important}}

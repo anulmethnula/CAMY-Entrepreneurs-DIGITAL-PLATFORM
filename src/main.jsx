@@ -5,6 +5,10 @@ import './styles.css'
 import './shop.css'
 import './polish.css'
 import './inventory.css'
+import './credit-payments.css'
+import './commission-ui.css'
+import './orders-ui.css'
+import './credit-stock-ui.css'
 
 class AppBoundary extends React.Component {
   state = { failed: false }

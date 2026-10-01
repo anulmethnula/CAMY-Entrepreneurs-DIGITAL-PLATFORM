@@ -1,0 +1,286 @@
+/* CAMY order workspace. Presentation only; deliberately scoped to these screens. */
+.entrepreneur-shell:is([data-page="orders"], [data-page="products"]) {
+  --order-ink: #17364d;
+  --order-muted: #627588;
+  --order-line: #e0e7ee;
+  --order-accent: #176b91;
+  background: #f5f7fa;
+}
+@media (min-width: 901px) {
+  .app-v2.entrepreneur-shell:is([data-page="orders"], [data-page="products"]) { --sidebar: 256px !important; }
+  .entrepreneur-shell:is([data-page="orders"], [data-page="products"]) .sidebar-v2 { overflow-y: auto; box-shadow: none; }
+  .entrepreneur-shell:is([data-page="orders"], [data-page="products"]) .side-links button { font-size: 13px; border-radius: 9px; }
+}
+.entrepreneur-shell:is([data-page="orders"], [data-page="products"]) > main { background: #f5f7fa; }
+.entrepreneur-shell:is([data-page="orders"], [data-page="products"]) .content-page { padding: 28px 28px 40px; }
+.entrepreneur-shell:is([data-page="orders"], [data-page="products"]) .topbar-v2 { background: #fff; box-shadow: none; gap: 16px; }
+.entrepreneur-shell:is([data-page="orders"], [data-page="products"]) .topbar-left strong { font-size: 16px; }
+.entrepreneur-shell:is([data-page="orders"], [data-page="products"]) .top-search { min-width: 150px; max-width: 380px; box-shadow: none; border-radius: 9px; }
+.entrepreneur-shell:is([data-page="orders"], [data-page="products"]) .topbar-actions { gap: 8px; }
+.entrepreneur-shell:is([data-page="orders"], [data-page="products"]) :is(button, a, input, select, textarea) { transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease; }
+.entrepreneur-shell:is([data-page="orders"], [data-page="products"]) :is(button, a, select, input, textarea):focus-visible,
+.entrepreneur-order-detail :is(button, a, input, select, textarea):focus-visible { outline: 3px solid #83bdd9; outline-offset: 3px; }
+.entrepreneur-shell:is([data-page="orders"], [data-page="products"]) :is(.btn, .market-primary) { border-radius: 9px; box-shadow: none; font-size: 13px; font-weight: 650; }
+
+/* A concise heading keeps the order directory above the fold. */
+.entrepreneur-shell[data-page="orders"] .page-title,
+.entrepreneur-shell[data-page="products"] .order-workspace-head {
+  min-height: 0; margin: 0 0 24px; padding: 0; border: 0; border-radius: 0;
+  background: transparent; box-shadow: none; color: var(--order-ink); overflow: visible;
+}
+.entrepreneur-shell[data-page="orders"] .page-title::before,
+.entrepreneur-shell[data-page="orders"] .page-title::after,
+.entrepreneur-shell[data-page="products"] .order-workspace-head::before,
+.entrepreneur-shell[data-page="products"] .order-workspace-head::after { content: none; }
+.entrepreneur-shell[data-page="orders"] .page-title .page-title-copy > span,
+.entrepreneur-shell[data-page="products"] .order-workspace-head small { padding: 0; border: 0; background: none; color: #176b91; font-size: 10px; letter-spacing: .1em; }
+.entrepreneur-shell[data-page="orders"] .page-title .page-title-copy > span::before { content: none; }
+.entrepreneur-shell[data-page="orders"] .page-title h1,
+.entrepreneur-shell[data-page="products"] .order-workspace-head h1 { margin: 8px 0; color: var(--order-ink); font-size: clamp(25px, 2.3vw, 32px); line-height: 1.2; letter-spacing: -.035em; text-shadow: none; }
+.entrepreneur-shell[data-page="orders"] .page-title p,
+.entrepreneur-shell[data-page="products"] .order-workspace-head p { color: var(--order-muted); font-size: 13px; line-height: 1.6; }
+.entrepreneur-shell[data-page="orders"] .page-actions { padding: 0; border: 0; background: none; box-shadow: none; backdrop-filter: none; }
+.entrepreneur-shell[data-page="orders"] .page-title .new-order-gold { min-height: 44px; padding: 0 18px; border: 1px solid #153e5a; color: #fff; background: #153e5a; box-shadow: 0 3px 6px #17364d12; }
+.entrepreneur-shell[data-page="orders"] .page-title .new-order-gold:hover { background: #205976; }
+.entrepreneur-shell[data-page="products"] .order-workspace-head > button { min-height: 44px; border: 1px solid #d4dfe8; border-radius: 9px; background: #fff; color: #245775; font-size: 13px; }
+
+.entrepreneur-shell[data-page="orders"] .orders-summary-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-bottom: 24px; }
+.entrepreneur-shell[data-page="orders"] .orders-summary-strip button { min-height: 96px; padding: 16px 14px; gap: 12px; border: 1px solid var(--order-line); border-radius: 12px; background: #fff; box-shadow: 0 2px 4px #17364d03; text-align: left; }
+.entrepreneur-shell[data-page="orders"] .orders-summary-strip button > span { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; }
+.entrepreneur-shell[data-page="orders"] .orders-summary-strip button > span svg { width: 18px; height: 18px; }
+.entrepreneur-shell[data-page="orders"] .orders-summary-strip small { font-size: 12px; color: var(--order-muted); }
+.entrepreneur-shell[data-page="orders"] .orders-summary-strip strong { margin-top: 4px; font-size: 26px; font-weight: 650; line-height: 1.1; color: var(--order-ink); font-variant-numeric: tabular-nums; }
+.entrepreneur-shell[data-page="orders"] .orders-summary-strip button:hover { border-color: #a8c6d6; background: #fafcfd; transform: none; }
+.entrepreneur-shell[data-page="orders"] .orders-summary-strip button.active { border-color: #5b97b4; background: #edf6fb; box-shadow: inset 0 2px #176b91; }
+.entrepreneur-shell[data-page="orders"] .orders-summary-strip button.active small { color: #245775; }
+.entrepreneur-shell[data-page="orders"] .orders-summary-strip button.active > span { color: #176b91; background: #dbeef8; }
+.entrepreneur-shell[data-page="orders"] .order-workspace { border: 1px solid var(--order-line); border-radius: 14px; background: #fff; box-shadow: 0 4px 20px #17364d04; }
+.entrepreneur-shell[data-page="orders"] .orders-workspace-head { min-height: 0; padding: 20px 22px; border-bottom: 1px solid var(--order-line); }
+.entrepreneur-shell[data-page="orders"] .orders-workspace-head h2 { margin: 4px 0; font-size: 20px; font-weight: 650; }
+.entrepreneur-shell[data-page="orders"] .orders-workspace-head p { font-size: 12px; line-height: 1.5; }
+.entrepreneur-shell[data-page="orders"] .orders-workspace-head .clear-order-filters { height: 40px; padding: 0 13px; border-color: #d8e2ea; border-radius: 8px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.entrepreneur-shell[data-page="orders"] .orders-toolbar { grid-template-columns: minmax(0, 1fr) 160px 170px; gap: 12px; padding: 18px 22px 12px; border: 0; background: #fff; }
+.entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search,
+.entrepreneur-shell[data-page="orders"] .orders-toolbar .order-select-field select { height: 52px; min-height: 52px; border-color: #d7e1e9; border-radius: 9px; box-shadow: none; }
+.entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search input { font-size: 13px; color: var(--order-ink); }
+.entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search small,
+.entrepreneur-shell[data-page="orders"] .order-select-field > span { color: #60768a; font-size: 9px; }
+.entrepreneur-shell[data-page="orders"] .orders-date-export { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: none; margin: 0; padding: 6px 22px 20px; border: 0; border-bottom: 1px solid var(--order-line); border-radius: 0; background: #fff; box-shadow: none; gap: 18px; align-items: end; }
+.entrepreneur-shell[data-page="orders"] .orders-date-export :is(.date-quick-filters, .order-date-fields, .orders-export-action) { grid-area: auto; }
+.entrepreneur-shell[data-page="orders"] .control-caption,
+.entrepreneur-shell[data-page="orders"] .orders-date-export .order-date-fields label > span { color: #60768a; font-size: 9px; margin-bottom: 6px; }
+.entrepreneur-shell[data-page="orders"] .date-quick-filters { width: max-content; min-height: 40px; border-radius: 8px; background: #f0f4f7; padding: 3px; }
+.entrepreneur-shell[data-page="orders"] .date-quick-filters button { min-height: 34px; padding: 0 10px; border-radius: 6px; font-size: 11px; }
+.entrepreneur-shell[data-page="orders"] .date-quick-filters button.active { color: #176b91; background: #fff; box-shadow: 0 1px 4px #17364d15; }
+.entrepreneur-shell[data-page="orders"] .orders-date-export .order-date-fields input { width: 132px; height: 40px; border-radius: 8px; border-color: #d7e1e9; font-size: 12px; }
+.entrepreneur-shell[data-page="orders"] .orders-export-action { min-height: 40px; padding: 0; border: 0; gap: 10px; }
+.entrepreneur-shell[data-page="orders"] .orders-export-action > span { display: none; }
+.entrepreneur-shell[data-page="orders"] .orders-export-action strong { font-size: 10px; }
+.entrepreneur-shell[data-page="orders"] .orders-export-action small { font-size: 10px; }
+.entrepreneur-shell[data-page="orders"] .orders-export-action .btn { min-width: 0; min-height: 40px; padding: 0 12px; border: 1px solid #cbdde8; border-radius: 8px; color: #245775; background: #f6fafc; font-size: 12px; }
+.entrepreneur-shell[data-page="orders"] .order-result-bar { min-height: 50px; margin: 0; padding: 12px 22px; }
+.entrepreneur-shell[data-page="orders"] .order-result-bar > span,
+.entrepreneur-shell[data-page="orders"] .order-result-bar > small { color: var(--order-muted); font-size: 12px; }
+.entrepreneur-shell[data-page="orders"] .order-result-bar > span strong { font-size: 15px; }
+.entrepreneur-shell[data-page="orders"] .order-table { margin: 0; border: 0; border-radius: 0; box-shadow: none; overflow-x: auto; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row { grid-template-columns: minmax(125px,.9fr) minmax(180px,1.4fr) 95px 105px 126px minmax(140px,1fr) 108px; gap: 14px; padding-inline: 22px; min-width: 1020px; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row.head { min-height: 44px; background: #f7f9fb; color: #60768a; font-size: 10px; letter-spacing: .045em; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head) { min-height: 104px !important; padding-block: 17px; background: #fff; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head):hover { background: #f8fbfd; box-shadow: none; transform: none; }
+.entrepreneur-shell[data-page="orders"] .order-table .order-id-cell > i { width: 34px; height: 34px; border-radius: 9px; background: #edf5fa; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row strong { font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 650; }
+.entrepreneur-shell[data-page="orders"] .order-table .data-row small { color: #63788b; font-size: 11px; }
+.entrepreneur-shell[data-page="orders"] .order-table .order-customer-cell em { color: #63788b; font-size: 10px; }
+.entrepreneur-shell[data-page="orders"] .order-table .view-order-btn { min-height: 38px !important; padding: 0 11px; border-radius: 8px !important; font-size: 11px; font-weight: 650; }
+
+/* Product selection and the existing checkout retain their original structure. */
+.entrepreneur-shell[data-page="products"] .order-progress { height: auto; min-height: 68px; margin: 0 0 22px; padding: 16px 22px; border: 1px solid var(--order-line); border-radius: 12px; box-shadow: none; background: #fff; }
+.entrepreneur-shell[data-page="products"] .order-progress span { font-size: 12px; }
+.entrepreneur-shell[data-page="products"] .dropship-order-page { max-width: none !important; }
+.entrepreneur-shell[data-page="products"] .stock-buy-layout { grid-template-columns: minmax(0, 1fr) 420px; gap: 28px; align-items: start; }
+.entrepreneur-shell[data-page="products"] .stock-buy-layout > section { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.entrepreneur-shell[data-page="products"] .stock-catalogue-title { margin: 0 0 20px; padding: 0; align-items: center; }
+.entrepreneur-shell[data-page="products"] .stock-catalogue-title small { font-size: 10px; font-weight: 650; letter-spacing: .1em; }
+.entrepreneur-shell[data-page="products"] .stock-catalogue-title h2 { font-size: 24px; letter-spacing: -.03em; }
+.entrepreneur-shell[data-page="products"] .stock-catalogue-title p { font-size: 12px; color: var(--order-muted); }
+.entrepreneur-shell[data-page="products"] .catalogue-browser { margin: 0 0 20px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.entrepreneur-shell[data-page="products"] .catalogue-browser label { min-height: 48px; border: 1px solid #d4dfe8; border-radius: 9px; box-shadow: 0 2px 3px #17364d03; background: #fff; }
+.entrepreneur-shell[data-page="products"] .catalogue-browser input { font-size: 13px; }
+.entrepreneur-shell[data-page="products"] .catalogue-browser > div { margin-top: 12px; gap: 8px; }
+.entrepreneur-shell[data-page="products"] .catalogue-browser button { min-height: 34px; padding: 0 12px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: #627588; font-size: 12px; font-weight: 600; box-shadow: none; }
+.entrepreneur-shell[data-page="products"] .catalogue-browser button:hover { background: #e9eff4; color: #17364d; }
+.entrepreneur-shell[data-page="products"] .catalogue-browser button.active { border-color: #c5dbe6; background: #e4f0f7; color: #176b91; }
+.entrepreneur-shell[data-page="products"] .stock-product-grid { grid-template-columns: minmax(0,1fr); gap: 14px; }
+.entrepreneur-shell[data-page="products"] .stock-product-card { display: grid; grid-template-columns: 150px minmax(0,1fr); align-items: stretch; padding: 18px; gap: 22px; border: 1px solid var(--order-line); border-radius: 12px; background: #fff; box-shadow: 0 2px 6px #17364d03; overflow: hidden; }
+.entrepreneur-shell[data-page="products"] .stock-product-card:hover { transform: translateY(-2px); border-color: #aac6d6; box-shadow: 0 6px 18px #17364d09; }
+.entrepreneur-shell[data-page="products"] .stock-product-image { height: 100%; min-height: 160px; max-height: 230px; padding: 30px 10px 10px; border: 0; border-radius: 8px; background: #f7f9fb; }
+.entrepreneur-shell[data-page="products"] .stock-product-image img { width: 100%; height: 130px; max-height: 130px; object-fit: contain; }
+.entrepreneur-shell[data-page="products"] .stock-product-image > span { top: 8px; left: 8px; max-width: calc(100% - 16px); padding: 5px 6px; border: 0; border-radius: 4px; background: #fff; color: #627588; box-shadow: none; font-size: 9px; font-weight: 500; }
+.entrepreneur-shell[data-page="products"] .stock-product-copy { display: flex; flex-direction: column; min-width: 0; padding: 0; }
+.entrepreneur-shell[data-page="products"] .stock-product-copy > small { color: #728598; font-size: 10px; font-weight: 550; }
+.entrepreneur-shell[data-page="products"] .stock-product-copy h3 { margin: 5px 0 7px; color: #17364d; font-size: 17px; font-weight: 650; line-height: 1.4; letter-spacing: -.02em; }
+.entrepreneur-shell[data-page="products"] .stock-product-copy > p { min-height: 0; height: auto; margin: 0 0 10px; color: var(--order-muted); font-size: 12px; line-height: 1.55; }
+.entrepreneur-shell[data-page="products"] .stock-product-delivery { margin: 0 0 10px; padding: 0; color: #21816c; font-size: 11px; font-weight: 500; }
+.entrepreneur-shell[data-page="products"] .stock-product-delivery.has-charge { color: #966e28; }
+.entrepreneur-shell[data-page="products"] .stock-product-meta { margin: auto 0 12px; padding: 0; gap: 12px; }
+.entrepreneur-shell[data-page="products"] .stock-product-meta > strong { color: #17364d; font-size: 19px; font-weight: 650; white-space: nowrap; }
+.entrepreneur-shell[data-page="products"] .stock-product-meta > span { font-size: 10px; font-weight: 500; }
+.entrepreneur-shell[data-page="products"] .stock-product-actions { display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap: 8px; }
+.entrepreneur-shell[data-page="products"] .stock-product-actions button { width: 100%; min-height: 38px; padding: 0 10px; border-radius: 7px; font-size: 12px; font-weight: 600; box-shadow: none; }
+.entrepreneur-shell[data-page="products"] .stock-product-actions .stock-details { display: inline-flex !important; align-items: center; justify-content: center; }
+.entrepreneur-shell[data-page="products"] .stock-product-actions .market-primary { background: #164d6d; }
+.entrepreneur-shell[data-page="products"] .stock-product-actions .market-primary:hover { background: #1d668b; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout { padding: 0 !important; border: 1px solid #d9e3eb; border-radius: 14px !important; background: #fff; box-shadow: 0 5px 24px #17364d08; }
+.entrepreneur-shell[data-page="products"] .stock-buy-layout > .dropship-checkout { box-shadow: 0 5px 24px #17364d08; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout > header { margin: 0; border: 0; border-bottom: 1px solid #e5ebf0; border-radius: 0; background: #fff; padding: 20px 22px !important; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout > header { border-radius: 13px 13px 0 0; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout > header > span { width: 42px; height: 42px; border-radius: 11px; color: #176b91; background: #eaf3f8; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout > header small { color: #728598; font-size: 9px; font-weight: 600; letter-spacing: .1em; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout > header h2 { margin: 4px 0 0; color: #17364d; font-size: 21px; font-weight: 650; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout > header h2 b { width: 24px; height: 24px; color: #176b91; background: #eaf3f8; font-size: 11px; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout > .stock-cart-empty { margin: 18px; padding: 32px 18px; border-color: #dce6ed; border-radius: 10px; background: #fafcfd; }
+.entrepreneur-shell[data-page="products"] .current-order-items { max-height: 390px; padding: 0 22px; }
+.entrepreneur-shell[data-page="products"] .dropship-order-line { padding: 20px 0; }
+.entrepreneur-shell[data-page="products"] .dropship-line-heading { align-items: flex-start; gap: 12px; }
+.entrepreneur-shell[data-page="products"] .dropship-line-heading > img { width: 48px; height: 48px; border-radius: 8px; background: #f7f9fb; }
+.entrepreneur-shell[data-page="products"] .dropship-line-product strong { overflow: visible; color: #17364d; font-size: 13px; line-height: 1.5; font-weight: 650; text-overflow: clip; white-space: normal; }
+.entrepreneur-shell[data-page="products"] .dropship-line-product small { margin-top: 3px; color: #728598; font-size: 11px; line-height: 1.5; font-weight: 400; }
+.entrepreneur-shell[data-page="products"] .dropship-line-product .cart-line-full { margin-top: 5px; color: #34546b; font-size: 11px; font-weight: 550; }
+.entrepreneur-shell[data-page="products"] .dropship-remove { width: 30px !important; height: 30px !important; min-height: 30px; border-radius: 7px; }
+.entrepreneur-shell[data-page="products"] .dropship-line-controls { grid-template-columns: minmax(0,1fr) 112px; gap: 14px; margin-top: 15px; align-items: start; }
+.entrepreneur-shell[data-page="products"] .dropship-line-controls label { color: #527084; font-size: 11px !important; font-weight: 550; line-height: 1.5; }
+.entrepreneur-shell[data-page="products"] .dropship-price-input,
+.entrepreneur-shell[data-page="products"] .dropship-stepper { height: 42px; margin-top: 7px; border-color: #d5e1e9; border-radius: 8px; }
+.entrepreneur-shell[data-page="products"] .dropship-price-input b { padding: 0 10px; color: #728598; background: #f8fafc; font-size: 11px; font-weight: 500; }
+.entrepreneur-shell[data-page="products"] .dropship-price-input input { min-width: 0; padding: 0 10px !important; font-size: 14px !important; font-weight: 600; }
+.entrepreneur-shell[data-page="products"] .dropship-stepper :is(input,button) { height: 40px !important; background: #fff !important; font-size: 14px; }
+.entrepreneur-shell[data-page="products"] .dropship-price-help { margin-top: 7px; font-size: 11px !important; font-weight: 400; }
+.entrepreneur-shell[data-page="products"] .checkout-section-heading { margin: 22px 22px 0; gap: 10px; }
+.entrepreneur-shell[data-page="products"] .checkout-section-heading > span { width: 34px; height: 34px; border-radius: 9px; color: #176b91; background: #eaf3f8; }
+.entrepreneur-shell[data-page="products"] .checkout-section-heading h3 { font-size: 17px; font-weight: 650; }
+.entrepreneur-shell[data-page="products"] .checkout-section-heading p { font-size: 11px !important; color: #728598; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout :is(.customer-fields, .order-totals, .payment-fulfilment) { border-radius: 9px; box-shadow: none; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout .customer-fields { margin: 14px 22px 0; padding: 0; border: 0; background: #fff; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout .customer-fields label { margin-top: 14px; color: #527084; font-size: 12px; font-weight: 550; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout .customer-fields :is(input, select, textarea) { border-color: #d5e1e9; border-radius: 8px; background: #fff; font-size: 13px; }
+.entrepreneur-shell[data-page="products"] .dropship-checkout .customer-fields > div { grid-template-columns: minmax(0,1fr); }
+.entrepreneur-shell[data-page="products"] .order-totals > div { font-size: 12px; }
+.entrepreneur-shell[data-page="products"] .stock-request-history { border: 1px solid var(--order-line); border-radius: 14px; box-shadow: none; }
+
+/* Only entrepreneur order details receive this treatment. */
+.entrepreneur-order-detail { width: min(1080px, calc(100vw - 48px)) !important; border-radius: 16px !important; }
+.entrepreneur-order-detail .order-detail-v3 { background: #f6f8fa; }
+.entrepreneur-order-detail .order-hero-v3 { min-height: 132px; padding: 24px 80px 24px 26px; background: #123c57; }
+.entrepreneur-order-detail .order-hero-v3 h2 { font-size: 30px; margin: 8px 0; }
+.entrepreneur-order-detail .order-hero-v3 .modal-kicker { padding: 0; border: 0; background: none; font-size: 10px; letter-spacing: .12em; }
+.entrepreneur-order-detail .order-hero-v3 p { font-size: 12px; }
+.entrepreneur-order-detail .order-glance-v3.entrepreneur-glance { margin: 20px 22px 0; gap: 14px; }
+.entrepreneur-order-detail .order-glance-v3 article { min-height: 100px; padding: 18px; border: 1px solid #e0e7ee; border-radius: 11px; box-shadow: none; }
+.entrepreneur-order-detail .order-glance-v3 strong { font-size: 14px; }
+.entrepreneur-order-detail .order-glance-v3 :is(a,p) { font-size: 12px; color: #627588; overflow-wrap: anywhere; }
+.entrepreneur-order-detail .order-client-meta-v3.concise { margin: 14px 22px 0; padding: 12px; border: 1px solid #e0e7ee; border-radius: 11px; box-shadow: none; }
+.entrepreneur-order-detail .ordered-products-v3 { margin: 16px 22px 0; padding: 20px; border: 1px solid #e0e7ee; border-radius: 12px; box-shadow: none; }
+.entrepreneur-order-detail .ordered-products-v3 h3 { font-size: 20px; }
+.entrepreneur-order-detail .ordered-products-v3 article { grid-template-columns: minmax(190px,1fr) minmax(300px,1.4fr) 110px; gap: 12px; border-radius: 9px; background: #f9fbfc; }
+.entrepreneur-order-detail .product-main-v3 > img { width: 54px; height: 54px; }
+.entrepreneur-order-detail .ordered-products-v3 dt { color: #627588; font-size: 10px; }
+.entrepreneur-order-detail .ordered-products-v3 dd { font-size: 12px; }
+.entrepreneur-order-detail .ordered-products-v3 dl > div { padding: 8px; }
+.entrepreneur-order-detail :is(.order-invoice-panel, .entrepreneur-commission-card, .fulfilment-panel-v3) { border: 1px solid #e0e7ee; border-radius: 12px; box-shadow: none; }
+.entrepreneur-order-detail .detail-modal.order-detail-v3 > .order-total-v3 { border-radius: 12px; box-shadow: none; background: #123c57; }
+.entrepreneur-order-detail .detail-modal.order-detail-v3 > .order-total-v3 > :is(div, span) { border-radius: 9px; }
+
+@media (max-width: 1350px) {
+  .entrepreneur-shell[data-page="orders"] .orders-summary-strip { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .entrepreneur-shell[data-page="orders"] .orders-summary-strip button { min-height: 80px; }
+  .entrepreneur-shell[data-page="orders"] .orders-date-export { grid-template-columns: 1fr auto; }
+  .entrepreneur-shell[data-page="orders"] .orders-export-action { grid-column: 1 / -1; justify-content: flex-end; }
+  .entrepreneur-shell[data-page="products"] .stock-buy-layout { grid-template-columns: minmax(0,1fr) 380px; }
+  .entrepreneur-shell[data-page="products"] .stock-product-actions { flex-wrap: wrap; }
+}
+@media (max-width: 1100px) {
+  .entrepreneur-shell:is([data-page="orders"], [data-page="products"]) .top-search { display: none; }
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar { grid-template-columns: 1fr 1fr; }
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search { grid-column: 1 / -1; }
+  .entrepreneur-shell[data-page="products"] .stock-buy-layout { grid-template-columns: minmax(0,1fr); }
+  .entrepreneur-shell[data-page="products"] .dropship-checkout { position: static; max-height: none; }
+}
+@media (max-width: 900px) {
+  .entrepreneur-shell[data-page="orders"] .order-table .data-row { min-width: 960px; }
+  .entrepreneur-order-detail .ordered-products-v3 article { grid-template-columns: 1fr auto; }
+  .entrepreneur-order-detail .ordered-products-v3 dl { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (max-width: 760px) {
+  .entrepreneur-shell:is([data-page="orders"], [data-page="products"]) .content-page { padding: 20px 16px 104px !important; }
+  .entrepreneur-shell[data-page="orders"] .page-title { gap: 16px; padding: 0 !important; }
+  .entrepreneur-shell[data-page="orders"] .page-actions { justify-content: flex-start; }
+  .entrepreneur-shell[data-page="orders"] .orders-summary-strip { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-bottom: 18px; }
+  .entrepreneur-shell[data-page="orders"] .orders-summary-strip button { min-height: 80px; padding: 14px; }
+  .entrepreneur-shell[data-page="orders"] .orders-workspace-head { padding: 18px 16px; flex-direction: row; align-items: center; gap: 10px; }
+  .entrepreneur-shell[data-page="orders"] .orders-workspace-head h2 { font-size: 18px; }
+  .entrepreneur-shell[data-page="orders"] .orders-workspace-head p { display: block; font-size: 11px; }
+  .entrepreneur-shell[data-page="orders"] .orders-workspace-head .clear-order-filters { width: auto; min-height: 44px; padding: 0 10px; font-size: 11px; }
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar { padding: 16px; grid-template-columns: 1fr 1fr; }
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search { grid-column: 1 / -1; }
+  .entrepreneur-shell[data-page="orders"] .orders-date-export { grid-template-columns: minmax(0,1fr); padding: 0 16px 16px; gap: 14px; }
+  .entrepreneur-shell[data-page="orders"] .orders-date-export > div { min-width: 0; }
+  .entrepreneur-shell[data-page="orders"] .orders-date-export .order-date-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .entrepreneur-shell[data-page="orders"] .orders-date-export .order-date-fields label { min-width: 0; }
+  .entrepreneur-shell[data-page="orders"] .date-quick-filters { width: 100%; display: flex; flex-wrap: wrap; }
+  .entrepreneur-shell[data-page="orders"] .date-quick-filters button { flex: 1 1 auto; }
+  .entrepreneur-shell[data-page="orders"] .orders-date-export .order-date-fields input { width: 100%; height: 44px; }
+  .entrepreneur-shell[data-page="orders"] .orders-export-action { grid-column: auto; justify-content: flex-start; }
+  .entrepreneur-shell[data-page="orders"] .orders-export-action .btn { margin-left: auto; min-height: 44px; }
+  .entrepreneur-shell[data-page="orders"] .order-result-bar { padding: 14px 16px; gap: 6px; flex-wrap: wrap; }
+  .entrepreneur-shell[data-page="orders"] .order-table { margin: 0; padding: 0 12px 12px; overflow: visible; background: #f5f7fa; }
+  .entrepreneur-shell[data-page="orders"] .order-table .data-row.head { display: none; }
+  .entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head) { min-width: 0; grid-template-columns: 1fr 1fr; gap: 14px; margin: 12px 0 0; padding: 18px; border: 1px solid #e0e7ee; border-radius: 11px; }
+  .entrepreneur-shell[data-page="orders"] .order-table .order-customer-cell { grid-column: 1 / -1; }
+  .entrepreneur-shell[data-page="orders"] .order-table :is(.order-id-cell, .order-date-cell, .order-profit-cell) { grid-column: 1; }
+  .entrepreneur-shell[data-page="orders"] .order-table :is(.order-value-cell, .order-progress-cell) { grid-column: 2; }
+  .entrepreneur-shell[data-page="orders"] .order-table .order-id-cell { grid-column: 1 / -1; }
+  .entrepreneur-shell[data-page="orders"] .order-table .view-order-btn { min-height: 44px !important; width: 100%; grid-column: 1 / -1; }
+  .entrepreneur-shell[data-page="orders"] .order-table .data-row strong { font-size: 13px; }
+  .entrepreneur-shell[data-page="products"] .order-workspace-head { gap: 12px; }
+  .entrepreneur-shell[data-page="products"] .order-progress { padding: 12px; overflow-x: auto; }
+  .entrepreneur-shell[data-page="products"] .stock-buy-layout > section { padding: 0; }
+  .entrepreneur-shell[data-page="products"] .stock-catalogue-title { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .entrepreneur-shell[data-page="products"] .stock-catalogue-title > div { width: 100%; text-align: left; }
+  .entrepreneur-shell[data-page="products"] .catalogue-browser { padding: 0 !important; }
+  .entrepreneur-shell[data-page="products"] .stock-product-grid { grid-template-columns: 1fr !important; }
+  .entrepreneur-shell[data-page="products"] .stock-product-card { padding: 14px; gap: 14px; grid-template-columns: 90px minmax(0,1fr); }
+  .entrepreneur-shell[data-page="products"] .stock-product-copy { padding: 0 !important; }
+  .entrepreneur-shell[data-page="products"] .stock-product-copy h3 { font-size: 15px !important; }
+  .entrepreneur-shell[data-page="products"] .stock-product-copy > p { font-size: 12px !important; }
+  .entrepreneur-shell[data-page="products"] .stock-product-image { height: 100% !important; min-height: 110px; max-height: 180px; padding: 24px 6px 8px; }
+  .entrepreneur-shell[data-page="products"] .stock-product-image img { height: 90px; }
+  .entrepreneur-shell[data-page="products"] .stock-product-image > span { font-size: 8px; }
+  .entrepreneur-shell[data-page="products"] .stock-product-actions { grid-template-columns: minmax(0,1fr); }
+  .entrepreneur-shell[data-page="products"] .stock-product-meta { flex-wrap: wrap; gap: 6px; }
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open { position: relative; }
+  .entrepreneur-shell[data-page="products"] .dropship-checkout .customer-fields :is(input, select, textarea) { font-size: 16px; }
+  .entrepreneur-order-detail { width: calc(100vw - 20px) !important; border-radius: 13px !important; }
+  .entrepreneur-order-detail .order-hero-v3 { padding: 24px 64px 22px 18px; flex-wrap: wrap; gap: 12px; }
+  .entrepreneur-order-detail .order-hero-v3 h2 { font-size: 27px; }
+  .entrepreneur-order-detail .order-glance-v3.entrepreneur-glance { margin: 14px 12px 0; grid-template-columns: 1fr; }
+  .entrepreneur-order-detail .order-client-meta-v3.concise { margin-inline: 12px; grid-template-columns: 1fr; }
+  .entrepreneur-order-detail .ordered-products-v3 { margin-inline: 12px; padding: 16px; }
+  .entrepreneur-order-detail .ordered-products-v3 article { grid-template-columns: minmax(0,1fr); gap: 12px; padding: 14px; }
+  .entrepreneur-order-detail .ordered-products-v3 dl { grid-column: auto; grid-template-columns: 1fr 1fr; }
+  .entrepreneur-order-detail .line-total-v3 { justify-self: end; }
+}
+@media (min-width: 1700px) {
+  .entrepreneur-shell[data-page="products"] .stock-buy-layout { grid-template-columns: minmax(0,1fr) 440px; }
+  .entrepreneur-shell[data-page="products"] .stock-product-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .entrepreneur-shell[data-page="products"] .stock-product-card { grid-template-columns: 130px minmax(0,1fr); gap: 18px; }
+}
+@media (max-width: 380px) {
+  .entrepreneur-shell[data-page="orders"] .orders-summary-strip { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .entrepreneur-shell[data-page="orders"] .orders-summary-strip button { padding: 10px; gap: 8px; }
+  .entrepreneur-shell[data-page="orders"] .orders-workspace-head { flex-direction: column; align-items: flex-start; }
+  .entrepreneur-shell[data-page="orders"] .orders-export-action { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .entrepreneur-shell:is([data-page="orders"], [data-page="products"]) *,
+  .entrepreneur-order-detail * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

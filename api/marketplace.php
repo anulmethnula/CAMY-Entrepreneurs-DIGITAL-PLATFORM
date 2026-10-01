@@ -75,23 +75,22 @@ function market_state(PDO $pdo, bool $lock = false): array {
         $person['initials']=implode('',array_map(static fn($word)=>substr($word,0,1),array_slice(explode(' ',$person['name']),0,2)));
         if($before!==$person)$changed=true;unset($person);
     }
-    // Keep every saved/displayed limit aligned with the fixed CAMY ladder:
-    // each complete Rs. 100,000 of delivered product selling value unlocks Rs. 10,000.
+    // Keep every saved/displayed limit aligned with CAMY Admin's saved tiers.
     foreach($state['entrepreneurs'] as &$creditPerson){
         $verifiedSales=0.0;
         foreach($state['orders'] as $creditOrder)if((string)($creditOrder['entrepreneurId'] ?? '')===(string)($creditPerson['id'] ?? '')&&($creditOrder['status'] ?? '')==='Delivered')$verifiedSales+=catalogue_order_sales_value($creditOrder);
-        $verifiedSales=round($verifiedSales,2);$fixedCredit=catalogue_credit_for_sales([], $verifiedSales);
+        $verifiedSales=round($verifiedSales,2);$fixedCredit=catalogue_credit_for_sales($state['tiers'] ?? [], $verifiedSales);
         if((float)($creditPerson['sales'] ?? 0)!==$verifiedSales||(float)($creditPerson['credit'] ?? 0)!==$fixedCredit){$creditPerson['sales']=$verifiedSales;$creditPerson['credit']=$fixedCredit;$changed=true;}
         if(($creditPerson['stage'] ?? '')!=='Departed'){$fixedStage=$fixedCredit>0?'Credit eligible':'Trial seller';if(($creditPerson['stage'] ?? '')!==$fixedStage){$creditPerson['stage']=$fixedStage;$changed=true;}}
     }unset($creditPerson);
     // Backfill repayment terms for credit orders created before tier-based terms
     // were introduced. First-tier entrepreneurs receive 21 days; all others 10.
-    $firstTierCredit=10000.0;
+    $orderedTiers=$state['tiers'] ?? [];usort($orderedTiers,static fn($a,$b)=>(float)($a['sales']??0)<=>(float)($b['sales']??0));$firstTierCredit=(float)($orderedTiers[0]['credit']??0);
     foreach($state['requests'] as &$termRequest){
         if(($termRequest['status']??'')!=='Dispatched'||isset($termRequest['repaymentDays']))continue;
         $termPerson=null;foreach($state['entrepreneurs'] as $candidate)if((string)($candidate['id']??'')===(string)($termRequest['entrepreneurId']??'')){$termPerson=$candidate;break;}
         $days=$termPerson&&(float)($termPerson['credit']??0)<=$firstTierCredit+0.009?21:10;$termRequest['repaymentDays']=$days;
-        $issued=$termRequest['creditIssuedAt']??$termRequest['updatedAt']??null;if($issued)$termRequest['creditDueAt']=date(DATE_ATOM,strtotime("+$days days",strtotime((string)$issued)));$changed=true;
+        $issued=$termRequest['dispatchedAt']??$termRequest['creditIssuedAt']??null;if($issued)$termRequest['creditDueAt']=date(DATE_ATOM,strtotime("+$days days",strtotime((string)$issued)));$changed=true;
     }unset($termRequest);
     foreach($state['requests'] as &$request)if($request['status']==='Pending'&&!empty($request['receipt'])){$request['status']='Payment review';$pdo->prepare('UPDATE stock_supply_requests SET status=? WHERE id=?')->execute(['Payment review',$request['id']]);$changed=true;}unset($request);
     if($changed)market_save($pdo,$state);
@@ -222,9 +221,11 @@ function market_route(PDO $pdo, string $path, string $method): void {
         if(empty($state['catalogue_live'])){$pdo->rollBack();response(['message'=>'CAMY Admin must verify and activate the real product catalogue before credit stock can be requested.'],409);}
         $personIndex=null;foreach($state['entrepreneurs'] as $index=>$person)if((string)$person['id']===(string)$user['member_id']){$personIndex=$index;break;}
         if($personIndex===null){$pdo->rollBack();response(['message'=>'Your entrepreneur profile could not be found.'],404);}
-        $person=$state['entrepreneurs'][$personIndex];$credit=catalogue_credit_for_sales([], (float)($person['sales'] ?? 0));$used=round((float)($person['used'] ?? 0),2);
+        $person=$state['entrepreneurs'][$personIndex];$credit=catalogue_credit_for_sales($state['tiers'] ?? [], (float)($person['sales'] ?? 0));$used=round((float)($person['used'] ?? 0),2);
         if($credit<=0||($person['stage'] ?? '')==='Departed'||($person['active'] ?? true)===false){$pdo->rollBack();response(['message'=>'Credit stock is available only after you become Credit eligible. Drop-shipping remains available.'],403);}
-        foreach($state['requests'] as $entry)if((string)($entry['entrepreneurId']??'')===(string)$user['member_id']&&($entry['creditMode']??false)===true&&($entry['status']??'')==='Dispatched'&&($entry['creditRepaymentStatus']??'Payment due')!=='Paid'){$pdo->rollBack();response(['message'=>'Settle your previous credit order before requesting more stock. You can submit the full payment from Credit repayments.'],409);}
+        foreach($state['requests'] as $entry)if((string)($entry['entrepreneurId'] ?? '')===(string)$user['member_id']&&($entry['creditMode'] ?? false)===true&&($entry['status'] ?? '')==='Dispatched'&&($entry['creditRepaymentStatus'] ?? '')!=='Paid'){
+            $pdo->rollBack();response(['message'=>'Pay your outstanding credit order before requesting more credit items. You can still browse Credit items and view your current stock.'],409);
+        }
         $clean=[];$total=0;
         foreach($items as $item){
             $product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($item['productId'] ?? '')){$product=$candidate;break;}
@@ -323,11 +324,10 @@ function market_route(PDO $pdo, string $path, string $method): void {
         if($action==='reject'&&!empty($request['reserved'])){workflow_release($state,$request['items'],null);$state['requests'][$found]['reserved']=false;}
         if($action==='dispatch'){
             if(empty($request['reserved'])){unset($person);$pdo->rollBack();response(['message'=>'Approve this request before dispatching it.'],409);}
-            foreach($state['requests'] as $entry)if((string)($entry['id']??'')!==(string)$request['id']&&(string)($entry['entrepreneurId']??'')===(string)$request['entrepreneurId']&&($entry['creditMode']??false)===true&&($entry['status']??'')==='Dispatched'&&($entry['creditRepaymentStatus']??'Payment due')!=='Paid'){unset($person);$pdo->rollBack();response(['message'=>'This entrepreneur must settle the previous credit order before another stock order can be dispatched.'],409);}
             if($used+(float)$request['total']>$credit+0.009){unset($person);$pdo->rollBack();response(['message'=>'Dispatch would exceed the entrepreneur\'s current credit limit. Review outstanding settlements or credit rules first.'],409);}
             foreach($request['items'] as $item){$foundInventory=false;foreach($state['inventory'] as &$inventory)if((string)$inventory['entrepreneurId']===(string)$request['entrepreneurId']&&(string)$inventory['productId']===(string)$item['productId']){$inventory['qty']+=$item['qty'];$foundInventory=true;break;}unset($inventory);if(!$foundInventory)$state['inventory'][]=['entrepreneurId'=>$request['entrepreneurId'],'productId'=>$item['productId'],'qty'=>$item['qty'],'price'=>$item['price'],'visible'=>false];}
-            $repaymentDays=$credit<=10000.009?21:10;
-            $person['used']=round($used+(float)$request['total'],2);$state['requests'][$found]['creditIssuedAt']=date(DATE_ATOM);$state['requests'][$found]['creditIssuedAmount']=round((float)$request['total'],2);$state['requests'][$found]['repaymentDays']=$repaymentDays;$state['requests'][$found]['creditDueAt']=date(DATE_ATOM,strtotime("+$repaymentDays days"));$state['requests'][$found]['creditRepaymentStatus']='Payment due';$state['requests'][$found]['dispatchedBy']=$admin['id'];
+            $orderedTiers=$state['tiers']??[];usort($orderedTiers,static fn($a,$b)=>(float)($a['sales']??0)<=>(float)($b['sales']??0));$firstTierCredit=(float)($orderedTiers[0]['credit']??0);$repaymentDays=$firstTierCredit>0&&$credit<=$firstTierCredit+0.009?21:10;$dispatchedAt=date(DATE_ATOM);
+            $person['used']=round($used+(float)$request['total'],2);$state['requests'][$found]['creditIssuedAt']=$dispatchedAt;$state['requests'][$found]['dispatchedAt']=$dispatchedAt;$state['requests'][$found]['creditIssuedAmount']=round((float)$request['total'],2);$state['requests'][$found]['repaymentDays']=$repaymentDays;$state['requests'][$found]['creditDueAt']=date(DATE_ATOM,strtotime("+$repaymentDays days",strtotime($dispatchedAt)));$state['requests'][$found]['creditRepaymentStatus']='Payment due';$state['requests'][$found]['dispatchedBy']=$admin['id'];
         }
         unset($person);
         $state['requests'][$found]['status']=$next;$state['requests'][$found]['reviewedAt']=date(DATE_ATOM);$state['requests'][$found]['updatedAt']=date(DATE_ATOM);

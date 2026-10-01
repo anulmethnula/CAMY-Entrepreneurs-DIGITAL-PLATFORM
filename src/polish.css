@@ -91,12 +91,44 @@
 @media(max-width:1120px){.home-essential-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.home-welcome{min-height:0;padding:25px 20px;align-items:flex-start;flex-direction:column}.home-welcome>button{width:100%;justify-content:center}.home-essential-stats,.home-destinations>div{grid-template-columns:1fr}.home-essential-stats>button{min-height:106px}.home-attention{grid-template-columns:42px 1fr}.home-attention button{grid-column:1/-1;justify-content:center}.home-destinations{padding:18px}}
 
+/* Entrepreneur home presentation */
+.entrepreneur-overview{--home-ink:#11324c;--home-muted:#587287;--home-line:#d7e3eb;gap:22px;max-width:1600px;margin-inline:auto}
+.entrepreneur-overview .home-welcome{min-height:220px;padding:40px 46px;border-radius:24px;background:radial-gradient(circle at 92% 12%,rgba(35,158,191,.34),transparent 32%),linear-gradient(115deg,#092a45 0%,#104968 66%,#176b88 100%);box-shadow:0 18px 42px rgba(13,47,70,.13)}
+.entrepreneur-overview .home-welcome small{font-size:12px;letter-spacing:.11em;color:#92e4f5}
+.entrepreneur-overview .home-welcome h1{margin:16px 0 14px;font-size:clamp(32px,3vw,50px);line-height:1.12;letter-spacing:-.045em}
+.entrepreneur-overview .home-welcome p{max-width:660px;font-size:15px;line-height:1.55;color:#deedf4}
+.entrepreneur-overview .home-welcome>button{min-height:54px;padding:0 20px;gap:11px;border:0;border-radius:12px;font-size:14px;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.entrepreneur-overview .home-welcome>button:hover{background:#f0faff}
+.entrepreneur-overview .home-welcome>button svg:last-child{margin-left:8px}
+.entrepreneur-overview .home-essential-stats{gap:16px}
+.entrepreneur-overview .home-essential-stats>button{min-height:160px;padding:23px;border-color:var(--home-line);border-radius:20px;grid-template-columns:52px minmax(0,1fr) 18px;gap:14px;box-shadow:0 6px 20px rgba(20,56,77,.045);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.entrepreneur-overview .home-essential-stats>button>span{width:52px;height:52px;border-radius:15px}
+.entrepreneur-overview .home-essential-stats small{font-size:11px;line-height:1.4;letter-spacing:.065em;color:#5c7690}
+.entrepreneur-overview .home-essential-stats strong{margin-top:8px;font-size:clamp(21px,1.6vw,28px);line-height:1.15;letter-spacing:-.025em;color:var(--home-ink)}
+.entrepreneur-overview .home-essential-stats p{margin-top:9px;font-size:13px;line-height:1.45;color:var(--home-muted)}
+.entrepreneur-overview .home-attention{padding:20px 24px;border-radius:18px}
+.entrepreneur-overview .home-attention small{font-size:11px}.entrepreneur-overview .home-attention p{font-size:13px;line-height:1.5}.entrepreneur-overview .home-attention button{min-height:44px;padding-inline:16px}
+.entrepreneur-overview .home-destinations{padding:30px;border-color:var(--home-line);border-radius:22px;box-shadow:0 8px 26px rgba(20,56,77,.045)}
+.entrepreneur-overview .home-destinations>header small{font-size:11px;letter-spacing:.1em}
+.entrepreneur-overview .home-destinations>header h2{margin:8px 0 24px;font-size:clamp(23px,2vw,29px);line-height:1.2;letter-spacing:-.03em}
+.entrepreneur-overview .home-destinations>div{gap:14px}
+.entrepreneur-overview .home-destinations button{min-height:108px;padding:18px 20px;grid-template-columns:52px minmax(0,1fr) 18px;gap:16px;border-color:#d9e5ec;border-radius:16px;background:#fbfdfe;transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease}
+.entrepreneur-overview .home-destinations button:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(20,56,77,.08)}
+.entrepreneur-overview .home-destinations button>span{width:52px;height:52px;border-radius:14px}
+.entrepreneur-overview .home-destinations strong{font-size:15px;line-height:1.35}.entrepreneur-overview .home-destinations small{margin-top:6px;font-size:13px;line-height:1.45;color:var(--home-muted)}
+.entrepreneur-overview button:focus-visible{outline:3px solid #56bce8;outline-offset:3px}
+@media(max-width:1450px){.entrepreneur-overview .home-essential-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.entrepreneur-overview .home-welcome{padding:30px;align-items:flex-start;flex-direction:column}.entrepreneur-overview .home-welcome>button{width:100%;justify-content:center}.entrepreneur-overview .home-destinations>div{grid-template-columns:1fr}}
+@media(max-width:650px){.entrepreneur-overview{gap:16px}.entrepreneur-overview .home-welcome{padding:26px 22px!important;border-radius:18px!important}.entrepreneur-overview .home-welcome h1{font-size:clamp(27px,7vw,34px)!important}.entrepreneur-overview .home-welcome p{font-size:14px}.entrepreneur-overview .home-essential-stats{grid-template-columns:1fr}.entrepreneur-overview .home-essential-stats>button{min-height:118px;padding:18px}.entrepreneur-overview .home-destinations{padding:22px}.entrepreneur-overview .home-destinations button{min-height:94px;padding:15px}.entrepreneur-overview .home-attention{grid-template-columns:44px 1fr}.entrepreneur-overview .home-attention button{grid-column:1/-1;justify-content:center}}
+@media(prefers-reduced-motion:reduce){.entrepreneur-overview button{transition:none!important}}
+
 /* Focused, personal My Growth workspace */
 .growth-focus-page{display:grid;gap:18px}.growth-welcome{min-height:205px;padding:34px 38px;border-radius:26px;color:#fff;background:radial-gradient(circle at 88% 8%,rgba(70,185,211,.28),transparent 27%),linear-gradient(120deg,#0b2944,#145a80);box-shadow:0 18px 42px rgba(10,49,76,.16);display:flex;align-items:center;justify-content:space-between;gap:28px}.growth-welcome small{color:#8fdcf2;font-size:10px;font-weight:900;letter-spacing:.13em}.growth-welcome h1{max-width:780px;margin:8px 0 7px;color:#fff;font-size:clamp(28px,3vw,43px);line-height:1.13;letter-spacing:-.045em}.growth-welcome p{margin:0;color:#c9e0ed;font-size:14px}.growth-welcome .btn{flex:0 0 auto;min-height:48px;padding-inline:18px}
 .growth-focus-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.growth-focus-kpis article{min-height:130px;padding:20px;border:1px solid #d8e5ed;border-radius:18px;background:#fff;box-shadow:0 8px 23px rgba(17,55,83,.055);display:flex;align-items:center;gap:14px}.growth-focus-kpis article>span{width:48px;height:48px;flex:0 0 auto;border-radius:15px;color:#2174a4;background:#e9f5fc;display:grid;place-items:center}.growth-focus-kpis article.earnings>span{color:#fff;background:linear-gradient(145deg,#1782a8,#24a17d)}.growth-focus-kpis article.position>span{color:#aa7117;background:#fff4df}.growth-focus-kpis svg{width:21px}.growth-focus-kpis small,.growth-focus-kpis strong,.growth-focus-kpis p{display:block}.growth-focus-kpis small{color:#668195;font-size:9px;font-weight:850;letter-spacing:.07em}.growth-focus-kpis strong{margin-top:4px;color:#123a57;font-size:22px}.growth-focus-kpis p{margin:4px 0 0;color:#7990a0;font-size:10px;line-height:1.45}
 .growth-focus-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(310px,.55fr);gap:18px;align-items:stretch}.growth-top-five,.growth-next-step{border:1px solid #d6e4ed;border-radius:22px;background:#fff;box-shadow:0 14px 34px rgba(15,53,81,.07)}.growth-top-five{overflow:hidden}.growth-top-five>header{padding:23px 25px;border-bottom:1px solid #e1eaf0;display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.growth-top-five header small,.growth-next-step header small{color:#1972a2;font-size:9px;font-weight:900;letter-spacing:.1em}.growth-top-five h2,.growth-next-step h2{margin:5px 0;color:#123a58;font-size:22px}.growth-top-five header p{margin:0;color:#718899;font-size:11px}.growth-top-five>header>span{padding:9px 12px;border-radius:10px;color:#557187;background:#eef6fa;font-size:10px;white-space:nowrap}.growth-top-five>header>span strong{margin-left:5px;color:#176a98;font-size:16px}
 .top-five-chart{padding:10px 22px 18px}.top-five-chart>article{min-height:72px;padding:10px 8px;border-bottom:1px solid #e8eef2;display:grid;grid-template-columns:30px 42px minmax(0,1fr) auto;align-items:center;gap:11px}.top-five-chart>article.me{margin:5px -4px;padding-inline:12px;border:1px solid #add8cb;border-radius:13px;background:#effaf6}.top-five-chart>article>b{color:#7990a1;text-align:center}.top-five-chart>article>i{width:40px;height:40px;border-radius:12px;color:#176c9b;background:#e8f4fb;display:grid;place-items:center;font-size:10px;font-style:normal;font-weight:900}.top-five-chart article>div>span{display:flex;align-items:center;gap:7px}.top-five-chart article>div strong{color:#173c57;font-size:12px}.top-five-chart article>div em{padding:3px 6px;border-radius:6px;color:#167255;background:#dff4eb;font-size:7px;font-style:normal;font-weight:900}.top-five-chart article>div small{display:block;margin-top:2px;color:#8093a1;font-size:9px}.top-five-chart article>div>div{height:6px;margin-top:8px;border-radius:99px;background:#e9f0f4;overflow:hidden}.top-five-chart article>div>div i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#1976a7,#28a67e)}.top-five-chart>article>strong{color:#123c59;font-size:12px}.growth-top-five>footer{margin:0 22px 20px;padding:13px 15px;border:1px dashed #b8d3e2;border-radius:12px;background:#f7fbfd;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:18px}.growth-top-five>footer span strong,.growth-top-five>footer span small{display:block}.growth-top-five>footer span small{color:#7890a0;font-size:9px}.growth-top-five>footer b{color:#176d9c;font-size:20px}
 .growth-next-step{padding:24px;display:flex;flex-direction:column;align-items:center;text-align:center}.growth-next-step>header{width:100%;display:flex;align-items:center;gap:11px;text-align:left}.growth-next-step>header>span{width:44px;height:44px;flex:0 0 auto;border-radius:13px;color:#fff;background:#176d9b;display:grid;place-items:center}.growth-milestone-ring{width:160px;height:160px;margin:27px auto 20px;border-radius:50%;background:conic-gradient(#22a27a var(--growth),#e4edf2 0);display:grid;place-items:center;position:relative}.growth-milestone-ring::before{content:'';position:absolute;inset:13px;border-radius:50%;background:#fff}.growth-milestone-ring>span{position:relative}.growth-milestone-ring strong,.growth-milestone-ring small{display:block}.growth-milestone-ring strong{color:#123c59;font-size:29px}.growth-milestone-ring small{color:#7890a0;font-size:9px}.growth-next-step>p{margin:0;color:#698294;font-size:11px;line-height:1.6}.growth-next-step>p strong{color:#14805d}.growth-next-bar{width:100%;height:8px;margin:20px 0 8px;border-radius:99px;background:#e7eef2;overflow:hidden}.growth-next-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#1876a5,#27a37b)}.growth-next-step>small{color:#7a909f;font-size:9px}
+.growth-current-tier{width:100%;margin-top:18px;padding:12px 14px;border:1px solid #d8e8ef;border-radius:13px;background:#f1f8fb;text-align:left}.growth-current-tier small,.growth-current-tier strong,.growth-current-tier span{display:block}.growth-current-tier small{color:#1972a2;font-size:8px;font-weight:900;letter-spacing:.1em}.growth-current-tier strong{margin-top:3px;color:#123a58;font-size:17px}.growth-current-tier span{margin-top:2px;color:#6f8798;font-size:10px}.growth-current-tier+.growth-milestone-ring{margin-top:20px}
 @media(max-width:1120px){.growth-focus-kpis{grid-template-columns:repeat(2,1fr)}.growth-focus-grid{grid-template-columns:1fr}.growth-next-step{min-height:400px}}
 @media(max-width:650px){.growth-welcome{min-height:0;padding:25px 20px;align-items:flex-start;flex-direction:column}.growth-welcome h1{font-size:30px}.growth-welcome .btn{width:100%}.growth-focus-kpis{grid-template-columns:1fr}.growth-focus-kpis article{min-height:108px}.growth-top-five>header{flex-direction:column}.top-five-chart{padding-inline:12px}.top-five-chart>article{grid-template-columns:26px 38px minmax(0,1fr)}.top-five-chart>article>strong{grid-column:3}.growth-top-five>footer{grid-template-columns:1fr auto}.growth-top-five>footer>strong{grid-column:1/-1}.growth-next-step{padding:20px}}
 
@@ -184,7 +216,7 @@ input::placeholder,textarea::placeholder { color:#97a6b2; }
 .status-pill,.market-status { min-height:28px; padding:5px 10px; border-radius:999px; font-size:10px; font-weight:800; line-height:1.2; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
 .status-pill i { width:6px; height:6px; border-radius:50%; background:currentColor; }
 .status-pill.pending,.status-pill.awaiting-payment,.status-pill.trial-seller,.market-status.pending,.market-status.awaiting { color:var(--warning); background:var(--warning-soft); }
-.status-pill.approved,.status-pill.paid,.status-pill.delivered,.status-pill.credit-eligible,.status-pill.ready-to-pay,.market-status.approved,.market-status.delivered { color:var(--success); background:var(--success-soft); }
+.status-pill.approved,.status-pill.paid,.status-pill.received,.status-pill.delivered,.status-pill.credit-eligible,.status-pill.ready-to-pay,.market-status.approved,.market-status.delivered { color:var(--success); background:var(--success-soft); }
 .status-pill.processing,.status-pill.dispatched,.status-pill.payment-review,.market-status.processing,.market-status.dispatched { color:var(--primary); background:var(--primary-soft); }
 .status-pill.rejected,.status-pill.returned,.status-pill.cancelled,.status-pill.needs-review,.market-status.rejected,.market-status.returned { color:var(--danger); background:var(--danger-soft); }
 .status-pill.inactive,.status-pill.departed { color:#687684; background:#edf1f4; }
@@ -944,6 +976,176 @@ input::placeholder,textarea::placeholder { color:#97a6b2; }
 @media(max-width:850px){.entrepreneur-shell[data-page="profile"] .profile-layout{grid-template-columns:1fr}.entrepreneur-shell[data-page="profile"] .profile-summary{position:static}.entrepreneur-shell[data-page="profile"] .page-title{padding:25px}.entrepreneur-shell[data-page="profile"] .page-title h1{font-size:29px}}
 @media(max-width:600px){.entrepreneur-shell[data-page="profile"] .page-title{min-height:0;border-radius:18px}.entrepreneur-shell[data-page="profile"] .profile-form,.entrepreneur-shell[data-page="profile"] .membership-card{padding:19px}.entrepreneur-shell[data-page="profile"] .profile-form .card-head{align-items:flex-start;gap:12px;flex-direction:column}.entrepreneur-shell[data-page="profile"] .profile-card-actions{width:100%;justify-content:space-between}.entrepreneur-shell[data-page="profile"] .profile-card-actions button{flex:1}.entrepreneur-shell[data-page="profile"] .membership-card>div:last-child{grid-template-columns:1fr}}
 
+/* My Growth — enterprise performance workspace */
+.entrepreneur-shell[data-page="growth"] .growth-focus-page {
+  --growth-navy:#0c304b;
+  --growth-blue:#176f9f;
+  --growth-teal:#159879;
+  --growth-ink:#123650;
+  --growth-muted:#687f90;
+  --growth-line:#d8e5ed;
+  gap:20px;
+  max-width:1600px;
+  margin:0 auto;
+  padding-top:24px;
+}
+.entrepreneur-shell[data-page="growth"] .growth-welcome {
+  min-height:222px;
+  padding:38px 42px;
+  border:1px solid rgba(111,198,224,.2);
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 90% 14%,rgba(75,196,220,.28),transparent 28%),
+    radial-gradient(circle at 68% 130%,rgba(32,139,151,.24),transparent 34%),
+    linear-gradient(118deg,#092841 0%,#0d4161 55%,#176d8d 100%);
+  box-shadow:0 22px 50px rgba(7,42,66,.16);
+  overflow:hidden;
+  position:relative;
+}
+.entrepreneur-shell[data-page="growth"] .growth-welcome::after {
+  content:'';
+  width:260px;
+  height:260px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:50%;
+  position:absolute;
+  right:-92px;
+  top:-140px;
+  box-shadow:0 0 0 42px rgba(255,255,255,.025),0 0 0 84px rgba(255,255,255,.018);
+  pointer-events:none;
+}
+.entrepreneur-shell[data-page="growth"] .growth-welcome>div,
+.entrepreneur-shell[data-page="growth"] .growth-welcome>.btn { position:relative; z-index:1; }
+.entrepreneur-shell[data-page="growth"] .growth-welcome small {
+  display:inline-flex;
+  padding:6px 10px;
+  border:1px solid rgba(129,220,239,.22);
+  border-radius:999px;
+  color:#8fe4f2;
+  background:rgba(5,31,49,.2);
+  font-size:10px;
+  letter-spacing:.14em;
+}
+.entrepreneur-shell[data-page="growth"] .growth-welcome h1 {
+  max-width:800px;
+  margin:13px 0 9px;
+  font-size:clamp(32px,3.1vw,48px);
+  line-height:1.08;
+  letter-spacing:-.052em;
+}
+.entrepreneur-shell[data-page="growth"] .growth-welcome p { color:#c8dfe9; font-size:13px; }
+.entrepreneur-shell[data-page="growth"] .growth-welcome>.btn {
+  min-height:50px;
+  padding:0 20px;
+  border:1px solid rgba(255,255,255,.58);
+  border-radius:13px;
+  color:#125476;
+  box-shadow:0 12px 24px rgba(4,31,48,.18);
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.entrepreneur-shell[data-page="growth"] .growth-welcome>.btn:hover { transform:translateY(-2px); background:#f6fcff; box-shadow:0 16px 30px rgba(4,31,48,.24); }
+.entrepreneur-shell[data-page="growth"] .growth-focus-kpis { gap:16px; }
+.entrepreneur-shell[data-page="growth"] .growth-focus-kpis article {
+  min-height:142px;
+  padding:22px;
+  border-color:var(--growth-line);
+  border-radius:20px;
+  box-shadow:0 9px 26px rgba(13,54,80,.06);
+  position:relative;
+  overflow:hidden;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.entrepreneur-shell[data-page="growth"] .growth-focus-kpis article::after {
+  content:'';
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  background:rgba(23,111,159,.045);
+  position:absolute;
+  right:-42px;
+  top:-42px;
+}
+.entrepreneur-shell[data-page="growth"] .growth-focus-kpis article:hover { transform:translateY(-3px); border-color:#b8d4e3; box-shadow:0 16px 34px rgba(13,54,80,.1); }
+.entrepreneur-shell[data-page="growth"] .growth-focus-kpis article>span {
+  width:52px;
+  height:52px;
+  border-radius:16px;
+  color:#176f9f;
+  background:#e8f4fa;
+  box-shadow:inset 0 0 0 1px rgba(23,111,159,.04);
+}
+.entrepreneur-shell[data-page="growth"] .growth-focus-kpis article.earnings>span { background:linear-gradient(145deg,#137fa3,#1ba07e); box-shadow:0 9px 18px rgba(21,143,136,.2); }
+.entrepreneur-shell[data-page="growth"] .growth-focus-kpis article.position>span { color:#9c6610; background:#fff2d9; }
+.entrepreneur-shell[data-page="growth"] .growth-focus-kpis small { color:#58758a; font-size:9px; letter-spacing:.105em; }
+.entrepreneur-shell[data-page="growth"] .growth-focus-kpis strong { margin-top:6px; color:var(--growth-ink); font-size:clamp(21px,1.55vw,26px); letter-spacing:-.035em; font-variant-numeric:tabular-nums; }
+.entrepreneur-shell[data-page="growth"] .growth-focus-kpis p { margin-top:5px; color:#748b9a; font-size:10px; }
+.entrepreneur-shell[data-page="growth"] .growth-focus-grid { grid-template-columns:minmax(0,1.65fr) minmax(330px,.58fr); gap:20px; }
+.entrepreneur-shell[data-page="growth"] .growth-top-five,
+.entrepreneur-shell[data-page="growth"] .growth-next-step { border-color:var(--growth-line); border-radius:24px; box-shadow:0 14px 36px rgba(12,50,76,.075); }
+.entrepreneur-shell[data-page="growth"] .growth-top-five>header { padding:26px 28px 22px; background:linear-gradient(180deg,#fff,#fbfdfe); }
+.entrepreneur-shell[data-page="growth"] .growth-top-five h2,
+.entrepreneur-shell[data-page="growth"] .growth-next-step h2 { margin-top:7px; color:var(--growth-ink); font-size:24px; letter-spacing:-.035em; }
+.entrepreneur-shell[data-page="growth"] .growth-top-five header small,
+.entrepreneur-shell[data-page="growth"] .growth-next-step header small { color:var(--growth-blue); font-size:9px; letter-spacing:.14em; }
+.entrepreneur-shell[data-page="growth"] .growth-top-five header p { color:var(--growth-muted); font-size:11px; }
+.entrepreneur-shell[data-page="growth"] .growth-top-five>header>span { padding:10px 13px; border:1px solid #d7e8f0; border-radius:11px; color:#597387; background:#eff7fb; }
+.entrepreneur-shell[data-page="growth"] .top-five-chart { padding:7px 24px 20px; }
+.entrepreneur-shell[data-page="growth"] .top-five-chart>article { min-height:76px; padding:11px 10px; grid-template-columns:28px 44px minmax(0,1fr) auto; gap:13px; }
+.entrepreneur-shell[data-page="growth"] .top-five-chart>article:last-child { border-bottom:0; }
+.entrepreneur-shell[data-page="growth"] .top-five-chart>article.me { margin:6px -5px; padding-inline:14px; border-color:#9dd4c3; border-radius:14px; background:linear-gradient(90deg,#edf9f5,#f8fcfb); box-shadow:0 7px 18px rgba(21,133,99,.08); }
+.entrepreneur-shell[data-page="growth"] .top-five-chart>article>b { font-size:13px; font-variant-numeric:tabular-nums; }
+.entrepreneur-shell[data-page="growth"] .top-five-chart>article>i { width:44px; height:44px; border-radius:14px; font-size:10px; }
+.entrepreneur-shell[data-page="growth"] .top-five-chart article>div>span { min-width:0; flex-wrap:wrap; }
+.entrepreneur-shell[data-page="growth"] .top-five-chart article>div strong { color:#173b55; font-size:12px; }
+.entrepreneur-shell[data-page="growth"] .top-five-chart article>div>div { height:7px; margin-top:9px; }
+.entrepreneur-shell[data-page="growth"] .top-five-chart article>div>div i { background:linear-gradient(90deg,#1977a7,#27a77d); transition:width .55s ease; }
+.entrepreneur-shell[data-page="growth"] .top-five-chart>article>strong { color:#113b58; font-size:12px; font-variant-numeric:tabular-nums; }
+.entrepreneur-shell[data-page="growth"] .growth-next-step { padding:26px; background:linear-gradient(180deg,#fff 0%,#fbfdfe 100%); }
+.entrepreneur-shell[data-page="growth"] .growth-next-step>header>span { width:48px; height:48px; border-radius:15px; background:linear-gradient(145deg,#176c99,#198e9a); box-shadow:0 9px 20px rgba(20,112,145,.2); }
+.entrepreneur-shell[data-page="growth"] .growth-current-tier { margin-top:20px; padding:15px 16px; border-color:#cee3ec; border-radius:14px; background:linear-gradient(135deg,#eff8fb,#f8fbfc); }
+.entrepreneur-shell[data-page="growth"] .growth-current-tier strong { margin-top:5px; font-size:19px; letter-spacing:-.025em; }
+.entrepreneur-shell[data-page="growth"] .growth-milestone-ring { width:170px; height:170px; margin:24px auto 18px; background:conic-gradient(var(--growth-teal) var(--growth),#e5eef2 0); box-shadow:0 14px 34px rgba(15,120,94,.1); }
+.entrepreneur-shell[data-page="growth"] .growth-milestone-ring::before { inset:14px; box-shadow:inset 0 0 0 1px #edf3f5; }
+.entrepreneur-shell[data-page="growth"] .growth-milestone-ring strong { font-size:32px; letter-spacing:-.045em; font-variant-numeric:tabular-nums; }
+.entrepreneur-shell[data-page="growth"] .growth-next-step>p { max-width:310px; color:#637c8e; font-size:11px; }
+.entrepreneur-shell[data-page="growth"] .growth-next-bar { height:9px; margin-top:18px; }
+.entrepreneur-shell[data-page="growth"] .growth-next-bar i { background:linear-gradient(90deg,#176f9f,#19a17b); transition:width .55s ease; }
+.entrepreneur-shell[data-page="growth"] .growth-next-step>small { margin-top:2px; color:#718998; font-variant-numeric:tabular-nums; }
+@media(max-width:1250px) {
+  .entrepreneur-shell[data-page="growth"] .growth-focus-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .entrepreneur-shell[data-page="growth"] .growth-focus-grid { grid-template-columns:minmax(0,1.35fr) minmax(310px,.65fr); }
+}
+@media(max-width:1040px) {
+  .entrepreneur-shell[data-page="growth"] .growth-focus-grid { grid-template-columns:1fr; }
+  .entrepreneur-shell[data-page="growth"] .growth-next-step { min-height:0; }
+}
+@media(max-width:700px) {
+  .entrepreneur-shell[data-page="growth"] .growth-focus-page { gap:14px; padding-top:16px; }
+  .entrepreneur-shell[data-page="growth"] .growth-welcome { min-height:0; padding:27px 22px; border-radius:21px; }
+  .entrepreneur-shell[data-page="growth"] .growth-welcome h1 { margin-top:11px; font-size:31px; line-height:1.12; }
+  .entrepreneur-shell[data-page="growth"] .growth-welcome p { font-size:12px; }
+  .entrepreneur-shell[data-page="growth"] .growth-welcome>.btn { width:100%; justify-content:center; }
+  .entrepreneur-shell[data-page="growth"] .growth-focus-kpis { grid-template-columns:1fr; gap:12px; }
+  .entrepreneur-shell[data-page="growth"] .growth-focus-kpis article { min-height:116px; padding:18px; }
+  .entrepreneur-shell[data-page="growth"] .growth-top-five,
+  .entrepreneur-shell[data-page="growth"] .growth-next-step { border-radius:19px; }
+  .entrepreneur-shell[data-page="growth"] .growth-top-five>header { padding:21px 18px; }
+  .entrepreneur-shell[data-page="growth"] .growth-top-five h2,
+  .entrepreneur-shell[data-page="growth"] .growth-next-step h2 { font-size:21px; }
+  .entrepreneur-shell[data-page="growth"] .top-five-chart { padding:5px 12px 15px; }
+  .entrepreneur-shell[data-page="growth"] .top-five-chart>article { min-height:82px; padding:11px 7px; grid-template-columns:24px 40px minmax(0,1fr); gap:9px; }
+  .entrepreneur-shell[data-page="growth"] .top-five-chart>article>i { width:40px; height:40px; border-radius:12px; }
+  .entrepreneur-shell[data-page="growth"] .top-five-chart>article>strong { grid-column:3; justify-self:start; margin-top:-4px; }
+  .entrepreneur-shell[data-page="growth"] .growth-next-step { padding:21px 18px; }
+  .entrepreneur-shell[data-page="growth"] .growth-milestone-ring { width:156px; height:156px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .entrepreneur-shell[data-page="growth"] .growth-focus-kpis article,
+  .entrepreneur-shell[data-page="growth"] .growth-welcome>.btn,
+  .entrepreneur-shell[data-page="growth"] .top-five-chart article>div>div i,
+  .entrepreneur-shell[data-page="growth"] .growth-next-bar i { transition:none; }
+}
+
 /* Premium orders workspace — visual treatment only */
 .entrepreneur-shell[data-page="orders"] .orders-page-v2 { max-width:1500px; padding-top:24px; }
 .entrepreneur-shell[data-page="orders"] .order-workspace { border:1px solid #ccdce7; border-radius:22px; background:#fff; box-shadow:0 18px 45px rgba(10,45,70,.09); }
@@ -1036,15 +1238,35 @@ input::placeholder,textarea::placeholder { color:#97a6b2; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-centre>header h2 { margin:6px 0; color:#123a56; font-size:25px; letter-spacing:-.03em; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-centre>header p { color:#698294; font-size:11px; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-centre>header>b { min-width:88px; padding:10px 13px; border:1px solid #cbe0eb; border-radius:12px; color:#17668e; background:#edf7fb; text-align:center; }
-.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools { padding:17px 24px 11px; grid-template-columns:minmax(300px,1fr) 180px 180px 180px 80px; gap:10px; border-bottom:0; background:#f6f9fb; }
-.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools label:first-child { min-height:48px; border-color:#c9dbe6; border-radius:12px; box-shadow:0 4px 12px rgba(15,55,80,.035); }
+.credit-request-filter-panel { margin:18px 24px 4px; border:1px solid #d4e2ea; border-radius:17px; background:#f8fbfd; box-shadow:0 7px 20px rgba(15,54,78,.045); overflow:hidden; }
+.credit-request-filter-heading { padding:15px 17px 12px; display:flex; align-items:end; justify-content:space-between; gap:18px; }
+.credit-request-filter-heading small,.credit-request-filter-heading strong { display:block; }
+.credit-request-filter-heading small { color:#19749e; font-size:8px; font-weight:900; letter-spacing:.1em; }
+.credit-request-filter-heading strong { margin-top:3px; color:#173f5b; font-size:13px; }
+.credit-request-filter-heading>span { color:#698394; font-size:10px; font-weight:750; }
+.credit-request-status-filters { padding:0 17px 15px; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:9px; }
+.credit-request-status-filters button { min-width:0; min-height:61px; padding:10px 11px; border:1px solid #d3e1e9; border-radius:12px; color:#48697e; background:#fff; display:flex; align-items:center; justify-content:space-between; gap:8px; text-align:left; cursor:pointer; transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease,background .16s ease; }
+.credit-request-status-filters button:hover { border-color:#90bdd2; box-shadow:0 6px 15px rgba(16,66,94,.08); transform:translateY(-1px); }
+.credit-request-status-filters button>span { min-width:0; display:flex; align-items:center; gap:7px; overflow:hidden; font-size:10px; font-weight:800; }
+.credit-request-status-filters button i { width:8px; height:8px; flex:0 0 auto; border-radius:50%; background:#8aa0ae; box-shadow:0 0 0 4px #edf2f5; }
+.credit-request-status-filters button strong { min-width:27px; height:27px; padding:0 7px; border-radius:8px; color:#527084; background:#edf3f6; display:grid; place-items:center; font-size:10px; }
+.credit-request-status-filters button.pending i { background:#d69721; box-shadow:0 0 0 4px #fff3dc; }.credit-request-status-filters button.approved i { background:#228362; box-shadow:0 0 0 4px #e5f5ed; }.credit-request-status-filters button.dispatched i { background:#217ba6; box-shadow:0 0 0 4px #e4f3fa; }.credit-request-status-filters button.cancelled i,.credit-request-status-filters button.rejected i { background:#a65a55; box-shadow:0 0 0 4px #faeae8; }
+.credit-request-status-filters button.active { border-color:#237fa8; color:#145d83; background:#eef8fc; box-shadow:0 0 0 2px rgba(35,127,168,.12),0 7px 17px rgba(18,91,126,.09); transform:none; }
+.credit-request-status-filters button.active strong { color:#fff; background:#1b739e; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools { padding:15px 17px 11px; grid-template-columns:minmax(300px,1fr) 180px 180px 88px; gap:10px; border-top:1px solid #dce7ed; border-bottom:0; background:#f3f7f9; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools .credit-request-search { min-height:0; padding:0; border:0; border-radius:0; background:transparent; display:block; box-shadow:none; }
+.credit-request-search>span { color:#547187; font-size:9px; font-weight:800; }
+.credit-request-search>div { height:44px; margin-top:5px; padding:0 11px; border:1px solid #c9dbe6; border-radius:11px; background:#fff; box-shadow:0 4px 12px rgba(15,55,80,.035); display:flex; align-items:center; gap:8px; }
+.credit-request-search>div svg { width:17px; color:#7792a5; }
+.credit-request-search>div input { height:auto!important; margin:0!important; padding:0!important; border:0!important; outline:0; box-shadow:none; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-tools input,
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-tools select { height:44px; border-color:#c9dbe6; border-radius:11px; color:#153d58; background:#fff; font-size:11px; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-tools>button { height:44px; border-color:#c9dbe6; border-radius:11px; color:#496a7f; background:#fff; }
-.credit-request-date-shortcuts { padding:0 24px 15px; display:flex; align-items:center; flex-wrap:wrap; gap:7px; border-bottom:1px solid #dce7ed; background:#f6f9fb; }
+.credit-request-date-shortcuts { padding:0 17px 15px; display:flex; align-items:center; flex-wrap:wrap; gap:7px; background:#f3f7f9; }
 .credit-request-date-shortcuts>span { margin-right:3px; color:#6a8394; font-size:9px; font-weight:850; letter-spacing:.06em; text-transform:uppercase; }
 .credit-request-date-shortcuts button { min-height:34px; padding:0 11px; border:1px solid #cfdee7; border-radius:9px; color:#3d637a; background:#fff; font:inherit; font-size:9px; font-weight:800; cursor:pointer; }
 .credit-request-date-shortcuts button:hover { border-color:#64a7c8; color:#176a94; background:#f2faff; }
+.credit-request-date-shortcuts button.active { border-color:#247fa7; color:#fff; background:#247fa7; box-shadow:0 5px 12px rgba(24,108,149,.16); }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-export { margin:16px 24px 12px; padding:15px 17px; border-color:#c9dfe9; border-radius:14px; background:linear-gradient(110deg,#edf7fb,#f8fcfd); box-shadow:0 7px 17px rgba(15,59,84,.045); }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-export>span { width:42px; height:42px; background:linear-gradient(145deg,#176b96,#2496ae); box-shadow:0 7px 16px rgba(21,109,149,.17); }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-export strong { color:#123d59; font-size:13px; }
@@ -1060,8 +1282,8 @@ input::placeholder,textarea::placeholder { color:#97a6b2; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list strong { color:#153c57; font-size:12px; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article>button { min-height:41px; border-color:#b8d6e5; border-radius:10px; color:#17658e; background:#eef8fc; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article>button:hover { color:#fff; background:#176b96; }
-@media(max-width:1100px){.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools{grid-template-columns:1fr 1fr}.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools label:first-child{grid-column:1/-1}.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article{grid-template-columns:44px 1fr 1fr}.entrepreneur-shell[data-page="credit-requests"] .credit-request-row-note{display:none}}
-@media(max-width:650px){.entrepreneur-shell[data-page="credit-requests"] .credit-requests-page-head{min-height:0;padding:21px;flex-direction:column;align-items:flex-start}.entrepreneur-shell[data-page="credit-requests"] .credit-request-centre>header{min-height:0;padding:21px}.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools{padding:14px;grid-template-columns:1fr}.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools label:first-child{grid-column:auto}.credit-request-date-shortcuts{padding:0 14px 14px}.entrepreneur-shell[data-page="credit-requests"] .credit-request-export{margin:14px;grid-template-columns:40px 1fr}.entrepreneur-shell[data-page="credit-requests"] .credit-request-export button{grid-column:1/-1;justify-content:center}.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list{padding:0 14px 17px}.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article{grid-template-columns:40px 1fr}.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article>button{grid-column:1/-1;width:100%;justify-content:center}}
+@media(max-width:1100px){.credit-request-status-filters{grid-template-columns:repeat(3,1fr)}.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools{grid-template-columns:1fr 1fr}.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools .credit-request-search{grid-column:1/-1}.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article{grid-template-columns:44px 1fr 1fr}.entrepreneur-shell[data-page="credit-requests"] .credit-request-row-note{display:none}}
+@media(max-width:650px){.entrepreneur-shell[data-page="credit-requests"] .credit-requests-page-head{min-height:0;padding:21px;flex-direction:column;align-items:flex-start}.entrepreneur-shell[data-page="credit-requests"] .credit-request-centre>header{min-height:0;padding:21px}.credit-request-filter-panel{margin:14px}.credit-request-filter-heading{align-items:flex-start;flex-direction:column;gap:6px}.credit-request-status-filters{grid-template-columns:1fr 1fr}.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools{padding:14px;grid-template-columns:1fr}.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools .credit-request-search{grid-column:auto}.credit-request-date-shortcuts{padding:0 14px 14px}.entrepreneur-shell[data-page="credit-requests"] .credit-request-export{margin:14px;grid-template-columns:40px 1fr}.entrepreneur-shell[data-page="credit-requests"] .credit-request-export button{grid-column:1/-1;justify-content:center}.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list{padding:0 14px 17px}.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article{grid-template-columns:40px 1fr}.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article>button{grid-column:1/-1;width:100%;justify-content:center}}
 
 /* Premium admin entrepreneur CRM */
 .admin-shell[data-page="entrepreneurs"] .admin-entrepreneurs-page { max-width:1500px; padding-top:24px; }
@@ -1865,3 +2087,4 @@ html,body,#root,.app-v2{width:100%;max-width:100%;overflow-x:hidden}.app-v2>main
   .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-copy{min-height:0}
   .entrepreneur-shell[data-page="credit-stock"] .credit-product-actions{grid-template-columns:1fr}
 }
+.credit-request-compact-list article.credit-overdue{border-color:#efb8b3;background:#fffafa}.credit-request-compact-list article.credit-overdue .credit-request-row-note strong{color:#b43f38}.credit-request-compact-list article.credit-due-today{border-color:#e8c47d;background:#fffdf7}.credit-request-compact-list article.credit-due-today .credit-request-row-note strong{color:#976315}

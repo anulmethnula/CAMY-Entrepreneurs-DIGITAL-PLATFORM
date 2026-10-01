@@ -1390,7 +1390,7 @@ input:focus, select:focus, textarea:focus {
 .settlement-history article strong,.settlement-history article small { display: block; }
 .settlement-history article small { margin-top: 3px; color: var(--muted); font-size: 10px; }
 .settlement-history time { color: var(--muted); font-size: 11px; }
-.status-pill.paid { color: #187b59; background: #e3f6ee; }
+.status-pill.paid, .status-pill.received { color: #187b59; background: #e3f6ee; }
 
 @media (max-width: 980px) {
   .credit-overview-v2 { grid-template-columns: 1fr; }
@@ -3749,6 +3749,166 @@ input:focus, select:focus, textarea:focus {
 .profile-form label.field-invalid small{display:block;margin-top:6px;color:#a63333;font-size:10px;line-height:1.4}
 .profile-summary > .btn:last-child::after { content:' · +94 77 716 5336'; }
 @media(max-width:620px){.profile-card-actions>svg{display:none}.profile-card-actions button{padding-inline:10px}.profile-card-actions button:disabled{font-size:0}.profile-card-actions button:disabled svg{width:17px;height:17px}}
+
+/* Enterprise profile workspace — scoped to the existing profile component. */
+.profile-layout {
+  grid-template-columns: minmax(270px, 320px) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+.profile-layout .profile-summary,
+.profile-layout .profile-security-card,
+.profile-layout .profile-form,
+.profile-layout .membership-card,
+.profile-layout .leave-company-card {
+  border-color: #d5e3ec;
+  box-shadow: 0 12px 32px rgba(14, 54, 82, .065);
+}
+.profile-layout .profile-summary {
+  position: sticky;
+  top: 96px;
+  padding: 0 26px 26px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+}
+.profile-layout .profile-cover {
+  height: 150px;
+  margin: 0 -26px 70px;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(255,255,255,.16) 0 62px, transparent 63px),
+    radial-gradient(circle at 15% 115%, rgba(79,204,188,.25) 0 90px, transparent 91px),
+    linear-gradient(135deg, #0b2d49 0%, #126181 58%, #1c9a98 100%);
+}
+.profile-layout .profile-cover::after {
+  content: '';
+  position: absolute;
+  inset: 18px 20px auto auto;
+  width: 64px;
+  height: 64px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 50%;
+}
+.profile-layout .profile-avatar {
+  width: 112px;
+  height: 112px;
+  bottom: -56px;
+  border-width: 6px;
+  border-radius: 32px;
+  color: #174663;
+  background: linear-gradient(145deg, #dff7fb, #a6dfeb);
+  box-shadow: 0 16px 35px rgba(10, 49, 74, .2);
+}
+.profile-layout .profile-avatar img,
+.profile-layout .profile-avatar > span { border-radius: 25px; }
+.profile-layout .profile-avatar > span { font-size: 30px; }
+.profile-layout .profile-photo-action {
+  right: -10px;
+  bottom: -8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #127b9a, #18a5a0);
+  box-shadow: 0 8px 18px rgba(13, 111, 135, .28);
+}
+.profile-layout .profile-photo-tools { margin: -44px 0 24px; }
+.profile-layout .profile-photo-tools label,
+.profile-layout .profile-photo-tools button {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease;
+}
+.profile-layout .profile-photo-tools label:hover,
+.profile-layout .profile-photo-tools button:hover { transform: translateY(-1px); }
+.profile-layout .profile-summary h2 { color: #102f49; font-size: 25px; letter-spacing: -.035em; }
+.profile-layout .profile-summary h2 svg { color: #168bb4; }
+.profile-layout .profile-summary > p { margin: 7px 0 0; color: #70879a; font-size: 12px; }
+.profile-layout .profile-joined { margin-top: 16px; padding: 8px 12px; color: #285d7e; background: #edf6fb; font-size: 11px; }
+.profile-layout .profile-summary > b { margin-top: 11px; padding: 8px 12px; font-size: 10px; }
+.profile-layout .profile-live-stats {
+  margin: 24px 0 20px !important;
+  padding: 20px 0 !important;
+  border-color: #dfe8ee !important;
+}
+.profile-layout .profile-live-stats strong { color: #103b59; font-size: 23px !important; letter-spacing: -.035em; }
+.profile-layout .profile-live-stats small { margin-top: 5px !important; color: #74899a !important; font-size: 9px !important; }
+.profile-layout .profile-summary > .btn { min-height: 46px; color: #1b5d82; border: 1px solid #cfe2ed; background: #eff8fc; }
+.profile-layout .form-stack { gap: 20px; }
+.profile-layout .profile-security-card,
+.profile-layout .profile-form,
+.profile-layout .membership-card,
+.profile-layout .leave-company-card { border-radius: 22px; }
+.profile-layout .profile-security-card { padding: 24px 26px; }
+.profile-layout .profile-security-head { grid-template-columns: 52px minmax(0,1fr) auto; gap: 17px; }
+.profile-layout .profile-security-icon { width: 52px; height: 52px; border-radius: 15px; background: linear-gradient(145deg, #116786, #1aa394); }
+.profile-layout .profile-security-head small,
+.profile-layout .card-head > div > span { color: #1479ad; font-size: 10px; font-weight: 850; letter-spacing: .12em; }
+.profile-layout .profile-security-head h2,
+.profile-layout .card-head h2 { color: #102f49; font-size: 23px; letter-spacing: -.035em; }
+.profile-layout .profile-security-head p { margin-top: 5px; color: #71879a; font-size: 12px; line-height: 1.5; }
+.profile-layout .profile-security-head .btn,
+.profile-layout .profile-card-actions button { min-height: 42px; border-radius: 11px; }
+.profile-layout .profile-form,
+.profile-layout .membership-card { padding: 26px 28px; }
+.profile-layout .profile-form > div:nth-child(2) { margin-top: 24px; gap: 20px 22px; }
+.profile-layout .profile-form label { color: #183c56; font-size: 11px; font-weight: 750; }
+.profile-layout .profile-form input {
+  height: 50px;
+  margin-top: 8px;
+  padding: 0 15px;
+  border-color: #ccdde8;
+  border-radius: 12px;
+  color: #163b57;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 650;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.profile-layout .profile-form input:disabled { color: #274d68; background: #f5f8fa; opacity: 1; }
+.profile-layout .profile-form input:focus { outline: 0; border-color: #3693bd; box-shadow: 0 0 0 4px rgba(54,147,189,.11); }
+.profile-layout .profile-form.is-editing { border-color: #6cb3d2; box-shadow: 0 0 0 4px rgba(52,139,190,.08), 0 16px 34px rgba(14,54,82,.08); }
+.profile-layout .secure { padding: 14px 15px; border: 1px solid #cce4ef; color: #476c83; background: #eff8fc; font-size: 10px; line-height: 1.5; }
+.profile-layout .secure strong { color: #1b5879; }
+.profile-layout .membership-card > div:last-child {
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 12px;
+}
+.profile-layout .membership-card > div:last-child > span:nth-child(3) { display: block; }
+.profile-layout .membership-card > div:last-child > span { padding: 16px; border-color: #d9e5ed; background: #f6f9fb; }
+.profile-layout .membership-card small { font-size: 10px; }
+.profile-layout .membership-card strong { margin-top: 7px; color: #153d59; font-size: 14px; }
+.profile-layout .leave-company-card { padding: 24px 26px; border-color: #efd9d3; background: linear-gradient(120deg, #fff 0%, #fff9f7 100%); }
+.profile-layout .leave-company-card h2 { color: #263a49; font-size: 20px; }
+.profile-layout .leave-company-card p { color: #778896; font-size: 11px; }
+.profile-layout .leave-checks > span { min-height: 76px; }
+
+@media (max-width: 1100px) {
+  .profile-layout { grid-template-columns: minmax(245px, 285px) minmax(0,1fr); gap: 18px; }
+  .profile-layout .membership-card > div:last-child { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 820px) {
+  .profile-layout { grid-template-columns: 1fr; }
+  .profile-layout .profile-summary { position: static; }
+  .profile-layout .profile-security-head { grid-template-columns: 46px minmax(0,1fr); }
+  .profile-layout .profile-security-head .btn { grid-column: 1/-1; width: 100%; }
+}
+@media (max-width: 560px) {
+  .profile-layout { gap: 15px; }
+  .profile-layout .profile-summary { padding: 0 18px 20px; }
+  .profile-layout .profile-cover { height: 132px; margin-inline: -18px; }
+  .profile-layout .profile-security-card,
+  .profile-layout .profile-form,
+  .profile-layout .membership-card,
+  .profile-layout .leave-company-card { padding: 20px 17px; border-radius: 18px; }
+  .profile-layout .profile-form > div:nth-child(2),
+  .profile-layout .membership-card > div:last-child { grid-template-columns: 1fr; }
+  .profile-layout .profile-form label.wide { grid-column: auto; }
+  .profile-layout .card-head { align-items: flex-start; }
+  .profile-layout .card-head h2 { font-size: 20px; }
+  .profile-layout .profile-card-actions > svg { display: none; }
+  .profile-layout .profile-card-actions button { padding-inline: 10px; }
+}
 @media(max-width:1050px){.admin-orders-page .admin-order-table .data-row{min-height:0}.admin-orders-page .admin-order-table .data-row small,.admin-orders-page .admin-order-table .admin-order-client em,.admin-orders-page .admin-order-table .admin-order-money em{font-size:12px}}
 @media(max-width:620px){.admin-orders-page .admin-order-table .order-id-cell strong{font-size:16px}.admin-orders-page .admin-order-table .admin-order-person strong,.admin-orders-page .admin-order-table .admin-order-client strong,.admin-orders-page .admin-order-table .admin-order-delivery strong,.admin-orders-page .admin-order-table .admin-order-money strong{font-size:15px}}
 

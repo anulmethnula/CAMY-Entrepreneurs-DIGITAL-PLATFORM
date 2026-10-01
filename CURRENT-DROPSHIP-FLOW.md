@@ -79,11 +79,12 @@ The entrepreneur can keep placing the same COD client orders. CAMY delivers to t
 6. **Approve** reserves the warehouse units but does not yet increase outstanding credit.
 7. **Dispatch** moves the units to the entrepreneur's issued inventory and increases their outstanding credit by the request value.
 8. Tier 1 receives 21 days to settle; every higher tier receives 10 days.
-9. The entrepreneur must settle this credit order before another credit-stock order can be requested or dispatched.
-10. If more time is needed, the entrepreneur requests a later date and CAMY Admin approves or rejects it.
-11. CAMY verifies the full per-order settlement before reducing outstanding credit and reopening credit-stock purchasing.
+9. The entrepreneur can submit another credit-stock request while an earlier order remains unpaid, provided the new request fits within the remaining credit limit.
+10. CAMY Admin receives the request and can approve it after checking the available credit and warehouse stock.
+11. If more repayment time is needed, the entrepreneur requests a later date and CAMY Admin approves or rejects it.
+12. CAMY verifies each full per-order settlement before reducing outstanding credit.
 
-The server blocks requests or dispatches that would exceed the entrepreneur's current credit limit, and blocks new credit stock while an earlier dispatched credit order is unpaid.
+The server blocks requests or dispatches only when they would exceed the entrepreneur's current credit limit; an unpaid earlier order does not by itself block a new request.
 
 ## Phase 3 — Credit & settlement tracking
 

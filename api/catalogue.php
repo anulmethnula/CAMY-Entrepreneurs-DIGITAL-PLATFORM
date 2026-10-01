@@ -45,16 +45,15 @@ function catalogue_tiers(array $tiers): array {
     usort($clean,static fn($a,$b)=>$a['sales']<=>$b['sales']);return $clean;
 }
 function catalogue_credit_progression(array $tiers, float $sales): array {
-    // Award credit only for complete Rs. 100,000 verified-sales blocks.
-    $salesStep = 100000.0;
-    $creditStep = 10000.0;
-    $completedSteps = (int)floor(max(0.0, $sales) / $salesStep);
-
-    return [
-        'credit' => $completedSteps * $creditStep,
-        'nextSales' => ($completedSteps + 1) * $salesStep,
-        'nextCredit' => ($completedSteps + 1) * $creditStep,
-    ];
+    // The saved admin tiers are the complete policy; do not invent tiers above them.
+    $sales=max(0.0,$sales);$credit=0.0;$nextSales=null;$nextCredit=null;
+    usort($tiers,static fn($a,$b)=>(float)($a['sales']??0)<=>(float)($b['sales']??0));
+    foreach($tiers as $tier){
+        $required=max(0.0,(float)($tier['sales']??0));
+        if($sales+0.00001>=$required)$credit=max(0.0,(float)($tier['credit']??0));
+        else{$nextSales=$required;$nextCredit=max(0.0,(float)($tier['credit']??0));break;}
+    }
+    return ['credit'=>$credit,'nextSales'=>$nextSales,'nextCredit'=>$nextCredit];
 }
 function catalogue_credit_for_sales(array $tiers, float $sales): float {
     return round((float)catalogue_credit_progression($tiers, $sales)['credit'], 2);
