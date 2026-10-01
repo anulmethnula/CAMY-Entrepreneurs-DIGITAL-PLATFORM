@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX users_role_status_member (role,status,member_id)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB AUTO_INCREMENT=1000;
 
 CREATE TABLE IF NOT EXISTS staff_access_roles (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS staff_access_roles (
   permissions_json TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB AUTO_INCREMENT=1000;
 
 CREATE TABLE IF NOT EXISTS entrepreneurs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS entrepreneurs (
   outstanding DECIMAL(14,2) NOT NULL DEFAULT 0,
   total_sales DECIMAL(14,2) NOT NULL DEFAULT 0,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB AUTO_INCREMENT=1000;
 
 CREATE TABLE IF NOT EXISTS products (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS products (
   status ENUM('active','inactive') NOT NULL DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB AUTO_INCREMENT=1000;
 
 CREATE TABLE IF NOT EXISTS marketplace_state (
   id TINYINT UNSIGNED PRIMARY KEY,
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   ip_address VARCHAR(45) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX audit_user_time(user_id,created_at)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB AUTO_INCREMENT=1000;
 
 -- Shop-flow records for reporting and future migration away from the JSON snapshot.
 CREATE TABLE IF NOT EXISTS stock_supply_requests (
@@ -170,7 +170,7 @@ CREATE TABLE IF NOT EXISTS entrepreneur_payouts (
   INDEX payout_paid_at (paid_at),
   FOREIGN KEY (order_id) REFERENCES shop_orders(id) ON DELETE CASCADE,
   FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB AUTO_INCREMENT=1000;
 
 CREATE TABLE IF NOT EXISTS credit_tiers (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS credit_tiers (
   credit_limit DECIMAL(14,2) NOT NULL,
   sort_order INT NOT NULL DEFAULT 0,
   record_json LONGTEXT NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB AUTO_INCREMENT=1000;
 
 CREATE TABLE IF NOT EXISTS platform_settings (
   setting_key VARCHAR(80) PRIMARY KEY,
@@ -236,7 +236,7 @@ CREATE TABLE IF NOT EXISTS registration_requests (
   INDEX registration_status_created (status, created_at),
   INDEX registration_city (city),
   FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB AUTO_INCREMENT=1000;
 
 CREATE TABLE IF NOT EXISTS login_attempts (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -245,4 +245,4 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   succeeded TINYINT(1) NOT NULL DEFAULT 0,
   attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX login_limit (email, ip_address, attempted_at)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB AUTO_INCREMENT=1000;

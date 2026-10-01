@@ -32,6 +32,11 @@ function initialise_database(PDO $pdo): void
     $schema = file_get_contents(__DIR__ . '/../database/schema.sql');
     if ($schema === false) throw new RuntimeException('Database schema could not be loaded.');
     $pdo->exec($schema);
+    // Numeric primary keys begin at 1000. MySQL keeps a higher existing sequence,
+    // so this safely updates established databases without renumbering records.
+    foreach (['users','staff_access_roles','entrepreneurs','products','audit_logs','entrepreneur_payouts','credit_tiers','registration_requests','login_attempts'] as $table) {
+        $pdo->exec("ALTER TABLE `$table` AUTO_INCREMENT = 1000");
+    }
     foreach(['must_change_password'=>'TINYINT(1) NOT NULL DEFAULT 0','session_version'=>'INT UNSIGNED NOT NULL DEFAULT 1','access_role'=>'VARCHAR(40) NULL','permissions_json'=>'TEXT NULL'] as $field=>$definition){
         if(!$pdo->query("SHOW COLUMNS FROM users LIKE '$field'")->fetch())$pdo->exec("ALTER TABLE users ADD COLUMN $field $definition");
     }

@@ -28,7 +28,7 @@ function workflow_customer_details(array $data): array {
     return $clean;
 }
 function workflow_next_order_id(array $state): string {
-    $highest=1000;
+    $highest=999;
     foreach(($state['orders'] ?? []) as $order){
         if(preg_match('/^CMY-(\d+)$/',(string)($order['id'] ?? ''),$match))$highest=max($highest,(int)$match[1]);
     }

@@ -6,7 +6,7 @@ function staff_templates(): array {
 }
 function staff_assignable_permissions(): array { return array_values(array_filter(staff_templates()['Super Admin'],fn($item)=>$item!=='user-access')); }
 function staff_ensure_roles(PDO $pdo): void {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS staff_access_roles (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,name VARCHAR(40) NOT NULL UNIQUE,permissions_json TEXT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS staff_access_roles (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,name VARCHAR(40) NOT NULL UNIQUE,permissions_json TEXT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 }
 function staff_role_catalog(PDO $pdo): array {
     staff_ensure_roles($pdo);$roles=[];
