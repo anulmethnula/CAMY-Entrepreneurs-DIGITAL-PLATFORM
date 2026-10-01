@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { customerProductPrice, deliveryLabel, fullProductCost, payableDeliveryCost } from './productCosts'
 import { AlertCircle, ArrowRight, BadgeDollarSign, Banknote, CalendarDays, Check, CheckCircle2, CircleDollarSign, ClipboardList, Download, Eye, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, UserRound, X } from 'lucide-react'
 import { api } from './api'
@@ -73,7 +73,10 @@ function CreditSensor({ person, tiers = [], orders = [] }) {
 }
 
 export function DropshipOrderPage({ products = [], person, notify, catalogueLive, orders = [], tiers = [], setPage }) {
-  const [cart, setCart] = useState([])
+  const cartStorageKey = `camy-dropship-cart-${person?.id || 'current'}`
+  const [cart, setCart] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(cartStorageKey)) || [] } catch { return [] }
+  })
   const [client, setClient] = useState(blankClient)
   const [busy, setBusy] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -92,6 +95,10 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
     const product = products.find(product => String(product.id) === String(item.productId))
     return product ? { ...item, product } : null
   }).filter(Boolean), [cart, products])
+
+  useEffect(() => {
+    try { sessionStorage.setItem(cartStorageKey, JSON.stringify(cart)) } catch { /* The order remains usable if browser storage is unavailable. */ }
+  }, [cart, cartStorageKey])
 
   const productSubtotal = selected.reduce((sum, item) => sum + customerProductPrice(item.product) * Number(item.qty), 0)
   const deliveryTotal = selected.reduce((sum, item) => sum + payableDeliveryCost(item.product) * Number(item.qty), 0)
@@ -181,6 +188,22 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
     setMobileCheckout(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('camy-order-cart-count', { detail: itemCount }))
+  }, [itemCount])
+
+  useEffect(() => {
+    const openOrderCart = () => {
+      if (window.matchMedia('(max-width: 720px)').matches) {
+        showMobileCheckout()
+        return
+      }
+      document.querySelector('.dropship-checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    window.addEventListener('camy-open-order-cart', openOrderCart)
+    return () => window.removeEventListener('camy-open-order-cart', openOrderCart)
+  }, [])
 
   return <div className={`content-page market-page stock-buy-page dropship-order-page ${mobileCheckout ? 'mobile-checkout-page' : ''}`}>
     <section className="order-workspace-head">
@@ -364,7 +387,7 @@ export function CreditStockPage({ products = [], person, requests = [], inventor
       return <article className="stock-product-card credit-product-card" key={product.id}><button className="stock-product-image" type="button" onClick={()=>setSelectedProduct(product)}><img src={product.image} alt={product.name}/><span>{product.category}</span><i><Eye size={16}/></i></button><div className="stock-product-copy"><small>{product.code||product.category}</small><h3>{product.name}</h3><p>{product.description||'CAMY product available for credit supply.'}</p><div className="credit-product-facts"><span><small>STOCK</small><strong>{availableStock?product.stock:'0'} units</strong></span>{product.warranty&&<span><small>WARRANTY</small><strong>{product.warranty}</strong></span>}</div><div className="stock-product-meta"><span className={availableStock?'available':'unavailable'}><i/> {availableStock?'Available at CAMY':'Unavailable'}</span><strong>{money(product.price)}</strong></div><div className="credit-product-actions"><button className="stock-details" type="button" onClick={()=>setSelectedProduct(product)}>View details</button><button className="market-primary" disabled={!availableStock||Number(product.price)>available} onClick={()=>add(product)}>{inCart?`Add another (${inCart.qty})`:'Add to request'} <ArrowRight size={15}/></button></div></div></article>
     })}</div></section><aside className="market-checkout stock-request-card"><header><span><PackageCheck size={19}/></span><div><small>CREDIT STOCK REQUEST</small><h2>Request summary</h2></div></header>{selected.length?selected.map(item=><div className="market-line" key={item.productId}><span><strong>{item.product.name}</strong><small>{money(item.product.price)} each</small></span><input type="number" min="1" value={item.qty} onChange={event=>setCart(old=>old.map(entry=>String(entry.productId)===String(item.productId)?{...entry,qty:Math.max(1,Number(event.target.value)||1)}:entry))}/><button onClick={()=>setCart(old=>old.filter(entry=>String(entry.productId)!==String(item.productId)))}><X size={15}/></button></div>):<div className="stock-cart-empty"><PackageOpen size={23}/><p>Choose products for your credit request.</p></div>}<div className="market-total"><span>Credit request</span><strong>{money(total)}</strong></div><div className={total>available?'market-warning':'credit-safe-note'}><ShieldCheck size={15}/>{total>available?` Reduce this request by ${money(total-available)} to stay within your available credit.`:' No payment or receipt is required now. Your outstanding credit increases only when CAMY dispatches the approved stock.'}</div><button className="market-primary" disabled={!catalogueLive||!selected.length||busy||total>available} onClick={send}>{busy?'Sending…':'Send credit request'} <ArrowRight size={17}/></button></aside></div>}
 
-    {selectedProduct&&<div className="credit-product-dialog-overlay" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setSelectedProduct(null)}}><section className="credit-product-dialog" role="dialog" aria-modal="true" aria-label={`${selectedProduct.name} details`}><button className="credit-product-dialog-close" type="button" onClick={()=>setSelectedProduct(null)} aria-label="Close product details"><X/></button><div className="credit-product-dialog-image"><img src={selectedProduct.image} alt={selectedProduct.name}/><span>{selectedProduct.category}</span></div><div className="credit-product-dialog-copy"><small>{selectedProduct.code||selectedProduct.category}</small><h2>{selectedProduct.name}</h2><p>{selectedProduct.description||'CAMY product available for credit supply.'}</p><div className="credit-product-dialog-stats"><span><small>CAMY PRICE</small><strong>{money(selectedProduct.price)}</strong></span><span><small>AVAILABLE STOCK</small><strong>{Number(selectedProduct.stock)>0?`${selectedProduct.stock} units`:'Out of stock'}</strong></span>{selectedProduct.warranty&&<span><small>WARRANTY</small><strong>{selectedProduct.warranty}</strong></span>}</div>{selectedProduct.specs?.length>0&&<div className="credit-product-specs"><h3>Product details</h3><ul>{selectedProduct.specs.map((spec,index)=><li key={index}><CheckCircle2/>{spec}</li>)}</ul></div>}<button className="market-primary" type="button" disabled={Number(selectedProduct.stock)<=0||Number(selectedProduct.price)>available} onClick={()=>{add(selectedProduct);setSelectedProduct(null)}}>Add to credit request <ArrowRight/></button></div></section></div>}
+    {selectedProduct&&<PortalOverlay className="credit-product-dialog-overlay" onClose={()=>setSelectedProduct(null)} label={`${selectedProduct.name} details`}><section className="credit-product-dialog"><button className="credit-product-dialog-close" type="button" onClick={()=>setSelectedProduct(null)} aria-label="Close product details"><X/></button><div className="credit-product-dialog-image"><img src={selectedProduct.image} alt={selectedProduct.name}/><span>{selectedProduct.category}</span></div><div className="credit-product-dialog-copy"><small>{selectedProduct.code||selectedProduct.category}</small><h2>{selectedProduct.name}</h2><p>{selectedProduct.description||'CAMY product available for credit supply.'}</p><div className="credit-product-dialog-stats"><span><small>CAMY PRICE</small><strong>{money(selectedProduct.price)}</strong></span><span><small>AVAILABLE STOCK</small><strong>{Number(selectedProduct.stock)>0?`${selectedProduct.stock} units`:'Out of stock'}</strong></span>{selectedProduct.warranty&&<span><small>WARRANTY</small><strong>{selectedProduct.warranty}</strong></span>}</div>{selectedProduct.specs?.length>0&&<div className="credit-product-specs"><h3>Product details</h3><ul>{selectedProduct.specs.map((spec,index)=><li key={index}><CheckCircle2/>{spec}</li>)}</ul></div>}<button className="market-primary" type="button" disabled={Number(selectedProduct.stock)<=0||Number(selectedProduct.price)>available} onClick={()=>{add(selectedProduct);setSelectedProduct(null)}}>Add to credit request <ArrowRight/></button></div></section></PortalOverlay>}
 
     <section className="market-history stock-request-history credit-request-history"><div className="credit-request-history-heading"><div><small>CREDIT REQUEST HISTORY</small><h2>My requests</h2><p>Every credit-stock request, its products, value and current progress.</p></div><b>{mine.length} request{mine.length===1?'':'s'}</b></div>{mine.length?<div className="credit-request-list">{[...mine].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))).map(request=>{
       const items=(request.items||[]).map(item=>({item,product:products.find(product=>String(product.id)===String(item.productId))}))
