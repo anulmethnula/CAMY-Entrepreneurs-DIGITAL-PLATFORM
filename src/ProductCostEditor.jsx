@@ -1,9 +1,10 @@
-import { productCosts } from './productCosts'
+import { fullProductCost, productCosts } from './productCosts'
 
-const money = value => `Rs. ${Number(value || 0).toLocaleString('en-LK')}`
+const money = value => `Rs. ${Number(value || 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 export function ProductCostEditor({ product, onChange }) {
   const costs = productCosts(product)
+  const fullTotal = fullProductCost(costs)
   const update = (key, value) => {
     const next = { ...product, ...costs, [key]: value }
     onChange({ ...next, price: productCosts(next).price })
@@ -15,7 +16,10 @@ export function ProductCostEditor({ product, onChange }) {
         <label key={key}>{label}<input required type="number" min="0" step="0.01" value={product[key] ?? costs[key]} onChange={event => update(key, event.target.value)} /></label>
       )}
     </div>
-    <label>Delivery shown to reseller<select value={costs.freeDelivery ? 'free' : 'included'} onChange={event => update('freeDelivery', event.target.value === 'free')}><option value="free">Free delivery</option><option value="included">Delivery included in total</option></select></label>
-    <div className="cost-total"><span><strong>Total product cost</strong><small>Billing + delivery + packaging · Resellers see this total only</small></span><output>{money(costs.price)}</output></div>
+    <div className="delivery-display-setting">
+      <label className="delivery-check"><input type="checkbox" checked={costs.freeDelivery} onChange={event => update('freeDelivery', event.target.checked)} /><span aria-hidden="true">✓</span><div><strong>Free delivery</strong><small>Tick this when the reseller should see delivery as free.</small></div></label>
+      <div className={`delivery-charge-preview ${costs.freeDelivery ? 'is-free' : ''}`}><small>Delivery shown to reseller</small><strong>{costs.freeDelivery ? 'Free delivery' : `Delivery charge: ${money(costs.deliveryCost)}`}</strong></div>
+    </div>
+    <div className="cost-total"><span><strong>Full total</strong><small>Billing + packaging + delivery</small></span><output>{money(fullTotal)}</output></div>
   </section>
 }

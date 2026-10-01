@@ -2795,12 +2795,12 @@ input:focus, select:focus, textarea:focus {
   }
 
   .mobile-order-cart {
-    position: fixed;
+    position: sticky;
     z-index: 74;
-    right: 12px;
-    bottom: 88px;
-    left: 12px;
+    top: 76px;
+    width: calc(100% - 8px);
     min-height: 60px;
+    margin: 0 4px 14px;
     padding: 10px 13px;
     border: 1px solid rgba(255, 255, 255, .32);
     border-radius: 17px;

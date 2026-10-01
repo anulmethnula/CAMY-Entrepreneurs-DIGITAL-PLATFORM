@@ -40,8 +40,18 @@ function initialise_database(PDO $pdo): void
     foreach(['must_change_password'=>'TINYINT(1) NOT NULL DEFAULT 0','session_version'=>'INT UNSIGNED NOT NULL DEFAULT 1','access_role'=>'VARCHAR(40) NULL','permissions_json'=>'TEXT NULL'] as $field=>$definition){
         if(!$pdo->query("SHOW COLUMNS FROM users LIKE '$field'")->fetch())$pdo->exec("ALTER TABLE users ADD COLUMN $field $definition");
     }
-    foreach(['products'=>['record_json'=>'LONGTEXT NULL'],'stock_supply_requests'=>['record_json'=>'LONGTEXT NULL'],'shop_orders'=>['record_json'=>'LONGTEXT NULL'],'credit_tiers'=>['record_json'=>'LONGTEXT NULL'],'entrepreneur_shop_items'=>['visible'=>'TINYINT(1) NOT NULL DEFAULT 1']] as $table=>$fields){
+    foreach(['products'=>['record_json'=>'LONGTEXT NULL','billing_price'=>'DECIMAL(14,2) NULL AFTER price','delivery_cost'=>'DECIMAL(14,2) NOT NULL DEFAULT 0 AFTER billing_price','packaging_cost'=>'DECIMAL(14,2) NOT NULL DEFAULT 0 AFTER delivery_cost','free_delivery'=>'TINYINT(1) NOT NULL DEFAULT 1 AFTER packaging_cost'],'stock_supply_requests'=>['record_json'=>'LONGTEXT NULL'],'shop_orders'=>['record_json'=>'LONGTEXT NULL'],'credit_tiers'=>['record_json'=>'LONGTEXT NULL'],'entrepreneur_shop_items'=>['visible'=>'TINYINT(1) NOT NULL DEFAULT 1']] as $table=>$fields){
         foreach($fields as $field=>$definition)if(!$pdo->query("SHOW COLUMNS FROM $table LIKE '$field'")->fetch())$pdo->exec("ALTER TABLE $table ADD COLUMN $field $definition");
+    }
+    // Backfill normalized pricing columns for catalogues created before the cost
+    // breakdown became relational. Future saves keep both these columns and the
+    // complete JSON product record synchronized.
+    $productPricing=$pdo->prepare('UPDATE products SET billing_price=?,delivery_cost=?,packaging_cost=?,free_delivery=? WHERE id=?');
+    foreach($pdo->query('SELECT id,price,record_json,billing_price FROM products')->fetchAll() as $row){
+        if($row['billing_price']!==null)continue;
+        $record=$row['record_json']?json_decode((string)$row['record_json'],true):[];
+        $billing=round((float)($record['billingPrice'] ?? $row['price']),2);$delivery=round((float)($record['deliveryCost'] ?? 0),2);$packaging=round((float)($record['packagingCost'] ?? 0),2);$free=($record['freeDelivery'] ?? true)===true?1:0;
+        $productPricing->execute([$billing,$delivery,$packaging,$free,$row['id']]);
     }
     foreach([
         'address'=>'TEXT NULL',

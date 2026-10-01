@@ -14,7 +14,7 @@ function storage_read(PDO $pdo): ?array {
     }
     $state['products']=[];$byCode=[];
     foreach($pdo->query('SELECT * FROM products WHERE record_json IS NOT NULL ORDER BY id')->fetchAll() as $row){
-        $product=storage_decode($row['record_json']);$product['price']=(float)$row['price'];$product['stock']=(int)$row['stock'];$byCode[$row['code']]=$product;$state['products'][]=$product;
+        $product=storage_decode($row['record_json']);$product['price']=(float)$row['price'];$product['billingPrice']=(float)($row['billing_price'] ?? $row['price']);$product['deliveryCost']=(float)($row['delivery_cost'] ?? 0);$product['packagingCost']=(float)($row['packaging_cost'] ?? 0);$product['freeDelivery']=(bool)($row['free_delivery'] ?? true);$product['stock']=(int)$row['stock'];$byCode[$row['code']]=$product;$state['products'][]=$product;
     }
     $state['entrepreneurs']=array_map(static fn($row)=>storage_decode($row['record_json']),$pdo->query('SELECT record_json FROM entrepreneur_directory ORDER BY member_id')->fetchAll());
     $state['inventory']=[];
@@ -38,10 +38,10 @@ function storage_read(PDO $pdo): ?array {
 function storage_write(PDO $pdo,array $state): void {
     $products=[];
     // Preserve platform IDs in product metadata; relational auto-increment IDs may differ.
-    $productWrite=$pdo->prepare("INSERT INTO products(code,name,category,description,price,stock,image,status,record_json) VALUES(?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE name=VALUES(name),category=VALUES(category),description=VALUES(description),price=VALUES(price),stock=VALUES(stock),image=VALUES(image),status=VALUES(status),record_json=VALUES(record_json)");
+    $productWrite=$pdo->prepare("INSERT INTO products(code,name,category,description,price,billing_price,delivery_cost,packaging_cost,free_delivery,stock,image,status,record_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE name=VALUES(name),category=VALUES(category),description=VALUES(description),price=VALUES(price),billing_price=VALUES(billing_price),delivery_cost=VALUES(delivery_cost),packaging_cost=VALUES(packaging_cost),free_delivery=VALUES(free_delivery),stock=VALUES(stock),image=VALUES(image),status=VALUES(status),record_json=VALUES(record_json)");
     foreach($state['products'] ?? [] as $product){
         $code=(string)($product['code'] ?? $product['id']);$products[(string)$product['id']]=$code;
-        $productWrite->execute([$code,$product['name'],$product['category'] ?? 'Other',$product['description'] ?? '',$product['price'],max(0,(int)$product['stock']),$product['image'] ?? '',empty($state['catalogue_live'])?'inactive':'active',storage_json($product)]);
+        $productWrite->execute([$code,$product['name'],$product['category'] ?? 'Other',$product['description'] ?? '',$product['price'],$product['billingPrice'] ?? $product['price'],$product['deliveryCost'] ?? 0,$product['packagingCost'] ?? 0,($product['freeDelivery'] ?? true)?1:0,max(0,(int)$product['stock']),$product['image'] ?? '',empty($state['catalogue_live'])?'inactive':'active',storage_json($product)]);
     }
     $codes=array_values($products);
     if($codes){$placeholders=implode(',',array_fill(0,count($codes),'?'));$pdo->prepare("UPDATE products SET status='inactive',record_json=NULL WHERE record_json IS NOT NULL AND code NOT IN ($placeholders)")->execute($codes);}

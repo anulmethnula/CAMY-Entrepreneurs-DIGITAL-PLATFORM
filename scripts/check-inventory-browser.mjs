@@ -59,7 +59,7 @@ try {
       const [product, setProduct] = React.useState(products[0])
       const [search, setSearch] = React.useState('')
       return h('div', { className:'admin-shell' },
-        h(AdminInventory, { products, visible: products.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())), categories:['Home Appliances','Cookware'], search, setSearch, openAdd:()=>{}, openAddCategory:()=>{}, openProduct:()=>{}, stock:()=>{}, togglePublished:()=>{}, manageCategory:()=>{}, exportProducts:()=>{} }),
+        h(AdminInventory, { products, visible: products.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())), categories:['Home Appliances','Cookware'], allCategories:['Home Appliances','Cookware'], categoryFilter:'All', setCategoryFilter:()=>{}, search, setSearch, openAdd:()=>{}, openAddCategory:()=>{}, openImport:()=>{}, openProduct:()=>{}, stock:()=>{}, togglePublished:()=>{}, manageCategory:()=>{}, exportProducts:()=>{} }),
         h('form', { id:'cost-fixture', style:{maxWidth:'700px',margin:'20px auto',padding:'16px'} }, h(ProductCostEditor, {product,onChange:setProduct})))
     }
     const fixture = document.createElement('div')
@@ -68,6 +68,7 @@ try {
   })()`)
   await pause(400)
   check(await evaluate("document.querySelector('.inventory-total').textContent.includes('3,200')"), 'Inventory total missing')
+  check(await evaluate("[...document.querySelectorAll('.inventory-total')].some(node => node.textContent.includes('2,400'))"), 'Inventory total must include billing, delivery, and packaging')
   check(await evaluate("document.querySelector('#cost-fixture output').textContent.includes('3,200')"), 'Manual cost editor total incorrect')
   await evaluate("(()=>{const input=document.querySelector('#cost-fixture .cost-inputs input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'2100');input.dispatchEvent(new Event('input',{bubbles:true}));})()")
   await pause(150)

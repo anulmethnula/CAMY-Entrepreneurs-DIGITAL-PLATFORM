@@ -48,8 +48,8 @@ function market_state(PDO $pdo, bool $lock = false): array {
         unset($ledgerOrder['payoutDueAt']);
     }unset($ledgerOrder);
     if(empty($state['products'])&&empty($state['catalogue_seeded'])){
-        $rows=$pdo->query("SELECT id,code,name,category,description,price,stock,image FROM products WHERE status='active' ORDER BY id")->fetchAll();
-        if($rows){$state['products']=array_map(static fn($row)=>['id'=>(int)$row['id'],'code'=>$row['code'],'name'=>$row['name'],'category'=>$row['category'],'description'=>$row['description'],'price'=>(float)$row['price'],'stock'=>(int)$row['stock'],'image'=>$row['image'] ?: '/products/classic-set.png','specs'=>[]],$rows);$state['catalogue_live']=true;}
+        $rows=$pdo->query("SELECT id,code,name,category,description,price,billing_price,delivery_cost,packaging_cost,free_delivery,stock,image FROM products WHERE status='active' ORDER BY id")->fetchAll();
+        if($rows){$state['products']=array_map(static fn($row)=>['id'=>(int)$row['id'],'code'=>$row['code'],'name'=>$row['name'],'category'=>$row['category'],'description'=>$row['description'],'price'=>(float)$row['price'],'billingPrice'=>(float)($row['billing_price'] ?? $row['price']),'deliveryCost'=>(float)($row['delivery_cost'] ?? 0),'packagingCost'=>(float)($row['packaging_cost'] ?? 0),'freeDelivery'=>(bool)($row['free_delivery'] ?? true),'stock'=>(int)$row['stock'],'image'=>$row['image'] ?: '/products/classic-set.png','specs'=>[]],$rows);$state['catalogue_live']=true;}
         else{$demo=json_decode((string)file_get_contents(__DIR__.'/../database/demo_catalog.json'),true);$state['products']=$demo['products'] ?? [];$state['tiers']=$demo['tiers'] ?? [];$state['catalogue_live']=false;}
         $state['catalogue_seeded']=true;$changed=true;
     }
@@ -178,6 +178,18 @@ function market_route(PDO $pdo, string $path, string $method): void {
     }
     if ($path === '/marketplace/activate-catalogue' && $method === 'POST') {
         require_admin($pdo);$pdo->beginTransaction();$state=market_state($pdo,true);if(empty($state['products'])){$pdo->rollBack();response(['message'=>'Add products before activating the catalogue.'],422);}foreach($state['products'] as $product)if(!isset($product['code'],$product['name'],$product['price'],$product['stock'])){$pdo->rollBack();response(['message'=>'Complete all product details before activation.'],422);}$state['products']=catalogue_products($state['products']);$state['catalogue_live']=true;market_save($pdo,$state);$pdo->commit();response(['state'=>$state]);
+    }
+    if ($path === '/marketplace/product' && $method === 'POST') {
+        require_admin($pdo);$data=input();
+        if(!is_array($data['product'] ?? null))response(['message'=>'Invalid product.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
+        foreach($state['products'] as $key=>$current)if((string)$current['id']===(string)($data['product']['id'] ?? '')){$index=$key;break;}
+        if($index===null){$pdo->rollBack();response(['message'=>'Product not found. Reload the catalogue and try again.'],404);}
+        $current=$state['products'][$index];$updated=catalogue_products([array_merge($current,$data['product'])])[0];
+        if((string)$updated['code']!==(string)$current['code'])foreach($state['inventory'] ?? [] as $item)if((string)$item['productId']===(string)$current['id']&&(int)$item['qty']>0){$pdo->rollBack();response(['message'=>'A stocked product code cannot be changed.'],409);}
+        $baseStock=array_key_exists('baseStock',$data)?(int)$data['baseStock']:(int)$updated['stock'];
+        $updated['stock']=max(0,(int)$current['stock']+((int)$updated['stock']-$baseStock));
+        $state['products'][$index]=$updated;$state['catalogue_seeded']=true;market_save($pdo,$state);$pdo->commit();response(['ok'=>true,'product'=>$updated,'revision'=>$state['revision']]);
     }
     if ($path === '/marketplace/catalog' && $method === 'POST') {
         require_admin($pdo); $data=input();
