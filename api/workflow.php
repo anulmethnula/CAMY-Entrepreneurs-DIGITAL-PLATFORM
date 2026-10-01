@@ -128,14 +128,16 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $safe=$order;unset($safe['trackingToken'],$safe['receiptPath']);response(['order'=>$safe],201);
     }
     if(preg_match('#^/marketplace/orders/([^/]+)/client-details$#',$path,$clientDetailsMatch)&&$method==='PATCH'){
-        $user=current_user($pdo);if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
+        $user=current_user($pdo);if(!$user)response(['message'=>'Authentication required.'],401);
+        $admin=in_array($user['role'],['admin','manager'],true);
+        if(!$admin&&($user['role']!=='entrepreneur'||!$user['member_id']))response(['message'=>'Administrator or entrepreneur access is required.'],403);
         $data=input();$orderId=(string)$clientDetailsMatch[1];
         $name=trim((string)($data['name']??''));$phone=trim((string)($data['phone']??''));$cleanPhone=preg_replace('/[\s()-]/','',$phone);$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
         if(!$name||strlen($name)>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter the client name, a valid Sri Lankan phone number, district and delivery address.'],422);
         $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;foreach($state['orders'] as $key=>$candidate)if((string)$candidate['id']===$orderId){$index=$key;break;}
         if($index===null){$pdo->rollBack();response(['message'=>'Order not found.'],404);}$order=$state['orders'][$index];
-        if(($order['orderMode']??'')!=='dropship'||(string)$order['entrepreneurId']!==(string)$user['member_id']){$pdo->rollBack();response(['message'=>'You cannot edit this order.'],403);}
-        if(!in_array(($order['status']??''),['Pending','Processing'],true)){$pdo->rollBack();response(['message'=>'Client details can only be edited before CAMY dispatches the order.'],409);}
+        if(($order['orderMode']??'')!=='dropship'||(!$admin&&(string)$order['entrepreneurId']!==(string)$user['member_id'])){$pdo->rollBack();response(['message'=>'You cannot edit this order.'],403);}
+        if(!in_array(($order['status']??''),['Pending','Awaiting payment','Payment review','Approved','Processing'],true)){$pdo->rollBack();response(['message'=>'Client details can only be edited before CAMY dispatches the order.'],409);}
         $state['orders'][$index]=array_merge($order,['customer'=>$name,'phone'=>$phone,'district'=>$district,'deliveryAddress'=>$address,'address'=>trim($address.($address!==''?', ':'').$district),'notes'=>$notes,'updatedAt'=>date(DATE_ATOM)]);
         $pdo->prepare('UPDATE customer_order_groups SET customer_name=?,customer_phone=?,district=?,delivery_address=? WHERE id=?')->execute([$name,$phone,$district,$address,$order['groupId']]);
         market_save($pdo,$state);$pdo->commit();$saved=$state['orders'][$index];unset($saved['trackingToken'],$saved['receiptPath']);response(['order'=>$saved,'message'=>'Client details updated before dispatch.']);

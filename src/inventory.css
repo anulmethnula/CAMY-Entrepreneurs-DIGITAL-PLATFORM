@@ -15,3 +15,62 @@
 @media(max-width:700px){.delivery-display-setting{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.inventory-row{animation:none}.inventory-workspace button{transition:none}}
 .delivery-charge-preview:not(.is-free){border-color:#efb9b9;background:#fff2f2}.delivery-charge-preview:not(.is-free) small{color:#9a5b5b}.delivery-charge-preview:not(.is-free) strong{color:#cf3434}
+
+/* Premium product catalogue workspace */
+.admin-products-shell{min-height:100%;background:#f4f8fb}
+.admin-products-shell .inventory-workspace{width:100%;max-width:1680px;padding:28px clamp(20px,2.6vw,42px) 64px}
+.admin-products-shell .inventory-heading{min-height:190px;padding:38px 42px;border:1px solid #17637b;border-radius:26px;background:radial-gradient(circle at 88% 10%,rgba(100,214,224,.22),transparent 18rem),linear-gradient(118deg,#092f49 0%,#0d536f 55%,#0c8291 100%);box-shadow:0 18px 45px rgba(11,54,76,.16)}
+.admin-products-shell .inventory-heading:before{content:"";position:absolute;right:8%;bottom:-160px;width:330px;height:330px;border:48px solid rgba(255,255,255,.055);border-radius:50%}
+.admin-products-shell .inventory-heading-copy{position:relative;z-index:1;max-width:680px}
+.admin-products-shell .inventory-heading span{color:#9ee7ec;font-size:10px;letter-spacing:.16em}
+.admin-products-shell .inventory-heading h1{margin:9px 0 10px;font-size:clamp(30px,3vw,42px);font-weight:750;line-height:1.08;letter-spacing:-.045em}
+.admin-products-shell .inventory-heading p{max-width:640px;color:#d2e8ed;font-size:13px}
+.admin-products-shell .inventory-actions{justify-content:flex-end;max-width:540px}
+.admin-products-shell .inventory-actions button{min-height:48px;padding:0 18px;border-color:rgba(255,255,255,.3);border-radius:12px;background:rgba(255,255,255,.1);box-shadow:inset 0 1px rgba(255,255,255,.08)}
+.admin-products-shell .inventory-actions button:hover{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.18);box-shadow:0 8px 18px rgba(5,36,51,.18)}
+.admin-products-shell .inventory-actions .primary{border-color:#fff;color:#124f67;background:#fff;box-shadow:0 10px 24px rgba(3,34,49,.22)}
+.admin-products-shell .inventory-actions .primary:hover{color:#0c4156;background:#f3fbfd}
+.admin-products-shell .inventory-overview{gap:16px;margin:20px 0 24px}
+.admin-products-shell .inventory-overview article{display:flex;align-items:center;gap:16px;min-height:118px;padding:22px 24px;border-color:#d7e4ec;border-radius:18px;box-shadow:0 9px 26px rgba(19,60,84,.055)}
+.admin-products-shell .inventory-overview article:before{width:3px}
+.admin-products-shell .inventory-overview article i{display:grid;place-items:center;width:48px;height:48px;flex:0 0 48px;border-radius:14px;color:#187ba3;background:#e9f5fa}
+.admin-products-shell .inventory-overview article:nth-child(2) i{color:#188262;background:#e9f7f1}
+.admin-products-shell .inventory-overview article:nth-child(3) i{color:#6f64c1;background:#f0edfb}
+.admin-products-shell .inventory-overview article i svg{width:22px}
+.admin-products-shell .inventory-overview small{font-size:11px;font-weight:650}
+.admin-products-shell .inventory-overview strong{margin-top:3px;font-size:28px;line-height:1.1}
+.admin-products-shell .inventory-overview article div>span{display:block;margin-top:5px;color:#8496a3;font-size:10px}
+.admin-products-shell .inventory-tools{margin:0 0 24px;padding:12px 14px 10px;border-color:#d5e3eb;border-radius:18px;box-shadow:0 8px 25px rgba(17,57,81,.05)}
+.admin-products-shell .inventory-search{gap:10px}
+.admin-products-shell .inventory-search label{position:relative;min-height:50px;border-color:#d4e1e9;border-radius:12px;background:#f8fafc}
+.admin-products-shell .inventory-search label>svg{color:#47758d}
+.admin-products-shell .inventory-search-clear{width:28px!important;min-height:28px!important;padding:0!important;border:0!important;border-radius:50%!important;color:#5f7888!important;background:#e7eef2!important;font-size:18px!important;line-height:1}
+.admin-products-shell .inventory-export{min-height:48px!important;padding-inline:16px!important}
+.admin-products-shell .inventory-search>span{padding-inline:10px;color:#647c8c}
+.admin-products-shell .product-category-bar{gap:6px;margin-top:10px!important;padding:10px 0 1px!important}
+.admin-products-shell .product-category-bar button{min-height:42px;padding:0 13px;border-radius:10px;color:#587184;background:transparent;font-size:11px}
+.admin-products-shell .product-category-bar button:hover{color:#176b90;background:#edf6fa}
+.admin-products-shell .product-category-bar button.active{border-color:#187ca3;color:#fff;background:#187ca3;box-shadow:0 7px 16px rgba(23,111,148,.2)}
+.admin-products-shell .product-category-bar button b{display:grid;place-items:center;min-width:23px;height:23px;padding:0 6px;border-radius:8px;background:#e9f1f5;color:#587384;font-size:10px}
+.admin-products-shell .product-category-bar button.active b{color:#176b90;background:#fff}
+.admin-products-shell .inventory-categories{gap:22px}
+.admin-products-shell .inventory-category{border-color:#d6e3eb;border-radius:20px;box-shadow:0 10px 30px rgba(16,54,78,.06)}
+.admin-products-shell .inventory-category>header{min-height:82px;padding:18px 22px;border-bottom-color:#dde8ee;background:linear-gradient(100deg,#fbfdfe,#f3f8fa)}
+.admin-products-shell .inventory-category>header>div{gap:12px}
+.admin-products-shell .inventory-category>header>div>i{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;color:#187ca2;background:#e8f4f9}
+.admin-products-shell .inventory-category>header span small{display:block;margin-bottom:3px;color:#7890a0;font-size:8px;font-weight:800;letter-spacing:.11em}
+.admin-products-shell .inventory-category h2{font-size:19px;letter-spacing:-.02em}
+.admin-products-shell .inventory-category>header b{margin-left:2px;color:#1b698a;background:#e5f1f6}
+.admin-products-shell .inventory-category>header button{min-height:42px;border-color:#ccdee7;background:#fff}
+.admin-products-shell .inventory-category>header button:hover{border-color:#6ba7c1;color:#fff;background:#18799e}
+.admin-products-shell .inventory-table-head{min-height:46px;padding-inline:24px;color:#60798a;background:#eef4f7}
+.admin-products-shell .inventory-row{min-height:108px;padding:16px 24px;transition:background .16s ease,box-shadow .16s ease}
+.admin-products-shell .inventory-row:hover{background:#f5fafc;box-shadow:inset 3px 0 #2187aa}
+.admin-products-shell .inventory-product img{width:64px;height:64px;border-radius:13px}
+.admin-products-shell .inventory-product strong{font-size:13px}
+.admin-products-shell .inventory-stock{border-radius:9px}
+.admin-products-shell .inventory-edit{border-radius:10px;transition:transform .16s ease,background .16s ease}
+.admin-products-shell .inventory-edit:hover{transform:translateY(-1px)}
+
+@media(max-width:1100px){.admin-products-shell .inventory-heading{align-items:flex-start;flex-direction:column}.admin-products-shell .inventory-actions{justify-content:flex-start;max-width:none}.admin-products-shell .inventory-table-head,.admin-products-shell .inventory-row{grid-template-columns:minmax(280px,2.2fr) repeat(4,minmax(92px,.75fr)) minmax(145px,1fr) 58px}}
+@media(max-width:760px){.admin-products-shell .inventory-workspace{padding:16px 12px 90px}.admin-products-shell .inventory-heading{min-height:0;padding:24px 20px;border-radius:20px}.admin-products-shell .inventory-heading h1{font-size:28px}.admin-products-shell .inventory-heading p{font-size:12px}.admin-products-shell .inventory-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.admin-products-shell .inventory-actions button{justify-content:center;padding-inline:10px}.admin-products-shell .inventory-actions .primary{grid-column:1/-1}.admin-products-shell .inventory-overview{grid-template-columns:1fr}.admin-products-shell .inventory-overview article{min-height:90px}.admin-products-shell .inventory-search{display:grid;grid-template-columns:1fr auto}.admin-products-shell .inventory-search label{grid-column:1/-1}.admin-products-shell .inventory-search>span{align-self:center}.admin-products-shell .inventory-category>header button{font-size:0}.admin-products-shell .inventory-category>header button svg{width:18px}.admin-products-shell .inventory-row{border:1px solid #dce7ed;border-radius:14px;margin:10px;background:#fff}.admin-products-shell .inventory-row:last-child{margin-bottom:10px}.admin-products-shell .inventory-product strong{white-space:normal}.admin-products-shell .inventory-amount{text-align:left}}

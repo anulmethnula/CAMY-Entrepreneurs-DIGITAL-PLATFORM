@@ -142,9 +142,21 @@ function downloadTemplate(categories) {
   ]
   downloadWorkbook('camy-product-import-template.xlsx', [
     {
-      name: 'Products', title: 'CAMY Bulk Product Import Template',
+      name: 'Products', title: 'CAMY Product Import - Replace the example row',
       columns: definitions.map(([key, label]) => ({ key, label, type: ['billingPrice', 'deliveryCost', 'packagingCost'].includes(key) ? 'currency' : 'text' })),
       rows: [{ code: 'EXAMPLE-001', name: 'Example product', category: categories[0] || 'Cookware', billingPrice: 2000, deliveryCost: 750, packagingCost: 450, freeDelivery: 'Yes', stock: 10, description: 'Total cost is calculated automatically: Rs. 3,200. Replace or delete this row.', tag: 'New', rating: 5, warranty: '1 year', specifications: 'Durable finish | Easy to clean', main_image_url: 'https://example.com/main.jpg', additional_media_urls: 'https://example.com/second.jpg | https://example.com/demo.mp4', published: 'Yes' }],
+    },
+    {
+      name: 'Instructions', title: 'How to complete the CAMY product import',
+      columns: [{ key: 'field', label: 'Field', type: 'text' }, { key: 'requirement', label: 'Required?', type: 'text' }, { key: 'guidance', label: 'What to enter', type: 'text' }],
+      rows: [
+        { field: 'Product code, Product name, Category', requirement: 'Required', guidance: 'Use a unique product code and a category copied exactly from the Valid categories sheet.' },
+        { field: 'Billing price, Opening stock', requirement: 'Required', guidance: 'Enter numbers only. Opening stock must be a whole number of zero or more.' },
+        { field: 'Delivery cost, Packaging cost', requirement: 'Optional', guidance: 'Enter zero when there is no cost. Do not combine these amounts with the billing price.' },
+        { field: 'Free delivery', requirement: 'Optional', guidance: 'Use Yes when delivery is included in the displayed product price; otherwise use No.' },
+        { field: 'Specifications and media URLs', requirement: 'Optional', guidance: 'Separate multiple values with the | character. Use public HTTPS links for media.' },
+        { field: 'Published', requirement: 'Optional', guidance: 'Use Yes to make the product visible or No to keep it hidden.' },
+      ],
     },
     { name: 'Valid categories', title: 'Use one of these categories', columns: [{ key: 'category', label: 'Valid category', type: 'text' }], rows: categories.map(category => ({ category })) },
   ])

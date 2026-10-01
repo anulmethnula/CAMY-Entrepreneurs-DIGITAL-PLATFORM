@@ -164,3 +164,308 @@
   .entrepreneur-shell .standalone-money-page:has(.money-detail-card) .money-detail-hero dl{grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){.entrepreneur-shell .commission-ledger-page button,.entrepreneur-shell .standalone-money-page:has(.money-detail-card) button{transition:none!important}}
+
+/* CAMY Admin commission payments workspace ------------------------------ */
+.admin-shell[data-page="payouts"] {
+  --payout-navy:#0a304f;
+  --payout-ink:#14354c;
+  --payout-muted:#687f90;
+  --payout-line:#d9e4eb;
+  --payout-blue:#1e7da9;
+  --payout-red:#dc3533;
+  --payout-green:#188564;
+  background:#f3f6f9;
+}
+.admin-shell[data-page="payouts"] > main {
+  background:
+    radial-gradient(circle at 100% 0,rgba(39,130,178,.09),transparent 31rem),
+    linear-gradient(180deg,#f8fafc 0,#f3f6f9 28rem);
+}
+.admin-shell[data-page="payouts"] .sidebar-v2 {
+  padding:20px 18px 16px;
+  border-right:0;
+  background:radial-gradient(circle at 15% -8%,rgba(49,132,181,.3),transparent 18rem),linear-gradient(180deg,#0b314f 0%,#082741 100%);
+  box-shadow:14px 0 38px rgba(4,28,48,.14);
+}
+.admin-shell[data-page="payouts"] .side-brand {
+  height:70px;
+  padding:4px 12px;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 10px 28px rgba(1,18,32,.16);
+}
+.admin-shell[data-page="payouts"] .brand { width:145px; }
+.admin-shell[data-page="payouts"] .brand img { width:132px;height:52px; }
+.admin-shell[data-page="payouts"] .brand span { display:none; }
+.admin-shell[data-page="payouts"] .workspace-card {
+  min-height:72px;
+  margin:18px 0 22px;
+  padding:12px 13px;
+  border:1px solid rgba(125,198,238,.2);
+  border-radius:15px;
+  background:rgba(35,92,130,.5);
+  box-shadow:inset 0 1px rgba(255,255,255,.08);
+}
+.admin-shell[data-page="payouts"] .workspace-card > span { border-radius:11px;color:#8fdcff;background:rgba(98,185,233,.17); }
+.admin-shell[data-page="payouts"] .workspace-card strong { color:#fff;font-size:14px; }
+.admin-shell[data-page="payouts"] .workspace-card small { color:#a9c4d6;font-size:11px; }
+.admin-shell[data-page="payouts"] .workspace-card > svg { color:#6fd0f5; }
+.admin-shell[data-page="payouts"] .side-label { margin:0 12px 10px;color:#7294ac; }
+.admin-shell[data-page="payouts"] .side-links { gap:4px; }
+.admin-shell[data-page="payouts"] .side-links button { min-height:46px;padding:0 14px;border-radius:10px;color:#afc6d6;font-size:13px; }
+.admin-shell[data-page="payouts"] .side-links button svg { color:#73c9ee!important; }
+.admin-shell[data-page="payouts"] .side-links button:hover { color:#fff;background:rgba(255,255,255,.07); }
+.admin-shell[data-page="payouts"] .side-links button.active { color:#fff;background:linear-gradient(105deg,#245f84,#1d5275);box-shadow:inset 3px 0 #71d2fa,0 8px 18px rgba(0,16,29,.16); }
+.admin-shell[data-page="payouts"] .side-links button.active svg { color:#a7e7ff!important; }
+.admin-shell[data-page="payouts"] .logout { margin-top:auto;border:1px solid rgba(139,188,218,.18);border-radius:11px;color:#a6c0d1;background:rgba(4,28,47,.22); }
+.admin-shell[data-page="payouts"] .logout:hover { color:#fff;background:rgba(255,255,255,.06); }
+.admin-shell[data-page="payouts"] .logout small { margin-left:auto;color:#6f91a9;overflow:hidden;text-overflow:ellipsis; }
+.admin-shell[data-page="payouts"] .topbar-v2 {
+  height:76px;
+  padding-inline:30px;
+  border-bottom:1px solid #dce6ed;
+  background:rgba(255,255,255,.94);
+  box-shadow:0 4px 20px rgba(17,48,70,.035);
+  backdrop-filter:blur(14px);
+}
+.admin-shell[data-page="payouts"] .topbar-left { position:relative;padding-left:14px; }
+.admin-shell[data-page="payouts"] .topbar-left::before { content:'';position:absolute;left:0;width:3px;height:32px;border-radius:3px;background:var(--payout-red); }
+.admin-shell[data-page="payouts"] .topbar-left small { color:#778b99;font-size:10px;font-weight:700;letter-spacing:.04em; }
+.admin-shell[data-page="payouts"] .topbar-left strong { margin-top:3px;color:var(--payout-navy);font-size:17px; }
+.admin-shell[data-page="payouts"] .top-search { width:min(420px,30vw);height:44px;border-color:#d6e1e9;border-radius:10px;color:#6e879a;background:#f9fbfc;box-shadow:none; }
+.admin-shell[data-page="payouts"] .top-search:focus-within { border-color:#67a9c9;background:#fff;box-shadow:0 0 0 3px rgba(32,119,159,.1); }
+.admin-shell[data-page="payouts"] .icon-btn { border-color:#d9e3ea;border-radius:10px;color:#315d78;background:#fff; }
+.admin-shell[data-page="payouts"] .icon-btn:hover { border-color:#afcbdc;background:#f3f8fb; }
+.admin-shell[data-page="payouts"] .user-chip > span { border-radius:11px;color:#fff;background:linear-gradient(145deg,#2587bc,#1b638f);box-shadow:none; }
+
+.admin-shell[data-page="payouts"] .commission-page {
+  max-width:1840px;
+  padding:26px 30px 56px;
+  color:var(--payout-ink);
+}
+.admin-shell[data-page="payouts"] .commission-page .page-title {
+  min-height:126px;
+  margin:0 0 16px;
+  padding:25px 28px;
+  border:0;
+  border-radius:18px;
+  color:#fff;
+  background:radial-gradient(circle at 88% 18%,rgba(96,192,232,.23),transparent 14rem),linear-gradient(115deg,#0a304f 0%,#124d70 62%,#187fa5 100%);
+  box-shadow:0 15px 34px rgba(11,52,78,.14);
+}
+.admin-shell[data-page="payouts"] .commission-page .page-title::before { width:0; }
+.admin-shell[data-page="payouts"] .commission-page .page-title::after { right:-65px;top:-170px;border-color:rgba(255,255,255,.06); }
+.admin-shell[data-page="payouts"] .commission-page .page-title .page-title-copy > span { color:#8edaf5;font-size:9px;font-weight:800;letter-spacing:.13em; }
+.admin-shell[data-page="payouts"] .commission-page .page-title h1 { margin:6px 0;color:#fff;font-size:32px;line-height:1.15;letter-spacing:-.035em; }
+.admin-shell[data-page="payouts"] .commission-page .page-title p { max-width:700px;color:#d2e8f1;font-size:13px;line-height:1.55; }
+.admin-shell[data-page="payouts"] .commission-page .page-actions { position:relative;z-index:2;padding:0;border:0;background:transparent;box-shadow:none;backdrop-filter:none; }
+.admin-shell[data-page="payouts"] .commission-page .page-title .btn.secondary { min-height:43px;padding-inline:15px;border:1px solid rgba(255,255,255,.35);border-radius:9px;color:#fff;background:rgba(255,255,255,.1);box-shadow:none; }
+.admin-shell[data-page="payouts"] .commission-page .page-title .btn.secondary:hover:not(:disabled) { border-color:rgba(255,255,255,.62);background:rgba(255,255,255,.18);transform:translateY(-1px); }
+
+.admin-shell[data-page="payouts"] .commission-simple-guide {
+  display:grid;
+  grid-template-columns:minmax(220px,1fr) auto 24px auto 24px auto;
+  align-items:center;
+  gap:13px;
+  min-height:72px;
+  margin:0 0 16px;
+  padding:13px 20px;
+  border:1px solid var(--payout-line);
+  border-radius:14px;
+  color:var(--payout-ink);
+  background:#fff;
+  box-shadow:0 5px 18px rgba(18,55,78,.045);
+}
+.admin-shell[data-page="payouts"] .commission-simple-guide > div small { display:block;color:#3880a0;font-size:8px;font-weight:800;letter-spacing:.12em; }
+.admin-shell[data-page="payouts"] .commission-simple-guide > div strong { display:block;margin-top:3px;font-size:13px; }
+.admin-shell[data-page="payouts"] .commission-simple-guide > span { display:flex;align-items:center;gap:9px;white-space:nowrap; }
+.admin-shell[data-page="payouts"] .commission-simple-guide > span i { width:29px;height:29px;flex:0 0 auto;border-radius:50%;color:#fff;background:#2385b0;display:grid;place-items:center;font-size:10px;font-style:normal;font-weight:800;box-shadow:0 5px 12px rgba(30,120,163,.15); }
+.admin-shell[data-page="payouts"] .commission-simple-guide > span em { color:#4d687b;font-size:10px;font-style:normal;font-weight:700; }
+.admin-shell[data-page="payouts"] .commission-simple-guide > b { color:#8eabba;display:grid;place-items:center; }
+.admin-shell[data-page="payouts"] .commission-simple-guide > b svg { width:14px;height:14px; }
+
+.admin-shell[data-page="payouts"] .commission-kpis { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:0 0 16px; }
+.admin-shell[data-page="payouts"] .commission-kpis article {
+  position:relative;
+  min-height:118px;
+  padding:18px;
+  border:1px solid var(--payout-line);
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 5px 18px rgba(20,56,78,.045);
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) 18px;
+  align-items:center;
+  gap:13px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:transform .17s ease,border-color .17s ease,box-shadow .17s ease;
+}
+.admin-shell[data-page="payouts"] .commission-kpis article::after { inset:auto 0 0;width:auto;height:3px;border-radius:0;background:#3193bd;opacity:0;transform:scaleX(.35);transition:opacity .17s ease,transform .17s ease; }
+.admin-shell[data-page="payouts"] .commission-kpis article.ready::after { background:#e34d43; }
+.admin-shell[data-page="payouts"] .commission-kpis article.paid::after { background:#259873; }
+.admin-shell[data-page="payouts"] .commission-kpis article.review::after { background:#ca8428; }
+.admin-shell[data-page="payouts"] .commission-kpis article:is(:hover,.active) { transform:translateY(-2px);border-color:#91bfd4;box-shadow:0 11px 25px rgba(18,58,82,.085); }
+.admin-shell[data-page="payouts"] .commission-kpis article:is(:hover,.active)::after { opacity:1;transform:scaleX(1); }
+.admin-shell[data-page="payouts"] .commission-kpis article.active { box-shadow:0 0 0 1px rgba(50,143,184,.12),0 11px 25px rgba(18,58,82,.085); }
+.admin-shell[data-page="payouts"] .commission-kpis article > span { width:42px;height:42px;border-radius:11px;box-shadow:none; }
+.admin-shell[data-page="payouts"] .commission-kpis article > span svg { width:18px;height:18px; }
+.admin-shell[data-page="payouts"] .commission-kpis article > div { min-width:0; }
+.admin-shell[data-page="payouts"] .commission-kpis small { color:#667f91;font-size:9px;font-weight:800;letter-spacing:.07em; }
+.admin-shell[data-page="payouts"] .commission-kpis strong { margin-top:4px;color:var(--payout-navy);font-size:24px;font-weight:750;letter-spacing:-.025em;white-space:nowrap; }
+.admin-shell[data-page="payouts"] .commission-kpis p { margin:5px 0 0;color:#768b99;font-size:10px;line-height:1.4; }
+.admin-shell[data-page="payouts"] .commission-kpis article > svg { width:16px;height:16px;color:#9bb0bd;transition:transform .17s ease; }
+.admin-shell[data-page="payouts"] .commission-kpis article:hover > svg { transform:translateX(2px);color:#4588a6; }
+
+.admin-shell[data-page="payouts"] .commission-workspace {
+  margin:0;
+  padding:0!important;
+  border:1px solid var(--payout-line);
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 8px 25px rgba(17,53,76,.055);
+  overflow:hidden;
+}
+.admin-shell[data-page="payouts"] .commission-workspace-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  padding:18px 20px 16px;
+  border-bottom:1px solid #e5edf2;
+  background:#fff;
+}
+.admin-shell[data-page="payouts"] .commission-workspace-heading small { display:block;color:#3480a2;font-size:9px;font-weight:800;letter-spacing:.12em; }
+.admin-shell[data-page="payouts"] .commission-workspace-heading h2 { margin:4px 0 3px;color:var(--payout-navy);font-size:18px;line-height:1.3;letter-spacing:-.015em; }
+.admin-shell[data-page="payouts"] .commission-workspace-heading p { margin:0;color:#718694;font-size:11px; }
+.admin-shell[data-page="payouts"] .commission-workspace-heading > b { padding:8px 11px;border-radius:9px;color:#607a8b;background:#eef4f7;font-family:'DM Sans','Segoe UI',sans-serif;font-size:10px;font-weight:600;white-space:nowrap; }
+.admin-shell[data-page="payouts"] .commission-workspace-heading > b strong { color:#1b5f80;font-size:13px; }
+.admin-shell[data-page="payouts"] .commission-workspace-tools {
+  display:grid;
+  grid-template-columns:minmax(300px,.8fr) minmax(0,1.5fr);
+  align-items:end;
+  gap:16px;
+  padding:15px 20px;
+  border-bottom:1px solid #e5edf2;
+  background:#fbfcfd;
+}
+.admin-shell[data-page="payouts"] .commission-workspace-tools > label > span { display:block;margin-bottom:6px;color:#526f82;font-size:10px;font-weight:700; }
+.admin-shell[data-page="payouts"] .commission-workspace-tools > label > div { display:flex;align-items:center;gap:9px;height:43px;padding:0 12px;border:1px solid #d3e0e8;border-radius:9px;color:#6b8292;background:#fff; }
+.admin-shell[data-page="payouts"] .commission-workspace-tools > label > div:focus-within { border-color:#6ba9c7;box-shadow:0 0 0 3px rgba(37,127,167,.09); }
+.admin-shell[data-page="payouts"] .commission-workspace-tools > label svg { width:17px;height:17px;flex:0 0 auto; }
+.admin-shell[data-page="payouts"] .commission-workspace-tools input { width:100%;height:40px;padding:0;border:0!important;outline:0!important;color:var(--payout-ink);background:transparent;font-size:12px;box-shadow:none!important; }
+.admin-shell[data-page="payouts"] .commission-workspace-tools nav { display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:3px;border:1px solid #dfe7ec;border-radius:10px;background:#f0f4f6; }
+.admin-shell[data-page="payouts"] .commission-workspace-tools nav button { display:flex;align-items:center;justify-content:center;gap:5px;min-height:37px;padding:0 7px;border:1px solid transparent;border-radius:7px;color:#647b8c;background:transparent;font-size:9px;font-weight:750;white-space:nowrap; }
+.admin-shell[data-page="payouts"] .commission-workspace-tools nav button b { min-width:18px;height:18px;padding:0 4px;border-radius:9px;color:#52718a;background:#e0e9ee;display:grid;place-items:center;font-size:8px; }
+.admin-shell[data-page="payouts"] .commission-workspace-tools nav button:hover { color:#2f617a;background:#e6eef2; }
+.admin-shell[data-page="payouts"] .commission-workspace-tools nav button.active { border-color:#bfd5e2;color:#155f87;background:#fff;box-shadow:0 2px 6px rgba(23,63,87,.07); }
+.admin-shell[data-page="payouts"] .commission-workspace-tools nav button.active b { color:#fff;background:#207ba8; }
+
+.admin-shell[data-page="payouts"] .commission-list { display:grid;gap:0;margin:0; }
+.admin-shell[data-page="payouts"] .commission-row {
+  min-height:112px;
+  padding:16px 20px;
+  border:0;
+  border-bottom:1px solid #e7edf2;
+  border-radius:0;
+  background:#fff;
+  display:grid;
+  grid-template-columns:minmax(210px,1.3fr) minmax(125px,.72fr) minmax(140px,.82fr) minmax(135px,.78fr) minmax(145px,.84fr) 126px;
+  align-items:center;
+  gap:14px;
+  transition:background-color .16s ease,box-shadow .16s ease;
+}
+.admin-shell[data-page="payouts"] .commission-row:last-child { border-bottom:0; }
+.admin-shell[data-page="payouts"] .commission-row:nth-child(even) { background:#fbfcfd; }
+.admin-shell[data-page="payouts"] .commission-row:hover { transform:none;border-color:#e7edf2;background:#f3f8fb;box-shadow:inset 3px 0 #3b91ba; }
+.admin-shell[data-page="payouts"] .commission-row.ready-to-pay { border-left:0;background:linear-gradient(90deg,#fff8f6 0,#fff 12%); }
+.admin-shell[data-page="payouts"] .commission-row.ready-to-pay:hover { background:linear-gradient(90deg,#fff3ef 0,#f5fafc 14%);box-shadow:inset 3px 0 #df4a40; }
+.admin-shell[data-page="payouts"] .commission-row.paid,
+.admin-shell[data-page="payouts"] .commission-row.needs-review { border-left:0; }
+.admin-shell[data-page="payouts"] .commission-row > div { min-width:0; }
+.admin-shell[data-page="payouts"] .commission-row > div > small { color:#698092;font-size:9px;font-weight:800;letter-spacing:.055em;line-height:1.35; }
+.admin-shell[data-page="payouts"] .commission-row > div > strong { margin-top:5px;color:var(--payout-ink);font-size:12px;font-weight:750;line-height:1.4; }
+.admin-shell[data-page="payouts"] .commission-row > div > p { margin:4px 0 0;color:#768a98;font-size:10px;line-height:1.4;white-space:normal; }
+.admin-shell[data-page="payouts"] .commission-order { align-items:center;gap:11px; }
+.admin-shell[data-page="payouts"] .commission-order > span { width:40px;height:44px;flex:0 0 40px;border-radius:9px;color:#28799f;background:#eaf4f8; }
+.admin-shell[data-page="payouts"] .commission-order > span svg { width:17px;height:17px; }
+.admin-shell[data-page="payouts"] .commission-order > div { display:block; }
+.admin-shell[data-page="payouts"] .commission-order > div > strong { margin-top:4px;color:#0d3653;font-size:13px;letter-spacing:0; }
+.admin-shell[data-page="payouts"] .commission-order > div > p { margin-top:4px;line-height:1.45; }
+.admin-shell[data-page="payouts"] .commission-amount { padding:10px 11px;border-radius:10px;background:#eff9f5; }
+.admin-shell[data-page="payouts"] .commission-amount > strong { color:var(--payout-green)!important;font-size:16px!important;white-space:nowrap; }
+.admin-shell[data-page="payouts"] .commission-amount .status-pill { min-height:28px;margin-top:7px;padding:0 9px;border-radius:7px;font-size:9px;box-shadow:none; }
+.admin-shell[data-page="payouts"] .commission-open { min-height:41px;padding:0 12px;border:1px solid #bdd7e5;border-radius:9px;color:#176c98;background:#edf7fb;font-size:10px;font-weight:800;box-shadow:none; }
+.admin-shell[data-page="payouts"] .commission-open:hover { border-color:#77b2cf;color:#0d557a;background:#dff0f7;transform:translateY(-1px); }
+.admin-shell[data-page="payouts"] .commission-row.ready-to-pay .commission-open { border-color:var(--payout-red);color:#fff;background:linear-gradient(145deg,#e4433d,#cc2c2e);box-shadow:0 6px 14px rgba(184,42,42,.16); }
+.admin-shell[data-page="payouts"] .commission-row.ready-to-pay .commission-open:hover { border-color:#b92326;background:#b92326; }
+.admin-shell[data-page="payouts"] .commission-page :is(button,input,a):focus-visible { outline:3px solid rgba(42,134,175,.3);outline-offset:2px; }
+.admin-shell[data-page="payouts"] .commission-page button { transition:color .16s ease,background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease; }
+
+@media(min-width:901px){.app-v2.admin-shell[data-page="payouts"]{--sidebar:292px!important}}
+@media(max-width:1450px){
+  .admin-shell[data-page="payouts"] .commission-simple-guide { grid-template-columns:minmax(190px,1fr) auto 18px auto 18px auto;gap:8px; }
+  .admin-shell[data-page="payouts"] .commission-simple-guide > span em { font-size:9px; }
+  .admin-shell[data-page="payouts"] .commission-row { grid-template-columns:minmax(195px,1.25fr) minmax(110px,.7fr) minmax(125px,.78fr) minmax(120px,.72fr) minmax(135px,.8fr) 112px;gap:10px;padding-inline:16px; }
+  .admin-shell[data-page="payouts"] .commission-open { padding-inline:8px; }
+}
+@media(max-width:1250px){
+  .admin-shell[data-page="payouts"] .commission-simple-guide { grid-template-columns:1fr auto 18px auto 18px auto; }
+  .admin-shell[data-page="payouts"] .commission-simple-guide > div small { display:none; }
+  .admin-shell[data-page="payouts"] .commission-workspace-tools { grid-template-columns:1fr; }
+  .admin-shell[data-page="payouts"] .commission-row { grid-template-columns:repeat(2,minmax(0,1fr));gap:17px 24px;margin:12px 14px 0;padding:18px;border:1px solid var(--payout-line);border-radius:12px;background:#fff!important;box-shadow:0 4px 14px rgba(18,55,78,.04); }
+  .admin-shell[data-page="payouts"] .commission-row:last-child { margin-bottom:14px;border-bottom:1px solid var(--payout-line); }
+  .admin-shell[data-page="payouts"] .commission-order { grid-column:1/-1;padding-bottom:13px;border-bottom:1px solid #e8eef2; }
+  .admin-shell[data-page="payouts"] .commission-amount { align-self:stretch; }
+  .admin-shell[data-page="payouts"] .commission-open { grid-column:1/-1;width:100%; }
+}
+@media(max-width:980px){
+  .admin-shell[data-page="payouts"] .commission-simple-guide { grid-template-columns:1fr 1fr 1fr;gap:12px; }
+  .admin-shell[data-page="payouts"] .commission-simple-guide > div { grid-column:1/-1; }
+  .admin-shell[data-page="payouts"] .commission-simple-guide > b { display:none; }
+  .admin-shell[data-page="payouts"] .commission-simple-guide > span { white-space:normal; }
+  .admin-shell[data-page="payouts"] .commission-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:900px){
+  .admin-shell[data-page="payouts"] .commission-page { padding:22px 20px 96px; }
+  .admin-shell[data-page="payouts"] .topbar-v2 { height:68px;padding-inline:20px; }
+  .admin-shell[data-page="payouts"] .topbar-left { padding-left:0; }
+  .admin-shell[data-page="payouts"] .topbar-left::before { content:none; }
+}
+@media(max-width:680px){
+  .admin-shell[data-page="payouts"] .commission-page { padding:18px 14px 92px; }
+  .admin-shell[data-page="payouts"] .commission-page .page-title { min-height:0;padding:21px 18px;border-radius:15px;align-items:flex-start;flex-direction:column;gap:15px; }
+  .admin-shell[data-page="payouts"] .commission-page .page-title h1 { font-size:27px; }
+  .admin-shell[data-page="payouts"] .commission-page .page-title p { font-size:12px; }
+  .admin-shell[data-page="payouts"] .commission-page .page-actions,
+  .admin-shell[data-page="payouts"] .commission-page .page-title .btn { width:100%; }
+  .admin-shell[data-page="payouts"] .commission-simple-guide { grid-template-columns:1fr;align-items:start;padding:16px; }
+  .admin-shell[data-page="payouts"] .commission-simple-guide > div { grid-column:auto;padding-bottom:10px;border-bottom:1px solid #e6edf2; }
+  .admin-shell[data-page="payouts"] .commission-simple-guide > div small { display:block; }
+  .admin-shell[data-page="payouts"] .commission-simple-guide > span { min-height:34px; }
+  .admin-shell[data-page="payouts"] .commission-simple-guide > span em { font-size:10px; }
+  .admin-shell[data-page="payouts"] .commission-kpis { gap:9px; }
+  .admin-shell[data-page="payouts"] .commission-kpis article { min-height:108px;padding:13px 11px;grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:start; }
+  .admin-shell[data-page="payouts"] .commission-kpis article > span { width:30px;height:30px;border-radius:8px; }
+  .admin-shell[data-page="payouts"] .commission-kpis article > span svg { width:15px;height:15px; }
+  .admin-shell[data-page="payouts"] .commission-kpis article > svg { display:none; }
+  .admin-shell[data-page="payouts"] .commission-kpis strong { font-size:19px;white-space:normal; }
+  .admin-shell[data-page="payouts"] .commission-kpis p { font-size:9px; }
+  .admin-shell[data-page="payouts"] .commission-workspace-heading { align-items:flex-start;padding:15px 14px; }
+  .admin-shell[data-page="payouts"] .commission-workspace-heading p { display:none; }
+  .admin-shell[data-page="payouts"] .commission-workspace-heading > b { padding:6px 8px;white-space:normal;text-align:right; }
+  .admin-shell[data-page="payouts"] .commission-workspace-tools { gap:12px;padding:13px 14px; }
+  .admin-shell[data-page="payouts"] .commission-workspace-tools nav { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .admin-shell[data-page="payouts"] .commission-workspace-tools nav button:last-child { grid-column:1/-1; }
+  .admin-shell[data-page="payouts"] .commission-row { grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px;margin-inline:10px;padding:16px; }
+  .admin-shell[data-page="payouts"] .commission-order { grid-column:1/-1; }
+  .admin-shell[data-page="payouts"] .commission-row > div:nth-child(3),
+  .admin-shell[data-page="payouts"] .commission-row > div:nth-child(4) { grid-column:1/-1; }
+  .admin-shell[data-page="payouts"] .commission-amount { grid-column:1/-1; }
+  .admin-shell[data-page="payouts"] .commission-open { grid-column:1/-1;min-height:44px; }
+}
+@media(prefers-reduced-motion:reduce){
+  .admin-shell[data-page="payouts"] *,
+  .admin-shell[data-page="payouts"] *::before,
+  .admin-shell[data-page="payouts"] *::after { animation:none!important;transition:none!important;scroll-behavior:auto!important; }
+}
