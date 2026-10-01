@@ -28,7 +28,7 @@ function zip(files) {
 }
 
 const labels = { id: 'Record ID', name: 'Name', entrepreneurId: 'Member ID', entrepreneur: 'Entrepreneur', customer: 'Customer name', phone: 'Contact number', email: 'Email address', nic: 'NIC number', city: 'City / district', address: 'Delivery address', joined: 'Joined date', date: 'Order date', deliveredAt: 'Delivered date', payoutDueAt: 'Payout due date', payoutPaidAt: 'Payout paid date', sales: 'Verified sales', credit: 'Credit limit', used: 'Outstanding balance', available: 'Available credit', stage: 'Membership stage', active: 'Account active', amount: 'Client COD total', camyCost: 'CAMY product value', entrepreneurMargin: 'Entrepreneur commission', payoutAmount: 'Payout amount', payoutStatus: 'Payout status', payoutReference: 'Transfer reference', qty: 'Quantity', reference: 'Payment reference', code: 'Product code', category: 'Category', price: 'Unit price', stock: 'Warehouse stock', warranty: 'Warranty', description: 'Description', status: 'Order status', orderId: 'Order ID', productId: 'Product ID', lineTotal: 'Line total', limit: 'Credit limit', outstanding: 'Outstanding balance', metric: 'Metric', value: 'Value', product: 'Product', rating: 'Rating' }
-const monetary = new Set(['sales', 'credit', 'used', 'available', 'amount', 'price', 'lineTotal', 'limit', 'outstanding', 'total', 'camyCost', 'entrepreneurMargin', 'payoutAmount', 'clientCod', 'camyGrossProfit', 'commission'])
+const monetary = new Set(['billingPrice', 'deliveryCost', 'packagingCost', 'sales', 'credit', 'used', 'available', 'amount', 'price', 'lineTotal', 'limit', 'outstanding', 'total', 'camyCost', 'entrepreneurMargin', 'payoutAmount', 'clientCod', 'camyGrossProfit', 'commission'])
 const dates = new Set(['joined', 'date', 'createdAt', 'updatedAt', 'reviewedAt', 'deliveredAt', 'payoutDueAt', 'payoutPaidAt', 'paidAt'])
 const textKeys = new Set(['id', 'entrepreneurId', 'orderId', 'productId', 'groupId', 'nic', 'phone', 'code', 'reference', 'account', 'accountNumber'])
 const secretKeys = new Set(['image', 'avatar', 'receipt', 'receiptPath', 'trackingToken', 'token', 'password', 'password_hash', 'temporaryPassword', 'permissions_json', 'nic_image_path', 'bankDetails', 'exitRequest'])
@@ -37,7 +37,7 @@ const niceLabel = key => labels[key] || key.replace(/([a-z])([A-Z])/g, '$1 $2').
 export function reportSheets(rows, title = 'Report') {
   let keys
   if (rows.some(row => 'customer' in row)) keys = ['id', 'date', 'deliveredAt', 'entrepreneurId', 'entrepreneur', 'customer', 'phone', 'address', 'product', 'qty', 'amount', 'camyCost', 'entrepreneurMargin', 'payoutStatus', 'payoutDueAt', 'payoutPaidAt', 'payoutReference', 'status']
-  else if (rows.some(row => 'stock' in row && 'price' in row)) keys = ['id', 'code', 'name', 'category', 'price', 'stock', 'warranty', 'description']
+  else if (rows.some(row => 'stock' in row && 'price' in row)) keys = ['id', 'code', 'name', 'category', ...(rows.some(row => 'billingPrice' in row) ? ['billingPrice', 'deliveryCost', 'packagingCost', 'freeDelivery'] : []), 'price', 'stock', 'warranty', 'description']
   else if (rows.some(row => 'sales' in row && 'name' in row)) keys = ['id', 'name', 'email', 'nic', 'phone', 'city', 'joined', 'stage', 'active', 'sales', 'credit', 'used', 'available']
   else keys = [...new Set(rows.flatMap(row => Object.keys(row)))].filter(key => !secretKeys.has(key) && key !== 'items')
   if (!keys.length) keys = ['id', 'name', 'status']

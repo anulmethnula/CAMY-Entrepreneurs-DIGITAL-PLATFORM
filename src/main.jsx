@@ -4,6 +4,7 @@ import App from './App'
 import './styles.css'
 import './shop.css'
 import './polish.css'
+import './inventory.css'
 
 class AppBoundary extends React.Component {
   state = { failed: false }

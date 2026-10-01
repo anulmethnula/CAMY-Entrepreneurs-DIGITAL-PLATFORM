@@ -2,13 +2,18 @@ import { useRef, useState } from 'react'
 import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Upload, X } from 'lucide-react'
 import { PortalOverlay } from './Dialog'
 import { downloadWorkbook } from './reports'
+import { productCosts } from './productCosts'
 
-const requiredHeaders = ['code', 'name', 'category', 'price', 'stock']
+const requiredHeaders = ['code', 'name', 'category', 'stock']
 const aliases = {
   code: ['code', 'product code', 'model', 'model code', 'sku'],
   name: ['name', 'product name'],
   category: ['category', 'product category'],
   price: ['price', 'price lkr', 'unit price'],
+  billingPrice: ['billing price', 'billing price lkr', 'billingprice'],
+  deliveryCost: ['delivery cost', 'delivery cost lkr', 'deliverycost'],
+  packagingCost: ['packaging cost', 'packaging cost lkr', 'packagingcost'],
+  freeDelivery: ['free delivery', 'free delivery yes no', 'freedelivery'],
   stock: ['stock', 'opening stock', 'warehouse stock', 'quantity'],
   description: ['description'], tag: ['tag'], rating: ['rating', 'rating 0 5'], warranty: ['warranty'],
   specifications: ['specifications', 'specs', 'specifications separate with'],
@@ -66,10 +71,10 @@ async function fileMatrix(file) {
   return matrix
 }
 
-async function parseFile(file, products, categories) {
+export async function parseFile(file, products, categories) {
   const matrix = await fileMatrix(file)
-  const headerIndex = matrix.findIndex(row => requiredHeaders.every(required => row.some(cell => headerKey(cell) === required)))
-  if (headerIndex < 0) throw new Error('Include Product code, Product name, Category, Price and Opening stock columns.')
+  const headerIndex = matrix.findIndex(row => requiredHeaders.every(required => row.some(cell => headerKey(cell) === required)) && row.some(cell => ['price', 'billingPrice'].includes(headerKey(cell))))
+  if (headerIndex < 0) throw new Error('Include Product code, Product name, Category, Billing price and Opening stock. Legacy Price sheets are also supported.')
 
   const keys = matrix[headerIndex].map(headerKey)
   const categoryMap = new Map(categories.map(category => [category.toLowerCase(), category]))
@@ -82,9 +87,17 @@ async function parseFile(file, products, categories) {
     const name = String(source.name ?? '').trim()
     const requestedCategory = String(source.category ?? '').trim()
     const category = categoryMap.get(requestedCategory.toLowerCase()) || ''
-    const price = Number(String(source.price ?? '').replace(/[^0-9.-]/g, ''))
+    const amount = value => Number(String(value ?? '').replace(/(?:Rs\.?|\s|,)/gi, ''))
+    const hasBreakdown = keys.includes('billingPrice')
+    const existing = existingByCode.get(clean(code))
+    const billingPrice = amount(hasBreakdown ? source.billingPrice : source.price)
+    const deliveryCost = hasBreakdown ? amount(source.deliveryCost ?? 0) : 0
+    const packagingCost = hasBreakdown ? amount(source.packagingCost ?? 0) : 0
+    const deliverySetting = String(source.freeDelivery ?? '').trim().toLowerCase()
+    const freeDelivery = deliverySetting ? ['yes', 'true', '1', 'free'].includes(deliverySetting) : existing?.freeDelivery !== false
+    const price = productCosts({ billingPrice, deliveryCost, packagingCost }).price
     const stock = Number(String(source.stock ?? '').replace(/[^0-9.-]/g, ''))
-    const rating = source.rating === '' ? 5 : Number(source.rating)
+    const rating = source.rating == null || source.rating === '' ? 5 : Number(source.rating)
     const mainImage = String(source.main_image_url ?? '').trim()
     const mediaUrls = [mainImage, ...splitValues(source.additional_media_urls)].filter(Boolean)
     const errors = []
@@ -94,6 +107,9 @@ async function parseFile(file, products, categories) {
     if (!requestedCategory) errors.push('Category is required')
     else if (!category) errors.push(`Unknown category: ${requestedCategory}`)
     if (!Number.isFinite(price) || price <= 0) errors.push('Price must be greater than 0')
+    if (hasBreakdown && (source.billingPrice == null || String(source.billingPrice).trim() === '')) errors.push('Billing price is required')
+    if ([billingPrice, deliveryCost, packagingCost].some(value => !Number.isFinite(value) || value < 0)) errors.push('All costs must be valid nonnegative numbers')
+    if (deliverySetting && !['yes', 'no', 'true', 'false', '1', '0', 'free', 'included'].includes(deliverySetting)) errors.push('Free delivery must be Yes or No')
     if (!Number.isInteger(stock) || stock < 0) errors.push('Stock must be a whole number, 0 or more')
     if (!Number.isFinite(rating) || rating < 0 || rating > 5) errors.push('Rating must be between 0 and 5')
     if (code && seenCodes.has(clean(code))) errors.push('Duplicate product code in this sheet')
@@ -101,10 +117,9 @@ async function parseFile(file, products, categories) {
     if (mediaUrls.some(url => !validMediaUrl(url))) errors.push('One or more media URLs are invalid')
     if (code) seenCodes.add(clean(code))
 
-    const existing = existingByCode.get(clean(code))
     const media = mediaUrls.map((src, mediaIndex) => ({ type: mediaType(src), src, name: mediaIndex ? `Imported media ${mediaIndex + 1}` : 'Main image' }))
     const product = {
-      ...(existing || {}), code, name, category, price, stock, rating,
+      ...(existing || {}), code, name, category, price, billingPrice, deliveryCost, packagingCost, freeDelivery, stock, rating,
       description: String(source.description ?? '').trim(),
       tag: String(source.tag ?? '').trim(),
       warranty: String(source.warranty ?? '').trim(),
@@ -119,7 +134,8 @@ async function parseFile(file, products, categories) {
 
 function downloadTemplate(categories) {
   const definitions = [
-    ['code', 'Product code'], ['name', 'Product name'], ['category', 'Category'], ['price', 'Price (LKR)'],
+    ['code', 'Product code'], ['name', 'Product name'], ['category', 'Category'],
+    ['billingPrice', 'Billing price (LKR)'], ['deliveryCost', 'Delivery cost (LKR)'], ['packagingCost', 'Packaging cost (LKR)'], ['freeDelivery', 'Free delivery (Yes/No)'],
     ['stock', 'Opening stock'], ['description', 'Description'], ['tag', 'Tag'], ['rating', 'Rating (0-5)'],
     ['warranty', 'Warranty'], ['specifications', 'Specifications (separate with |)'], ['main_image_url', 'Main image URL'],
     ['additional_media_urls', 'Other image/video URLs (separate with |)'], ['published', 'Published (Yes/No)'],
@@ -127,8 +143,8 @@ function downloadTemplate(categories) {
   downloadWorkbook('camy-product-import-template.xlsx', [
     {
       name: 'Products', title: 'CAMY Bulk Product Import Template',
-      columns: definitions.map(([key, label]) => ({ key, label, type: ['price'].includes(key) ? 'currency' : 'text' })),
-      rows: [{ code: 'EXAMPLE-001', name: 'Example product', category: categories[0] || 'Cookware', price: 2500, stock: 10, description: 'Replace or delete this row.', tag: 'New', rating: 5, warranty: '1 year', specifications: 'Durable finish | Easy to clean', main_image_url: 'https://example.com/main.jpg', additional_media_urls: 'https://example.com/second.jpg | https://example.com/demo.mp4', published: 'Yes' }],
+      columns: definitions.map(([key, label]) => ({ key, label, type: ['billingPrice', 'deliveryCost', 'packagingCost'].includes(key) ? 'currency' : 'text' })),
+      rows: [{ code: 'EXAMPLE-001', name: 'Example product', category: categories[0] || 'Cookware', billingPrice: 2000, deliveryCost: 750, packagingCost: 450, freeDelivery: 'Yes', stock: 10, description: 'Total cost is calculated automatically: Rs. 3,200. Replace or delete this row.', tag: 'New', rating: 5, warranty: '1 year', specifications: 'Durable finish | Easy to clean', main_image_url: 'https://example.com/main.jpg', additional_media_urls: 'https://example.com/second.jpg | https://example.com/demo.mp4', published: 'Yes' }],
     },
     { name: 'Valid categories', title: 'Use one of these categories', columns: [{ key: 'category', label: 'Valid category', type: 'text' }], rows: categories.map(category => ({ category })) },
   ])
@@ -155,9 +171,9 @@ export function ProductBulkImport({ products, categories, onImport, onClose }) {
     <section className="product-import-dialog">
       <header><i><FileSpreadsheet /></i><div><span>BULK CATALOGUE IMPORT</span><h2>Import products from Excel</h2><p>Use the template, validate every row, then import all valid products together.</p></div><button onClick={onClose} aria-label="Close"><X /></button></header>
       <div className="product-import-actions"><button onClick={() => downloadTemplate(categories)}><Download />Download template</button><button className="primary" onClick={() => input.current?.click()}><Upload />{busy ? 'Reading file...' : 'Choose Excel or CSV'}</button><input ref={input} type="file" accept=".xlsx,.csv" onChange={chooseFile} hidden /></div>
-      <aside><strong>Images and videos</strong><p>Paste public media links into the URL columns. For files on your computer, import first and then use <b>Edit details</b> to upload JPG, PNG, WebP, MP4 or WebM.</p></aside>
+      <aside><strong>Costs & delivery</strong><p>Total cost = billing price + delivery cost + packaging cost. Set Free delivery to Yes or No. Resellers see only the total and the delivery label; no charge is added again at checkout.</p><strong>Images and videos</strong><p>Paste public media links into the URL columns. For files on your computer, import first and then use <b>Edit details</b> to upload JPG, PNG, WebP, MP4 or WebM.</p></aside>
       {error && <p className="product-import-error"><AlertCircle />{error}</p>}
-      {!!rows.length && <><div className="product-import-summary"><span><b>{rows.length}</b> rows</span><span className="valid"><b>{validRows.length}</b> ready</span><span className="invalid"><b>{rows.length - validRows.length}</b> need fixing</span><small>{fileName}</small></div><div className="product-import-table"><div className="head"><span>Row</span><span>Product</span><span>Category</span><span>Action</span><span>Validation</span></div>{rows.map(row => <div key={row.rowNumber} className={row.errors.length ? 'invalid' : 'valid'}><span>{row.rowNumber}</span><span><strong>{row.product.name || 'Missing name'}</strong><small>{row.product.code || 'Missing code'}</small></span><span>{row.product.category || 'Not matched'}</span><span>{row.action}</span><span>{row.errors.length ? <><AlertCircle />{row.errors.join(' · ')}</> : <><CheckCircle2 />Ready</>}</span></div>)}</div></>}
+      {!!rows.length && <><div className="product-import-summary"><span><b>{rows.length}</b> rows</span><span className="valid"><b>{validRows.length}</b> ready</span><span className="invalid"><b>{rows.length - validRows.length}</b> need fixing</span><small>{fileName}</small></div><div className="product-import-table"><div className="head"><span>Row</span><span>Product</span><span>Category</span><span>Action</span><span>Validation</span></div>{rows.map(row => <div key={row.rowNumber} className={row.errors.length ? 'invalid' : 'valid'}><span>{row.rowNumber}</span><span><strong>{row.product.name || 'Missing name'}</strong><small>{row.product.code || 'Missing code'}</small><small>Billing {row.product.billingPrice} + delivery {row.product.deliveryCost} + packaging {row.product.packagingCost} = Rs. {row.product.price.toLocaleString('en-LK')}</small><small>{row.product.freeDelivery ? 'Free delivery' : 'Delivery included in total'}</small></span><span>{row.product.category || 'Not matched'}</span><span>{row.action}</span><span>{row.errors.length ? <><AlertCircle />{row.errors.join(' · ')}</> : <><CheckCircle2 />Ready</>}</span></div>)}</div></>}
       <footer><p>Existing product codes are updated; new codes create products. Invalid rows are skipped.</p><button onClick={onClose}>Cancel</button><button className="primary" disabled={!validRows.length || busy} onClick={() => { onImport(validRows.map(row => row.product)); onClose() }}>Import {validRows.length || ''} valid product{validRows.length === 1 ? '' : 's'}</button></footer>
     </section>
   </PortalOverlay>
