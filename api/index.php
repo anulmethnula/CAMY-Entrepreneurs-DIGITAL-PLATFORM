@@ -247,27 +247,26 @@ try {
         response(['message'=>'Registration approved. The entrepreneur can now sign in.','memberId'=>$memberId,'phone'=>$request['phone'],'activationMessage'=>$activationMessage]);
     }
     if ($path === '/admin/entrepreneurs' && $method === 'POST') {
-        require_admin($pdo);$payload=input();
-        $data=[
-            'full_name'=>trim((string)($payload['name'] ?? $payload['fullName'] ?? '')),
-            'email'=>strtolower(trim((string)($payload['email'] ?? ''))),
-            'password'=>(string)($payload['password'] ?? ''),
-            'phone'=>trim((string)($payload['phone'] ?? '')),
-            'nic'=>trim((string)($payload['nic'] ?? '')),
-            'address'=>trim((string)($payload['address'] ?? '')),
-            'city'=>trim((string)($payload['city'] ?? '')),
-            'joined'=>trim((string)($payload['joined'] ?? date('Y-m-d'))),
-        ];
+        $admin=require_admin($pdo);$payload=input();
+        $data=valid_registration($payload);
+        $data['joined']=trim((string)($payload['joined'] ?? date('Y-m-d')));
+        $front=(string)($payload['nicFrontImage'] ?? '');$back=(string)($payload['nicBackImage'] ?? '');
+        if($front===''||$back==='')response(['message'=>'Upload clear photos of both the front and back of the entrepreneur’s NIC.'],422);
         if(!$data['full_name']||!filter_var($data['email'],FILTER_VALIDATE_EMAIL)||!preg_match('/^(?:\\+94|0)7\\d{8}$/',preg_replace('/[\\s-]/','',$data['phone']))||!preg_match('/^(?:\\d{9}[VvXx]|\\d{12})$/',$data['nic'])||!$data['city'])response(['message'=>'Enter a full name, valid email, Sri Lankan mobile number, NIC and city.'],422);
         valid_password($data['password']);
         $joined=DateTime::createFromFormat('Y-m-d',$data['joined']);if(!$joined||$joined->format('Y-m-d')!==$data['joined'])response(['message'=>'Enter a valid joined date.'],422);
-        $check=$pdo->prepare('SELECT COUNT(*) FROM users WHERE email=?'); $check->execute([$data['email']]);
-        if((int)$check->fetchColumn()) response(['message'=>'An account already exists with this email.'],409);
+        $check=$pdo->prepare("SELECT (SELECT COUNT(*) FROM users WHERE email=?) + (SELECT COUNT(*) FROM entrepreneurs WHERE nic=?) + (SELECT COUNT(*) FROM registration_requests WHERE (email=? OR nic=?) AND status='pending')");$check->execute([$data['email'],$data['nic'],$data['email'],$data['nic']]);
+        if((int)$check->fetchColumn())response(['message'=>'An account or pending request already exists for this email or NIC.'],409);
+        $frontPath=save_nic_image($front,'front');$backPath=save_nic_image($back,'back');
         $pdo->beginTransaction(); $memberId=member_id($pdo);
+        $passwordHash=password_hash($data['password'],PASSWORD_DEFAULT);
         $userInsert=$pdo->prepare("INSERT INTO users(member_id,full_name,email,password_hash,role,status,must_change_password) VALUES(?,?,?,?, 'entrepreneur','active',1)");
-        $userInsert->execute([$memberId,$data['full_name'],$data['email'],password_hash($data['password'],PASSWORD_DEFAULT)]); $userId=(int)$pdo->lastInsertId();
-        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,full_name,email,nic,phone,address,city,joined_date) VALUES(?,?,?,?,?,?,?,?,?)');
-        $entrepreneurInsert->execute([$userId,$memberId,$data['full_name'],$data['email'],$data['nic'],$data['phone'],$data['address'],$data['city'],$data['joined']]); $pdo->commit();
+        $userInsert->execute([$memberId,$data['full_name'],$data['email'],$passwordHash]); $userId=(int)$pdo->lastInsertId();
+        $entrepreneurInsert=$pdo->prepare('INSERT INTO entrepreneurs(user_id,member_id,full_name,email,nic,nic_image_path,phone,address,city,joined_date) VALUES(?,?,?,?,?,?,?,?,?,?)');
+        $entrepreneurInsert->execute([$userId,$memberId,$data['full_name'],$data['email'],$data['nic'],$frontPath,$data['phone'],$data['address'],$data['city'],$data['joined']]);
+        $applicationInsert=$pdo->prepare("INSERT INTO registration_requests(full_name,email,password_hash,phone,nic,address,city,occupation,has_online_business,online_business_products,online_business_duration,monthly_income,social_media_url,followers_count,facebook_marketing,join_reason,agreement_accepted,nic_image_path,nic_front_path,nic_back_path,status,admin_note,reviewed_by,reviewed_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'approved', 'Account created manually by CAMY Admin.',?,NOW())");
+        $applicationInsert->execute([$data['full_name'],$data['email'],$passwordHash,$data['phone'],$data['nic'],$data['address'],$data['city'],$data['occupation'],$data['has_online_business'],$data['online_business_products'] ?: null,$data['online_business_duration'] ?: null,$data['monthly_income'] ?: null,$data['social_media_url'] ?: null,$data['followers_count'],$data['facebook_marketing'],$data['join_reason'],1,$frontPath,$frontPath,$backPath,$admin['id']]);
+        $pdo->commit();
         response(['entrepreneur'=>['id'=>$memberId,'name'=>$data['full_name'],'email'=>$data['email'],'phone'=>$data['phone'],'nic'=>$data['nic'],'address'=>$data['address'],'city'=>$data['city'],'joined'=>$data['joined'],'sales'=>0,'credit'=>0,'used'=>0,'active'=>true,'stage'=>'Trial seller','initials'=>strtoupper(substr($data['full_name'],0,1))]],201);
     }
 

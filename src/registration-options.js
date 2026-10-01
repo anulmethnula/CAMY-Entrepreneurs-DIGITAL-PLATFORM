@@ -1,0 +1,7 @@
+export const districts=['Ampara','Anuradhapura','Badulla','Batticaloa','Colombo','Galle','Gampaha','Hambantota','Jaffna','Kalutara','Kandy','Kegalle','Kilinochchi','Kurunegala','Mannar','Matale','Matara','Monaragala','Mullaitivu','Nuwara Eliya','Polonnaruwa','Puttalam','Ratnapura','Trincomalee','Vavuniya','Other / outside Sri Lanka']
+export const occupations=['Student','School leaver','Private-sector employee','Government employee','Self-employed','Home maker','Freelancer','Sales / marketing','Business owner','Other']
+export const businessCategories=['Clothing / fashion','Beauty / cosmetics','Food / snacks','Homeware / kitchen','Electronics / appliances','Health / wellness','Baby / kids','Services','Multiple product categories','Other']
+export const businessDurations=['Less than 3 months','3–6 months','6–12 months','1–2 years','More than 2 years']
+export const incomeRanges=['Less than Rs. 25,000','Rs. 25,000–50,000','Rs. 50,000–100,000','Rs. 100,000–200,000','More than Rs. 200,000','Prefer not to say']
+export const followerRanges=[{value:'0',label:'No page yet'},{value:'250',label:'Less than 500'},{value:'750',label:'500–1,000'},{value:'2500',label:'1,000–5,000'},{value:'7500',label:'5,000–10,000'},{value:'10001',label:'More than 10,000'}]
+export const joinReasons=['Start my first business','Earn extra income','Grow my existing online business','Access CAMY products and delivery support','Learn sales and Facebook marketing','Build a long-term business with CAMY']

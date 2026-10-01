@@ -1,0 +1,128 @@
+/* Presentation only; scoped to the entrepreneur account and application views. */
+.admin-shell .camy-entrepreneurs-workspace { --crm-ink:#163b56; --crm-muted:#647a8b; --crm-border:#dce6ed; max-width:1500px; }
+.admin-shell .camy-entrepreneurs-workspace .page-title { min-height:160px; padding:28px 30px; border:1px solid #194d69; border-radius:20px; align-items:center; gap:28px; background:linear-gradient(115deg,#102f49,#165b76); box-shadow:0 8px 24px #10365012; }
+.admin-shell .camy-entrepreneurs-workspace .page-title::before { width:4px; background:#ec514b; }
+.admin-shell .camy-entrepreneurs-workspace .page-title::after { display:none; }
+.admin-shell .camy-entrepreneurs-workspace .page-title-copy { min-width:0; flex:1; }
+.admin-shell .camy-entrepreneurs-workspace .page-title h1 { font-size:32px; line-height:1.15; letter-spacing:-.035em; }
+.admin-shell .camy-entrepreneurs-workspace .page-title p { max-width:490px; font-size:13px; line-height:1.6; }
+.admin-shell .camy-entrepreneurs-workspace .page-title>div:first-child>span { padding:0; border:0; border-radius:0; background:none; color:#97dbea; font-size:10px; letter-spacing:.12em; }
+.admin-shell .camy-entrepreneurs-workspace .page-actions { width:auto; flex:0 1 475px; }
+.admin-shell .camy-entrepreneurs-workspace .page-title-actions { max-width:none; padding:0!important; border:0!important; border-radius:0; background:none!important; box-shadow:none!important; gap:9px; }
+.admin-shell .camy-entrepreneurs-workspace .page-title-actions .btn { min-height:44px; padding:0 15px; border-radius:10px; font-size:12px; }
+.admin-shell .camy-entrepreneurs-workspace .page-title-actions .primary { flex-basis:100%; }
+.camy-entrepreneurs-workspace .signup-request-entry { display:flex; align-items:center; gap:16px; padding:20px 24px; margin-bottom:16px; border:1px solid #cbdfea; border-radius:16px; background:#fff; box-shadow:0 4px 16px #163b5605; }
+.signup-request-icon { display:grid; place-items:center; flex:0 0 48px; width:48px; height:48px; border-radius:13px; color:#1973a2; background:#edf5fa; }
+.signup-request-icon svg { width:23px; height:23px; }
+.signup-request-copy { flex:1; min-width:0; }
+.signup-request-copy h2 { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin:0; color:var(--crm-ink); font-size:17px; letter-spacing:-.02em; }
+.signup-request-copy p { margin:6px 0 0; color:var(--crm-muted); font-size:13px; line-height:1.5; }
+.request-count { padding:5px 9px; border-radius:7px; color:#607585; background:#f0f4f7; font-size:11px; font-weight:650; white-space:nowrap; }
+.request-count.has-pending { color:#8b5814; background:#fff3dd; }
+.camy-entrepreneurs-workspace .signup-request-entry>.btn { flex-shrink:0; min-height:44px; padding:0 18px; border:1px solid #176b98; border-radius:10px; color:#fff; background:#176b98; font-size:13px; box-shadow:none; flex-direction:row-reverse; }
+.admin-shell .camy-entrepreneurs-workspace .empty-exit-inbox { min-height:62px; padding:12px 20px; margin-bottom:20px; border-color:#deebe5; border-radius:12px; background:#f6faf8; box-shadow:none; }
+.admin-shell .camy-entrepreneurs-workspace .empty-exit-inbox>span { width:32px; height:32px; flex:0 0 32px; border-radius:9px; background:#e2f2eb; color:#23865f; }
+.admin-shell .camy-entrepreneurs-workspace .empty-exit-inbox strong { font-size:13px; }
+.admin-shell .camy-entrepreneurs-workspace .empty-exit-inbox small { font-size:12px; }
+.camy-entrepreneurs-workspace .entrepreneur-directory-section { border-color:var(--crm-border); border-radius:18px; box-shadow:0 6px 22px #163b5606; }
+.camy-entrepreneurs-workspace .entrepreneur-directory-section>header { min-height:0; padding:22px 24px; background:#fff; }
+.camy-entrepreneurs-workspace .entrepreneur-directory-section>header h2 { font-size:22px; line-height:1.3; }
+.camy-entrepreneurs-workspace .entrepreneur-directory-section>header p { margin-top:7px; font-size:13px; line-height:1.5; }
+.camy-entrepreneurs-workspace .entrepreneur-directory-section>header span { font-size:10px; }
+.camy-entrepreneurs-workspace .entrepreneur-directory-section>header>b { font-size:12px; border-radius:8px; background:#f5f9fc; }
+.camy-entrepreneurs-workspace .management-filters { padding:16px 24px; gap:12px; border:0; border-top:1px solid var(--crm-border); border-bottom:1px solid var(--crm-border); border-radius:0; background:#f8fafc; grid-template-columns:minmax(220px,1fr) 170px auto; }
+.camy-entrepreneurs-workspace .management-filters input { font-size:13px; }
+.camy-entrepreneurs-workspace .management-filters .btn { padding-inline:16px; font-size:12px; border-radius:10px; }
+.camy-entrepreneurs-workspace .people-table .data-row { min-width:940px; grid-template-columns:minmax(250px,1.8fr) 150px minmax(120px,1fr) minmax(100px,.8fr) minmax(100px,.8fr) 40px 48px; min-height:84px; gap:14px; }
+.camy-entrepreneurs-workspace .people-table .data-row.head { min-height:46px; background:#f1f5f8; font-size:11px; letter-spacing:.04em; }
+.camy-entrepreneurs-workspace .people-table .data-row:not(.head)>span { font-size:13px; font-variant-numeric:tabular-nums; }
+.camy-entrepreneurs-workspace .people-table .person strong { font-size:14px; }
+.camy-entrepreneurs-workspace .people-table .person small { font-size:12px; }
+.camy-entrepreneurs-workspace .people-table .member-number { font-size:11px; }
+.camy-entrepreneurs-workspace .people-table .person-avatar { width:42px; height:42px; flex-basis:42px; border-radius:12px; }
+.camy-entrepreneurs-workspace .row-action { width:38px; height:38px; border-radius:10px; }
+.admin-shell .camy-entrepreneurs-workspace .application-workspace { border-color:var(--crm-border); border-radius:18px; box-shadow:0 6px 22px #163b5606; }
+.admin-shell .camy-entrepreneurs-workspace .application-kpis small { font-size:11px; }
+.admin-shell .camy-entrepreneurs-workspace .application-filters { grid-template-columns:minmax(220px,1fr) 165px 170px; }
+.admin-shell .camy-entrepreneurs-workspace .application-filters>.btn { grid-column:1/-1; justify-self:end; font-size:12px; }
+.admin-shell .camy-entrepreneurs-workspace .application-row-actions .btn { font-size:12px; min-height:40px; }
+.camy-entrepreneurs-workspace :is(button,a,input,select):focus-visible { outline:3px solid #3a95c5; outline-offset:3px; }
+.camy-entrepreneurs-workspace :is(.management-filters,.application-filters)>label:focus-within { border-color:#3389b4; box-shadow:0 0 0 3px #3389b417; }
+.camy-entrepreneurs-workspace .btn { transition:background .16s ease,border-color .16s ease,box-shadow .16s ease; }
+.camy-entrepreneurs-workspace .signup-request-entry>.btn:hover { background:#10567e; border-color:#10567e; box-shadow:0 4px 12px #176b9824; }
+@media(min-width:701px) and (max-width:1150px) {
+  .admin-shell .camy-entrepreneurs-workspace .page-title { align-items:flex-start; flex-direction:column; }
+  .admin-shell .camy-entrepreneurs-workspace .page-actions { flex-basis:auto; width:100%; }
+  .admin-shell .camy-entrepreneurs-workspace .page-title-actions { justify-content:flex-start; }
+  .admin-shell .camy-entrepreneurs-workspace .page-title-actions .primary { flex-basis:auto; }
+  .camy-entrepreneurs-workspace .management-filters { grid-template-columns:1fr 1fr; }
+  .camy-entrepreneurs-workspace .management-filters>label { grid-column:1/-1; }
+}
+@media(max-width:700px) {
+  .admin-shell .camy-entrepreneurs-workspace .page-title { padding:24px 20px!important; align-items:stretch; }
+  .admin-shell .camy-entrepreneurs-workspace .page-actions { flex-basis:auto; width:100%; }
+  .admin-shell .camy-entrepreneurs-workspace .page-title-actions { display:grid; grid-template-columns:1fr 1fr; }
+  .admin-shell .camy-entrepreneurs-workspace .page-title-actions .btn { padding:10px; white-space:normal; font-size:12px; }
+  .admin-shell .camy-entrepreneurs-workspace .page-title-actions .btn:last-child { grid-column:1/-1; }
+  .camy-entrepreneurs-workspace .signup-request-entry { padding:18px; gap:12px; flex-wrap:wrap; }
+  .camy-entrepreneurs-workspace .signup-request-entry>.btn { width:100%; }
+  .signup-request-copy h2 { font-size:16px; gap:7px; }
+  .signup-request-copy p { font-size:12px; }
+  .admin-shell .camy-entrepreneurs-workspace .empty-exit-inbox { padding:14px; }
+  .camy-entrepreneurs-workspace .entrepreneur-directory-section>header { padding:20px 16px; gap:12px; }
+  .camy-entrepreneurs-workspace .entrepreneur-directory-section>header h2 { font-size:20px; }
+  .camy-entrepreneurs-workspace .management-filters { grid-template-columns:1fr; }
+  .camy-entrepreneurs-workspace .management-filters>label { grid-column:auto; }
+  .camy-entrepreneurs-workspace .entrepreneur-directory-section>.table-card { padding:12px; background:#f8fafc; }
+  .camy-entrepreneurs-workspace .people-table .data-row:not(.head)>span:nth-child(2)::before { content:'Account stage'; }
+  .camy-entrepreneurs-workspace .people-table .data-row:not(.head)>span:nth-child(3)::before { content:'Sales'; }
+  .camy-entrepreneurs-workspace .people-table .data-row:not(.head)>span:nth-child(4)::before { content:'Credit limit'; }
+  .camy-entrepreneurs-workspace .people-table .data-row:not(.head)>span:nth-child(5)::before { content:'Outstanding'; }
+  .camy-entrepreneurs-workspace .people-table .data-row:not(.head)>span::before { display:block; margin-bottom:6px; font-size:11px; font-weight:500; color:var(--crm-muted); }
+  .camy-entrepreneurs-workspace .people-table .view-action::after { content:'View account'; }
+  .camy-entrepreneurs-workspace .people-table .remove-action::after { content:'Remove entrepreneur'; }
+  .camy-entrepreneurs-workspace .people-table .row-action { display:flex; align-items:center; justify-content:center; gap:8px; font:inherit; font-size:12px; }
+  .admin-shell .camy-entrepreneurs-workspace .application-filters { grid-template-columns:1fr; }
+  .admin-shell .camy-entrepreneurs-workspace .application-kpis { grid-template-columns:1fr 1fr!important; }
+  .admin-shell .camy-entrepreneurs-workspace .application-filters>.btn { width:100%; }
+  .admin-shell .camy-entrepreneurs-workspace .application-table-head { display:none; }
+  .admin-shell .camy-entrepreneurs-workspace .application-table-wrap { overflow:visible; border:0; box-shadow:none; }
+  .admin-shell .camy-entrepreneurs-workspace .application-table-row { min-width:0; grid-template-columns:1fr 1fr; padding:16px; margin-bottom:12px; gap:16px; border:1px solid var(--crm-border); border-radius:12px; }
+  .admin-shell .camy-entrepreneurs-workspace .application-table-row>.person,.admin-shell .camy-entrepreneurs-workspace .application-row-actions { grid-column:1/-1; }
+  .admin-shell .camy-entrepreneurs-workspace .application-table-row :is(strong,small) { white-space:normal; overflow-wrap:anywhere; }
+  .admin-shell .camy-entrepreneurs-workspace .application-row-actions { justify-content:flex-start; }
+  .admin-shell .camy-entrepreneurs-workspace .application-row-actions .btn { flex:1; }
+}
+@media(prefers-reduced-motion:reduce) { .camy-entrepreneurs-workspace,.camy-entrepreneurs-workspace * { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+
+/* Manual registration uses the public registration questions and options. */
+.manual-registration-modal { width:min(880px,calc(100vw - 32px))!important; }
+.manual-registration-form fieldset { min-width:0; margin:0; padding:0; border:0; }
+.manual-registration-form .manual-registration-section { margin-top:24px; padding-top:24px; border-top:1px solid #e0e9f0; }
+.manual-registration-form .manual-registration-section:first-child { margin-top:0; border-top:0; }
+.manual-registration-form .manual-registration-section>header { margin-bottom:20px; }
+.manual-registration-section>header>span { color:#287da7; font-size:10px; font-weight:750; letter-spacing:.1em; }
+.manual-registration-section h3 { margin:7px 0; color:#163b56; font-size:20px; }
+.manual-registration-section header p { margin:0; color:#647a8b; font-size:13px; line-height:1.5; }
+.manual-registration-form :is(.entrepreneur-field-grid,.registration-grid) { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.manual-registration-form .wide { grid-column:1/-1; }
+.manual-registration-form label { min-width:0; }
+.manual-registration-form :is(input:not([type=checkbox]),select,textarea) { width:100%; box-sizing:border-box; min-height:46px; border:1px solid #cddfeb; border-radius:10px; background:#f8fbfd; color:#20445e; font:inherit; font-size:13px; }
+.manual-registration-form select { margin-top:8px; padding:0 12px; }
+.manual-registration-form .nic-upload-grid { margin-top:20px; }
+.manual-registration-form .nic-upload-grid label { position:relative; cursor:pointer; }
+.manual-registration-form .nic-upload-grid img { width:100%; height:120px; object-fit:contain; border-radius:8px; background:#fff; }
+.manual-registration-form .registration-agreement { display:flex; align-items:flex-start; gap:10px; margin-top:18px; }
+.manual-registration-form .registration-agreement input { flex:0 0 18px; width:18px; height:18px; margin-top:3px; accent-color:#1973a2; }
+.manual-registration-form .registration-agreement span { color:#476377; font-size:13px; line-height:1.6; }
+.manual-registration-note { display:flex; gap:10px; align-items:flex-start; padding:14px; margin-top:18px; border-radius:10px; color:#356550; background:#edf7f1; font-size:13px; line-height:1.6; }
+.manual-registration-note svg { flex:0 0 18px; width:18px; margin-top:2px; }
+.manual-registration-form :is(input,select,textarea):focus-visible { outline:3px solid #3389b440; outline-offset:2px; }
+@media(max-width:600px) {
+  .manual-registration-modal { width:calc(100vw - 16px)!important; }
+  .manual-registration-form { padding:24px 16px!important; }
+  .manual-registration-form :is(.entrepreneur-field-grid,.registration-grid,.nic-upload-grid) { grid-template-columns:1fr; }
+  .manual-registration-form .entrepreneur-create-head { padding-right:32px; gap:12px; }
+  .manual-registration-form .entrepreneur-create-head h2 { font-size:23px; }
+  .manual-registration-form .entrepreneur-create-head>span { width:44px; height:44px; flex:0 0 44px; }
+}

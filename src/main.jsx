@@ -10,6 +10,7 @@ import './commission-ui.css'
 import './orders-ui.css'
 import './credit-stock-ui.css'
 import './credit-orders-ui.css'
+import './entrepreneurs-ui.css'
 
 class AppBoundary extends React.Component {
   state = { failed: false }
