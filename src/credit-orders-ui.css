@@ -1,0 +1,209 @@
+/* Credit orders only: presentation overrides, with the existing workflow intact. */
+.entrepreneur-shell[data-page="credit-requests"] {
+  --co-ink: #18374e;
+  --co-muted: #607487;
+  --co-line: #dfe7ee;
+  --co-blue: #176b91;
+  --co-radius: 12px;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+}
+.entrepreneur-shell[data-page="credit-requests"] > main { background: #f4f6f9; }
+.entrepreneur-shell[data-page="credit-requests"] .content-page { padding: 26px 28px 40px; }
+.entrepreneur-shell[data-page="credit-requests"] .topbar-v2 { background: #fff; backdrop-filter: none; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] :is(button, input, textarea) { transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease; }
+.entrepreneur-shell[data-page="credit-requests"] :is(button, input, textarea):focus-visible { outline: 3px solid #70b6d7 !important; outline-offset: 3px; }
+.entrepreneur-shell[data-page="credit-requests"] button:disabled { cursor: not-allowed; opacity: .55; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-requests-only button { font-family: inherit; font-size: 13px; font-weight: 600; border-radius: 8px; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-requests-page-head {
+  min-height: 0; margin-bottom: 22px; padding: 24px 28px; gap: 28px;
+  border: 1px solid #214960; border-radius: 14px;
+  background: linear-gradient(110deg, #12354d, #1a526a); box-shadow: none;
+}
+.entrepreneur-shell[data-page="credit-requests"] .credit-requests-page-head button { min-height: 42px; padding: 0 14px; font-size: 12px; background: #ffffff0c; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-requests-page-head button:hover { background: #ffffff1a; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-requests-page-head small { color: #a4d7e7; font-size: 10px; font-weight: 600; letter-spacing: .1em; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-requests-page-head h1 { margin: 7px 0; font-size: 30px; font-weight: 650; letter-spacing: -.035em; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-requests-page-head p { color: #d0e0e8; font-size: 13px; line-height: 1.65; }
+.entrepreneur-shell[data-page="credit-requests"] :is(.credit-request-centre, .credit-request-detail-page) { border: 1px solid var(--co-line); border-radius: 14px; background: #fff; box-shadow: 0 4px 20px #17364d04; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-centre > header { min-height: 0; padding: 22px 24px; background: #fff; border-bottom-color: var(--co-line); }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-centre > header small { color: var(--co-blue); font-size: 10px; font-weight: 600; letter-spacing: .09em; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-centre > header h2 { margin: 7px 0 6px; color: var(--co-ink); font-size: 23px; font-weight: 650; letter-spacing: -.025em; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-centre > header p { color: var(--co-muted); font-size: 13px; line-height: 1.6; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-centre > header > b { padding: 7px 10px; border: 1px solid var(--co-line); border-radius: 7px; color: #526d81; background: #f7f9fb; font-size: 12px; font-weight: 550; white-space: nowrap; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-panel { margin: 20px 24px 0; border-color: var(--co-line); border-radius: var(--co-radius); background: #fff; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-heading { padding: 18px 18px 14px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-heading small { color: var(--co-muted); font-size: 10px; font-weight: 600; letter-spacing: .07em; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-heading strong { margin-top: 5px; color: var(--co-ink); font-size: 14px; font-weight: 600; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-heading > span { color: var(--co-muted); font-size: 12px; font-weight: 400; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-status-filters { padding: 0 18px 18px; gap: 8px; grid-template-columns: repeat(6,minmax(0,1fr)); }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-status-filters button { min-height: 48px; padding: 9px 12px; border-color: var(--co-line); border-radius: 8px; color: #456176; background: #f9fbfc; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-status-filters button:hover { transform: none; border-color: #a9c4d4; background: #f0f6fa; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-status-filters button > span { overflow: visible; font-size: 12px; font-weight: 550; gap: 8px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-status-filters button i { width: 6px; height: 6px; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-status-filters button strong { min-width: 25px; height: 25px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #eaf0f4; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-status-filters button.active { color: #fff; border-color: #164d6d; background: #164d6d; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-status-filters button.active strong { color: #fff; background: #ffffff22; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools { padding: 18px 18px 12px; grid-template-columns: minmax(160px,1fr) 165px 165px auto; gap: 12px; align-items: end; background: #f8fafc; border-top-color: var(--co-line); }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools label { min-width: 0; color: #4c6579; font-size: 12px; font-weight: 550; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-search > span { color: #4c6579; font-size: 12px; font-weight: 550; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-search > div { height: 44px; margin-top: 7px; border-color: #d4dfe7; border-radius: 8px; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-search > div:focus-within { border-color: var(--co-blue); box-shadow: 0 0 0 3px #176b9115; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools input { width: 100%; min-width: 0; height: 44px; margin-top: 7px; padding: 0 11px; border: 1px solid #d4dfe7; border-radius: 8px; color: var(--co-ink); font-size: 13px; font-weight: 400; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools input::placeholder { color: #758697; font-weight: 400; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-tools > button { height: 44px; padding: 0 14px; border-color: #d4dfe7; border-radius: 8px; color: #466175; background: #fff; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-date-shortcuts { padding: 0 18px 18px; gap: 8px; background: #f8fafc; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-date-shortcuts > span { color: var(--co-muted); font-size: 10px; font-weight: 600; letter-spacing: .05em; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-date-shortcuts button { min-height: 36px; padding: 0 12px; border-color: #dbe4eb; color: #516b7f; background: #fff; font-size: 12px; font-weight: 500; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-date-shortcuts button.active { color: #176b91; border-color: #bfd7e4; background: #eaf3f8; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-export { margin: 18px 24px; padding: 15px 18px; grid-template-columns: 36px minmax(0,1fr) auto; gap: 12px; border: 1px solid #dde8ef; border-radius: 10px; background: #f5f9fc; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-export > span { width: 36px; height: 36px; border-radius: 8px; color: var(--co-blue); background: #e5eff6; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-export svg { width: 18px; height: 18px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-export strong { color: var(--co-ink); font-size: 13px; font-weight: 600; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-export small { margin-top: 4px; color: var(--co-muted); font-size: 12px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-export button { min-height: 42px; padding: 0 16px; background: #164d6d; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list { padding: 0 24px 24px; display: grid; gap: 10px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article { min-height: 100px; padding: 18px; gap: 18px; grid-template-columns: 38px minmax(150px,1.1fr) minmax(110px,.7fr) 105px minmax(170px,1fr) auto; border-color: var(--co-line); border-radius: 10px; background: #fff; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article:hover { transform: none; border-color: #a9c4d4; background: #fbfdfe; box-shadow: 0 3px 12px #17364d06; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article > span:first-child { width: 38px; height: 38px; border-radius: 9px; color: #176b91; background: #edf4f8; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article > div { min-width: 0; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list small { color: var(--co-muted); font-size: 10px; font-weight: 600; letter-spacing: .05em; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list strong { color: var(--co-ink); font-size: 14px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list p { margin: 6px 0 0; color: var(--co-muted); font-size: 12px; line-height: 1.5; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-row-note { display: block; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-row-note strong { font-size: 12px; font-weight: 500; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article > button { min-height: 40px; padding: 0 12px; border-color: #c7dce7; color: #176b91; background: #f4f9fc; white-space: nowrap; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article > button:hover { color: #fff; background: #164d6d; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article:is(.cancelled,.rejected) { opacity: 1; background: #fafbfc; }
+.entrepreneur-shell[data-page="credit-requests"] .market-status { min-height: 0; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; line-height: 1.5; }
+.entrepreneur-shell[data-page="credit-requests"] .market-status.dispatched { color: #14658b; background: #e8f3f9; }
+.entrepreneur-shell[data-page="credit-requests"] .market-status.approved { color: #1c7256; background: #e8f5ef; }
+.entrepreneur-shell[data-page="credit-requests"] .market-status.pending { color: #8a611b; background: #fff4df; }
+.entrepreneur-shell[data-page="credit-requests"] .market-status.cancelled { color: #5e6b78; background: #eaf0f4; }
+.entrepreneur-shell[data-page="credit-requests"] .market-status.rejected { color: #9c443e; background: #fbeceb; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article.credit-overdue { border-color: #e9b9b4; background: #fff8f7; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article.credit-overdue .credit-request-row-note strong { color: #a93630; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article.credit-due-today { border-color: #e8d09c; background: #fffcf5; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article.credit-due-today .credit-request-row-note strong { color: #875b13; }
+
+/* Request details: summary, products, progress, payment and extension remain in order. */
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-detail-page > header { min-height: 0; padding: 24px; gap: 22px; grid-template-columns: auto minmax(0,1fr) auto; background: linear-gradient(110deg,#12354d,#1a526a); }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-detail-page > header button { min-height: 42px; padding: 0 14px; font-size: 12px; transform: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-detail-page > header small { font-size: 10px; font-weight: 550; letter-spacing: .09em; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-detail-page > header h2 { margin: 6px 0; color: #fff; font-size: 25px; font-weight: 650; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-detail-page > header p { font-size: 12px; line-height: 1.5; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-detail-kpis { grid-template-columns: repeat(3,minmax(0,1fr)) minmax(0,1.5fr); background: #f8fafc; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-detail-kpis > span { min-width: 0; min-height: 92px; padding: 18px 24px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-detail-kpis small { color: var(--co-muted); font-size: 10px; font-weight: 600; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-detail-kpis strong { margin-top: 8px; color: var(--co-ink); font-size: 18px; font-weight: 600; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-detail-kpis > span:last-child strong { font-size: 13px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-products { margin: 24px; padding: 0; border-color: var(--co-line); border-radius: 10px; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] :is(.credit-request-product-head,.credit-request-product) { min-width: 0; grid-template-columns: minmax(0,1fr) 110px 90px 115px; gap: 18px; padding: 14px 18px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-product-head { min-height: 44px; color: var(--co-muted); background: #f8fafc; font-size: 10px; font-weight: 600; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-product { min-height: 88px; color: #456176; font-size: 13px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-product strong { color: var(--co-ink); font-weight: 600; line-height: 1.5; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-product small { color: var(--co-muted); font-size: 12px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-product img { width: 48px; height: 48px; background: #f8fafc; }
+.entrepreneur-shell[data-page="credit-requests"] :is(.credit-request-product-head,.credit-request-product) > :not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-progress { margin: 0 24px 24px; padding: 24px; border-color: var(--co-line); border-radius: 10px; background: #f8fafc; grid-template-columns: minmax(0,1fr) minmax(16px,.7fr) minmax(0,1fr) minmax(16px,.7fr) minmax(0,1fr); }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-progress span i { width: 32px; height: 32px; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-progress span b { margin-top: 10px; font-size: 12px; font-weight: 600; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-progress small { margin-top: 5px; color: var(--co-muted); font-size: 11px; line-height: 1.5; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-progress hr { margin-top: 15px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail { margin: 24px; padding: 24px; border-color: #cbdfe9; border-radius: 12px; background: #f4f9fc; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail > header { align-items: flex-start; gap: 14px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail > header > span { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 10px; background: #176b91; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail > header small { color: #176b91; font-size: 10px; font-weight: 600; letter-spacing: .06em; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail h3 { margin: 7px 0; color: var(--co-ink); font-size: 22px; font-weight: 650; letter-spacing: -.025em; line-height: 1.4; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail p { color: var(--co-muted); font-size: 13px; line-height: 1.65; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail > div { margin: 20px 0; gap: 12px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail article { padding: 18px; border-color: var(--co-line); border-radius: 10px; gap: 12px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail article > svg { width: 20px; height: 20px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail article strong { color: var(--co-ink); font-size: 14px; font-weight: 600; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail article small { margin-top: 7px; color: var(--co-muted); font-size: 12px; line-height: 1.65; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail > button { min-height: 44px; padding: 0 18px; background: #164d6d; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail > button:hover { background: #1d668b; }
+.entrepreneur-shell[data-page="credit-requests"] :is(.credit-extension-form,.credit-extension-status) { margin-top: 22px; padding: 20px; border: 1px solid var(--co-line); border-radius: 10px; background: #fff; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-extension-form > strong { color: var(--co-ink); font-size: 15px; font-weight: 600; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-extension-form > p { margin: 6px 0 18px; font-size: 12px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-extension-form label { display: grid; gap: 7px; margin: 14px 0; color: #4c6579; font-size: 12px; font-weight: 550; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-extension-form :is(input,textarea) { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid #d4dfe7; border-radius: 8px; color: var(--co-ink); background: #fff; font-size: 13px; font-weight: 400; line-height: 1.5; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-extension-form input { max-width: 300px; min-height: 44px; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-extension-form textarea { resize: vertical; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-extension-form button { min-height: 42px; padding: 0 16px; border: 1px solid #c7dce7; color: #176b91; background: #edf5fa; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-detail-footer { min-height: 0; padding: 20px 24px; background: #fff; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-detail-footer strong { color: var(--co-ink); font-size: 14px; font-weight: 600; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-detail-footer p { color: var(--co-muted); font-size: 12px; line-height: 1.6; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-empty { margin: 0 24px 24px; padding: 44px 20px; border: 1px dashed var(--co-line); border-radius: 10px; background: #fafcfd; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-closed { padding: 32px 24px; }
+
+@media (min-width: 901px) {
+  .app-v2.entrepreneur-shell[data-page="credit-requests"] { --sidebar: 256px !important; }
+  .entrepreneur-shell[data-page="credit-requests"] .sidebar-v2 { overflow-y: auto; box-shadow: none; }
+  .entrepreneur-shell[data-page="credit-requests"] .side-links button { font-size: 13px; border-radius: 9px; }
+}
+@media (max-width: 1400px) {
+  .entrepreneur-shell[data-page="credit-requests"] .top-search { display: none; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article { grid-template-columns: 38px minmax(0,1fr) minmax(0,.8fr) auto; gap: 16px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article > div:nth-of-type(3) { grid-column: 2; grid-row: 2; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-row-note { grid-column: 3 / 5; grid-row: 2; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article > button { grid-column: 4; grid-row: 1; }
+}
+@media (max-width: 1100px) {
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-status-filters { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-tools { grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-tools .credit-request-search { grid-column: 1 / -1; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-detail-kpis { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-detail-kpis > span { border-bottom: 1px solid var(--co-line); }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-detail-page > header { gap: 16px; }
+}
+@media (max-width: 760px) {
+  .entrepreneur-shell[data-page="credit-requests"] .content-page { padding: 18px 16px 104px !important; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-requests-page-head { padding: 22px 20px; flex-direction: column; align-items: flex-start; gap: 18px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-requests-page-head h1 { font-size: 27px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-centre > header { padding: 20px 16px; flex-direction: row; align-items: flex-start; gap: 12px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-centre > header h2 { font-size: 21px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-panel { margin: 16px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-heading { padding: 16px; gap: 8px; flex-direction: column; align-items: flex-start; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-status-filters { padding: 0 16px 16px; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-tools { padding: 16px; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-tools > button { grid-column: 1 / -1; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-date-shortcuts { padding: 0 16px 16px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-date-shortcuts > span { width: 100%; margin-bottom: 2px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-date-shortcuts button { min-height: 44px; flex: 1 1 auto; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-export { margin: 16px; grid-template-columns: 36px minmax(0,1fr); padding: 16px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-export button { grid-column: 1 / -1; min-height: 44px; justify-content: center; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list { padding: 0 16px 16px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article { padding: 16px; grid-template-columns: 38px minmax(0,1fr); gap: 16px 12px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article > div { grid-column: 2; grid-row: auto; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article > div:nth-of-type(3) { grid-column: 2; grid-row: auto; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-compact-list article > button { grid-column: 1 / -1; grid-row: auto; width: 100%; min-height: 44px; justify-content: center; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-detail-page > header { padding: 20px 16px; grid-template-columns: minmax(0,1fr) auto; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-detail-page > header > button { grid-column: 1 / -1; grid-row: auto; width: auto; justify-content: center; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-detail-page > header > .market-status { grid-column: 2; grid-row: 2; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-detail-page > header h2 { font-size: 20px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-detail-kpis > span { padding: 16px; min-height: 88px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-detail-kpis strong { font-size: 17px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-products { margin: 16px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-product-head { display: none; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-product { grid-template-columns: repeat(3,minmax(0,1fr)); padding: 16px; gap: 14px 8px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-product > span:first-child { grid-column: 1 / -1; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-product > :not(:first-child) { text-align: left; font-size: 12px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-product > :nth-child(2)::before { content: 'Unit price'; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-product > :nth-child(3)::before { content: 'Quantity'; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-product > :nth-child(4)::before { content: 'Line total'; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-product > :not(:first-child)::before { display: block; margin-bottom: 5px; color: var(--co-muted); font-size: 10px; font-weight: 500; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-progress { margin: 0 16px 16px; padding: 20px 10px; grid-template-columns: minmax(0,1fr) 12px minmax(0,1fr) 12px minmax(0,1fr); }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-progress small { font-size: 10px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail { margin: 16px; padding: 18px 16px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail h3 { font-size: 19px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail > div { grid-template-columns: minmax(0,1fr); }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-repayment-detail > button { width: 100%; justify-content: center; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-extension-form { padding: 16px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-extension-form input { max-width: none; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-extension-form button { width: 100%; min-height: 44px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-detail-footer { padding: 18px 16px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-requests-only :is(input,textarea) { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .entrepreneur-shell[data-page="credit-requests"] :is(button,input,textarea,article) { transition: none !important; }
+}
