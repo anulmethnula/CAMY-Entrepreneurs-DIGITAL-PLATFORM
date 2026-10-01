@@ -190,7 +190,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
             $state['orders'][$index]['deliveryConfirmations']['customer']=['id'=>(int)$customer['id'],'name'=>$customer['name'],'at'=>date(DATE_ATOM)];
             $state['orders'][$index]['status']='Delivered';$state['orders'][$index]['updatedAt']=date(DATE_ATOM);$state['orders'][$index]['deliveredAt']=date(DATE_ATOM);
             $pdo->prepare("UPDATE shop_orders SET status='Delivered',delivered_at=COALESCE(delivered_at,NOW()) WHERE id=?")->execute([$order['id']]);
-            $shop=$order['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=catalogue_order_profit($entry);
+            $shop=$order['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=catalogue_order_sales_value($entry);
             $credit=catalogue_credit_for_sales($state['tiers'],$sales);
             foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
             market_save($pdo,$state);

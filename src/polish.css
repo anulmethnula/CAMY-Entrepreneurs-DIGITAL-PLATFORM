@@ -1609,5 +1609,259 @@ html,body,#root,.app-v2{width:100%;max-width:100%;overflow-x:hidden}.app-v2>main
 }
 @media(max-width:650px){
   .credit-product-dialog-overlay{padding:8px!important;align-items:flex-end!important}
-  .credit-product-dialog-overlay>.credit-product-dialog{max-height:calc(100dvh - 16px)!important;margin:auto 0 0!important}
+.credit-product-dialog-overlay>.credit-product-dialog{max-height:calc(100dvh - 16px)!important;margin:auto 0 0!important}
+}
+
+/* Refined entrepreneur commission wallet */
+.entrepreneur-shell[data-page="earnings"] .page-content,.entrepreneur-shell[data-page="earnings"] .content-page,.entrepreneur-shell[data-page="commissions"] .page-content,.entrepreneur-shell[data-page="commissions"] .content-page{max-width:none}
+.commission-ledger-page{gap:18px!important;padding-bottom:34px;color:#143b53}
+.commission-ledger-hero{min-height:0!important;padding:25px 27px 24px!important;border-radius:24px!important;background:radial-gradient(circle at 88% 12%,rgba(60,207,185,.24),transparent 27%),linear-gradient(125deg,#0b3049 0%,#0c5e78 60%,#087f8c 100%)!important;box-shadow:0 18px 42px rgba(10,54,78,.15)!important}
+.commission-ledger-hero:after{right:-130px!important;bottom:-225px!important;width:430px!important;height:430px!important;opacity:.8}
+.commission-hero-top{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.commission-hero-badge{padding:8px 11px;border:1px solid rgba(255,255,255,.16);border-radius:999px;color:#c5f4e5;background:rgba(3,39,53,.2);display:flex;align-items:center;gap:6px;font-size:9px;font-weight:800}.commission-hero-badge svg{width:14px}
+.commission-hero-layout{position:relative;z-index:2;margin-top:20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,310px);align-items:end;gap:30px}
+.commission-hero-copy{margin:0!important}.commission-hero-copy h1{margin:7px 0 8px!important;font-size:clamp(30px,3vw,42px)!important}.commission-hero-copy p{max-width:590px!important;color:#d3e8ee!important;font-size:12px!important}
+.commission-balance{position:static!important;min-width:0!important;padding:17px 19px!important;border-radius:16px!important;background:rgba(255,255,255,.11)!important}.commission-balance strong{margin:5px 0 7px!important;font-size:26px!important}.commission-balance small{letter-spacing:.07em}.commission-balance span{display:flex!important;align-items:center;gap:5px}
+.commission-summary-grid{margin-top:20px!important;gap:11px!important}.commission-summary-grid article{min-height:84px!important;padding:14px 15px!important;border-radius:15px!important;background:rgba(4,39,54,.3)!important}.commission-summary-icon{width:40px!important;height:40px!important;border-radius:12px!important}.commission-summary-grid strong{font-size:18px!important}.commission-summary-grid p{font-size:9px!important}
+.commission-ledger-panel{padding:25px!important;border-color:#d6e4eb!important;border-radius:22px!important;box-shadow:0 12px 32px rgba(13,58,84,.05)!important}
+.commission-ledger-toolbar{align-items:center!important;padding-bottom:18px;border-bottom:1px solid #e4edf1}.commission-ledger-toolbar h2{font-size:25px!important}.commission-ledger-toolbar>strong{min-width:90px;padding:10px 13px;border-radius:12px;color:#116f8b;background:#edf8fb;text-align:center;font-size:18px}.commission-ledger-toolbar>strong small{display:block;margin-top:2px;color:#72909d;font-size:8px;font-weight:700}
+.commission-filter-boxes{margin:18px 0 12px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.commission-filter-boxes>button{min-height:72px;padding:11px 12px;border:1px solid #dce8ed;border-radius:15px;color:#496778;background:#fbfdfe;display:grid;grid-template-columns:35px minmax(0,1fr) auto;align-items:center;gap:10px;font:inherit;text-align:left;cursor:pointer;transition:.18s ease}.commission-filter-boxes>button:hover{transform:translateY(-1px);border-color:#a9cad7;box-shadow:0 8px 20px rgba(15,68,93,.07)}.commission-filter-boxes>button>span:first-child{width:35px;height:35px;border-radius:11px;color:#367c99;background:#eaf5f9;display:grid;place-items:center}.commission-filter-boxes svg{width:16px}.commission-filter-boxes>button>span:nth-child(2) strong,.commission-filter-boxes>button>span:nth-child(2) small{display:block}.commission-filter-boxes>button>span:nth-child(2) strong{color:#183f56;font-size:11px}.commission-filter-boxes>button>span:nth-child(2) small{margin-top:3px;color:#7b909b;font-size:8px}.commission-filter-boxes>button>b{min-width:25px;height:25px;padding:0 6px;border-radius:999px;color:#567484;background:#edf3f5;display:grid;place-items:center;font-size:9px}.commission-filter-boxes>button.active{border-color:#176e8d;color:#fff;background:linear-gradient(135deg,#103f59,#14768b);box-shadow:0 9px 20px rgba(16,83,109,.16)}.commission-filter-boxes>button.active>span:first-child{color:#fff;background:rgba(255,255,255,.14)}.commission-filter-boxes>button.active>span:nth-child(2) strong{color:#fff}.commission-filter-boxes>button.active>span:nth-child(2) small{color:#bcdce4}.commission-filter-boxes>button.active>b{color:#14556c;background:#fff}.commission-filter-boxes>button.paid:not(.active)>span:first-child{color:#16805f;background:#e6f7f0}.commission-filter-boxes>button.waiting:not(.active)>span:first-child{color:#a87518;background:#fff4d9}.commission-filter-boxes>button.review:not(.active)>span:first-child{color:#a94c43;background:#fff0ee}
+.commission-filter-panel{margin:0 0 16px;padding:13px;border:1px solid #dfe9ee;border-radius:16px;background:#f7fafb;display:grid;grid-template-columns:minmax(230px,1.5fr) minmax(155px,.7fr) minmax(155px,.7fr) auto;align-items:end;gap:10px}.commission-filter-panel label>span{display:block;margin:0 0 6px 2px;color:#637d8c;font-size:8px;font-weight:850;letter-spacing:.03em}.commission-filter-panel input{width:100%;height:42px;padding:0 11px;border:1px solid #d2e0e6;border-radius:11px;color:#173c52;background:#fff;font:inherit;font-size:11px;outline:none}.commission-filter-panel input:focus{border-color:#4d9eb9;box-shadow:0 0 0 3px rgba(42,137,171,.1)}.commission-search-filter>div{position:relative}.commission-search-filter svg{position:absolute;left:12px;top:12px;width:17px;color:#78909d}.commission-search-filter input{padding-left:39px}.commission-filter-panel>button{height:42px;padding:0 15px;border:1px solid #cadde5;border-radius:11px;color:#276b86;background:#fff;display:flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-size:10px;font-weight:850;cursor:pointer}.commission-filter-panel>button:hover:not(:disabled){border-color:#89b8ca;background:#eef8fb}.commission-filter-panel>button:disabled{opacity:.42;cursor:not-allowed}.commission-filter-panel>button svg{width:14px}
+.commission-ledger-list{gap:9px!important}.commission-ledger-row{min-height:92px!important;padding:14px 15px!important;border-color:#dce7ec!important;border-radius:15px!important;grid-template-columns:46px minmax(170px,1.35fr) minmax(120px,.8fr) minmax(135px,.9fr) minmax(145px,.75fr) 36px!important}.commission-ledger-row:before{position:absolute;left:0;top:16px;bottom:16px;width:3px;border-radius:0 3px 3px 0;background:#d5a64d;content:""}.commission-ledger-row{position:relative}.commission-ledger-row.paid:before{background:#2aa57a}.commission-ledger-row.review:before{background:#d35d50}.commission-ledger-row:hover{transform:translateY(-1px)!important;border-color:#9fc5d3!important;box-shadow:0 9px 22px rgba(14,65,91,.08)!important}.commission-row-action{transition:.18s ease}.commission-ledger-row:hover .commission-row-action{color:#fff;background:#197a9e;transform:translateX(2px)}
+@media(max-width:1100px){.commission-filter-boxes{grid-template-columns:1fr 1fr}.commission-filter-panel{grid-template-columns:1fr 1fr}.commission-search-filter{grid-column:1/-1}.commission-filter-panel>button{align-self:end}.commission-ledger-row{grid-template-columns:44px minmax(0,1.2fr) minmax(110px,.75fr) minmax(130px,.75fr) 34px!important}.commission-row-reference{display:none}}
+@media(max-width:760px){.commission-ledger-page{gap:12px!important}.commission-ledger-hero{padding:18px!important;border-radius:19px!important}.commission-hero-badge{display:none}.commission-hero-layout{margin-top:14px;grid-template-columns:1fr;gap:15px}.commission-balance{width:100%!important}.commission-summary-grid{grid-template-columns:1fr!important}.commission-ledger-panel{padding:15px!important;border-radius:18px!important}.commission-ledger-toolbar{align-items:flex-start!important}.commission-ledger-toolbar>strong{display:none}.commission-filter-boxes{grid-template-columns:1fr 1fr;gap:8px}.commission-filter-boxes>button{min-height:65px;padding:9px;grid-template-columns:32px 1fr auto}.commission-filter-boxes>button>span:first-child{width:32px;height:32px}.commission-filter-boxes>button>span:nth-child(2) small{display:none}.commission-filter-panel{grid-template-columns:1fr 1fr;padding:10px}.commission-search-filter{grid-column:1/-1}.commission-filter-panel>button{grid-column:1/-1}.commission-ledger-row{grid-template-columns:42px minmax(0,1fr) 32px!important}.commission-row-state,.commission-row-amount{grid-column:2}.commission-row-action{grid-column:3;grid-row:1/4}}
+
+/* Desktop readability and financial-row alignment.
+   A number of legacy screens used 8–10px helper text. Keep the compact visual
+   hierarchy, but make all working text comfortably readable in the web app. */
+@media (min-width:901px) {
+  .app-v2 { font-size:15px; }
+  .app-v2 small { font-size:11px!important; line-height:1.45; }
+  .app-v2 p { font-size:12px; }
+  .app-v2 label { font-size:12px; }
+  .app-v2 input,
+  .app-v2 select,
+  .app-v2 textarea,
+  .app-v2 button { font-size:13px; }
+  .app-v2 .status-pill,
+  .app-v2 .market-status { min-height:30px; padding:6px 11px; font-size:11px; }
+
+  .commission-filter-boxes>button>span:nth-child(2) strong { font-size:12px; }
+  .commission-filter-boxes>button>span:nth-child(2) small,
+  .commission-filter-panel label>span,
+  .commission-ledger-toolbar>strong small { font-size:10px!important; }
+  .commission-filter-panel input { font-size:13px; }
+
+  .commission-ledger-row {
+    min-height:100px!important;
+    padding:16px 18px!important;
+    column-gap:18px;
+  }
+  .commission-ledger-row>span { min-width:0; }
+  .commission-row-main small,
+  .commission-ledger-row>span>small {
+    display:block;
+    margin:0 0 7px;
+    font-size:10px!important;
+    line-height:1.25;
+  }
+  .commission-row-main strong { margin:0 0 4px; font-size:14px; line-height:1.35; }
+  .commission-row-main em { font-size:11px; }
+  .commission-row-state { display:flex; flex-direction:column; align-items:flex-start; }
+  .commission-row-state .status-pill { margin-top:0; }
+  .commission-row-reference strong { max-width:100%; margin-top:0; font-size:12px; line-height:1.35; }
+  .commission-row-amount { display:flex; flex-direction:column; align-items:flex-end; }
+  .commission-row-amount strong { margin-top:0; font-size:20px; line-height:1.25; }
+}
+@media(max-width:430px){.commission-filter-boxes{grid-template-columns:1fr}.commission-filter-panel{grid-template-columns:1fr}.commission-filter-panel label{grid-column:1}.commission-hero-copy h1{font-size:28px!important}}
+
+/* Credit stock catalogue: one dependable desktop composition.
+   These rules intentionally live after the shared stock-market styles so the
+   catalogue, cards and sticky summary use the same alignment system. */
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-page{
+  max-width:none;
+  padding-bottom:48px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-page-actions,
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero,
+.entrepreneur-shell[data-page="credit-stock"] .shop-home-stats,
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout{
+  width:100%;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-page-actions{
+  min-height:68px;
+  margin:0 0 16px;
+  padding:12px 14px 12px 20px;
+  border-radius:18px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-page-actions button{
+  min-height:44px;
+  padding-inline:16px;
+  border-radius:12px;
+  box-shadow:0 8px 18px rgba(14,82,120,.14);
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero{
+  min-height:210px;
+  padding:30px 34px;
+  align-items:center;
+  border-radius:24px;
+  box-shadow:0 18px 42px rgba(11,57,86,.16);
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero>div:first-child{min-width:0}
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero h1{
+  margin:10px 0;
+  font-size:clamp(31px,2.6vw,40px);
+  line-height:1.08;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero p{
+  max-width:720px;
+  font-size:13px;
+  line-height:1.65;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero .stock-buy-steps{
+  width:280px;
+  min-width:280px;
+  padding:16px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .shop-home-stats{
+  margin:16px 0 0;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .shop-home-stats article{
+  min-height:104px;
+  padding:17px 20px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout{
+  margin-top:22px;
+  grid-template-columns:minmax(0,1fr) 360px;
+  gap:20px;
+  align-items:start;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout>section{
+  padding:18px;
+  border:1px solid #d6e4ec;
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 12px 32px rgba(13,58,84,.055);
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout .stock-catalogue-title{
+  min-height:82px;
+  margin:0;
+  padding:16px 18px;
+  align-items:center;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout .stock-catalogue-title h2{
+  margin-top:5px;
+  font-size:24px;
+  line-height:1.2;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-tools{
+  margin:12px 0;
+  padding:10px;
+  grid-template-columns:minmax(220px,1fr) minmax(165px,190px) auto;
+  gap:10px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-tools label,
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-tools select{
+  width:100%;
+  min-width:0;
+  height:44px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-category-tabs{
+  min-height:42px;
+  margin:0 0 12px;
+  align-items:center;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout .stock-product-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  align-items:stretch;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-product-card{
+  height:100%;
+  min-height:430px;
+  border-radius:18px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-image{
+  height:190px;
+  padding:18px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-copy{
+  min-height:238px;
+  padding:16px 17px 17px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-copy>p{
+  min-height:40px;
+  max-height:40px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-product-facts{
+  min-height:58px;
+  align-items:stretch;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-product-actions{
+  grid-template-columns:minmax(96px,.8fr) minmax(150px,1.55fr);
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-product-actions button{
+  min-width:0;
+  min-height:44px;
+  white-space:nowrap;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout>.stock-request-card{
+  top:88px!important;
+  width:100%;
+  min-width:0;
+  padding:20px!important;
+  border-radius:22px!important;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout>.stock-request-card header{
+  min-height:78px;
+  margin:-20px -20px 18px;
+  padding:17px 20px;
+  border-radius:21px 21px 0 0;
+}
+.entrepreneur-shell[data-page="credit-stock"] .stock-cart-empty{
+  min-height:132px;
+  margin:0 0 16px;
+  display:grid;
+  align-content:center;
+  justify-items:center;
+}
+.entrepreneur-shell[data-page="credit-stock"] .stock-request-card .market-total{
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.entrepreneur-shell[data-page="credit-stock"] .stock-request-card .credit-safe-note{
+  min-height:88px;
+  display:grid;
+  grid-template-columns:20px 1fr;
+  align-items:start;
+  gap:8px;
+}
+.entrepreneur-shell[data-page="credit-stock"] .stock-request-card .credit-safe-note svg{margin-top:2px}
+
+@media (max-width:1320px) and (min-width:1051px){
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout{grid-template-columns:minmax(0,1fr) 330px}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-tools{grid-template-columns:minmax(180px,1fr) 160px}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-tools>span{grid-column:1/-1}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-product-actions{grid-template-columns:1fr}
+}
+@media (max-width:1050px){
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout{grid-template-columns:1fr}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout>.stock-request-card{position:static!important}
+}
+@media (max-width:760px){
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-page-actions{align-items:stretch;flex-direction:column}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero{min-height:0;padding:23px 19px}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero .stock-buy-steps{width:100%;min-width:0}
+  .entrepreneur-shell[data-page="credit-stock"] .shop-home-stats{grid-template-columns:1fr}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout>section{padding:13px;border-radius:18px}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-tools{grid-template-columns:1fr}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-tools>span{grid-column:auto}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout .stock-product-grid{grid-template-columns:1fr}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card{min-height:0}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-copy{min-height:0}
+  .entrepreneur-shell[data-page="credit-stock"] .credit-product-actions{grid-template-columns:1fr}
 }

@@ -48,7 +48,7 @@ If an already-paid dropship order is later returned, its entrepreneur payout bec
 
 ## Verified sales and Phase 2 eligibility
 
-Credit-tier calculations use the **CAMY product value of successfully delivered orders**, not the entrepreneur's markup.
+Credit-tier calculations use the **total product selling value of successfully delivered orders** (selling price × quantity). Entrepreneur profit and delivery charges do not count toward the tier.
 
 The CAMY brief defines configurable sales-based credit tiers but does not define one fixed trial duration. Therefore the system uses CAMY Admin's configured first credit milestone as the Phase 2 unlock.
 
@@ -78,10 +78,12 @@ The entrepreneur can keep placing the same COD client orders. CAMY delivers to t
 5. CAMY Admin checks eligibility, available credit and warehouse stock.
 6. **Approve** reserves the warehouse units but does not yet increase outstanding credit.
 7. **Dispatch** moves the units to the entrepreneur's issued inventory and increases their outstanding credit by the request value.
-8. Entrepreneur later settles the outstanding credit through the Credit & Settlements flow.
-9. CAMY verifies settlements before reducing outstanding credit.
+8. Tier 1 receives 21 days to settle; every higher tier receives 10 days.
+9. The entrepreneur must settle this credit order before another credit-stock order can be requested or dispatched.
+10. If more time is needed, the entrepreneur requests a later date and CAMY Admin approves or rejects it.
+11. CAMY verifies the full per-order settlement before reducing outstanding credit and reopening credit-stock purchasing.
 
-The server blocks requests or dispatches that would exceed the entrepreneur's current credit limit.
+The server blocks requests or dispatches that would exceed the entrepreneur's current credit limit, and blocks new credit stock while an earlier dispatched credit order is unpaid.
 
 ## Phase 3 — Credit & settlement tracking
 

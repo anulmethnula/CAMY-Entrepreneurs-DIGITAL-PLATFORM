@@ -59,13 +59,21 @@ function catalogue_credit_progression(array $tiers, float $sales): array {
 function catalogue_credit_for_sales(array $tiers, float $sales): float {
     return round((float)catalogue_credit_progression($tiers, $sales)['credit'], 2);
 }
-function catalogue_order_profit(array $order): float {
-    if(array_key_exists('entrepreneurMargin',$order))return max(0.0,(float)$order['entrepreneurMargin']);
-    return max(0.0,(float)($order['amount'] ?? 0)-(float)($order['camyCost'] ?? $order['amount'] ?? 0));
+function catalogue_order_sales_value(array $order): float {
+    // Credit tiers are earned from the products' actual client selling value,
+    // not from the entrepreneur's profit and not from delivery charges.
+    if(!empty($order['items'])&&is_array($order['items'])){
+        $value=0.0;
+        foreach($order['items'] as $item)$value+=max(0.0,(float)($item['price']??0))*max(0,(int)($item['qty']??0));
+        return round($value,2);
+    }
+    // Historical records may not contain line items. Their stored order total is
+    // the safest available selling-value snapshot.
+    return max(0.0,round((float)($order['amount']??0),2));
 }
 function catalogue_credit(array &$state): void {
     foreach($state['entrepreneurs'] as &$person){
-        $sales=0;foreach($state['orders'] as $order)if((string)$order['entrepreneurId']===(string)$person['id']&&$order['status']==='Delivered')$sales+=catalogue_order_profit($order);
+        $sales=0;foreach($state['orders'] as $order)if((string)$order['entrepreneurId']===(string)$person['id']&&$order['status']==='Delivered')$sales+=catalogue_order_sales_value($order);
         $credit = catalogue_credit_for_sales($state['tiers'], $sales);
         $person['sales']=round($sales,2);$person['credit']=$credit;
         if(($person['stage'] ?? '')!=='Departed')$person['stage']=$credit>0?'Credit eligible':'Trial seller';
@@ -96,15 +104,21 @@ function catalogue_route(PDO $pdo,string $path,string $method): void {
         response(['media'=>['type'=>str_starts_with($match[1],'image/')?'image':'video','src'=>'/api/product-media/'.$name,'name'=>substr(basename((string)($data['name']??'Media')),0,190)]]);
     }
     if($path==='/admin/credit-settlements' && $method==='POST'){
-        $actor=require_admin($pdo);$data=input();$amount=filter_var($data['amount'] ?? null,FILTER_VALIDATE_FLOAT);$reference=trim((string)($data['reference'] ?? ''));$member=(string)($data['memberId'] ?? '');
-        if($amount===false||!is_finite($amount)||$amount<=0||!$reference||strlen($reference)>100)response(['message'=>'Enter a positive payment amount and reference.'],422);
+        $actor=require_admin($pdo);$data=input();$amount=filter_var($data['amount'] ?? null,FILTER_VALIDATE_FLOAT);$reference=trim((string)($data['reference'] ?? ''));$member=(string)($data['memberId'] ?? '');$requestId=trim((string)($data['requestId']??''));
+        if($amount===false||!is_finite($amount)||$amount<=0||!$reference||strlen($reference)>100||!$requestId)response(['message'=>'Choose a credit order and enter its full payment amount and reference.'],422);
         $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
         foreach($state['entrepreneurs'] as $key=>$person)if((string)$person['id']===$member){$index=$key;break;}
         if($index===null)response(['message'=>'Entrepreneur not found.'],404);
-        if($amount>(float)($state['entrepreneurs'][$index]['used'] ?? 0)+0.009)response(['message'=>'The payment exceeds the current outstanding balance.'],422);
+        $requestIndex=null;foreach($state['requests']??[] as $key=>$request)if((string)($request['id']??'')===$requestId){$requestIndex=$key;break;}
+        if($requestIndex===null||(string)($state['requests'][$requestIndex]['entrepreneurId']??'')!==$member||($state['requests'][$requestIndex]['creditMode']??false)!==true||($state['requests'][$requestIndex]['status']??'')!=='Dispatched')response(['message'=>'Choose an unpaid dispatched credit order for this entrepreneur.'],422);
+        $request=$state['requests'][$requestIndex];if(($request['creditRepaymentStatus']??'')==='Paid')response(['message'=>'This credit order has already been paid.'],409);
+        foreach($state['settlements']??[] as $entry)if((string)($entry['requestId']??'')===$requestId&&($entry['status']??'')!=='Rejected')response(['message'=>'This credit order already has a recorded payment.'],409);
+        $required=round((float)($request['creditIssuedAmount']??$request['total']??0),2);if(abs((float)$amount-$required)>0.009)response(['message'=>'Record the full credit-order payment of Rs. '.number_format($required,2,'.',',').'.'],422);
+        if($required>(float)($state['entrepreneurs'][$index]['used'] ?? 0)+0.009)response(['message'=>'The outstanding balance changed. Review this order before recording payment.'],409);
         foreach($state['settlements'] as $entry)if((string)$entry['entrepreneurId']===$member && $entry['reference']===$reference && $entry['status']!=='Rejected')response(['message'=>'This payment reference has already been recorded or is awaiting verification.'],409);
-        $amount=round($amount,2);$state['entrepreneurs'][$index]['used']=round((float)$state['entrepreneurs'][$index]['used']-$amount,2);
-        $state['settlements'][]=['id'=>'SET-'.bin2hex(random_bytes(5)),'entrepreneurId'=>$member,'amount'=>$amount,'reference'=>$reference,'method'=>'cash_at_camy','status'=>'Verified','recordedBy'=>$actor['id'],'createdAt'=>date(DATE_ATOM),'reviewedAt'=>date(DATE_ATOM)];
+        $amount=$required;$state['entrepreneurs'][$index]['used']=max(0,round((float)$state['entrepreneurs'][$index]['used']-$amount,2));
+        $settlementId='SET-'.bin2hex(random_bytes(5));$state['settlements'][]=['id'=>$settlementId,'requestId'=>$requestId,'entrepreneurId'=>$member,'amount'=>$amount,'reference'=>$reference,'method'=>'cash_at_camy','status'=>'Verified','recordedBy'=>$actor['id'],'createdAt'=>date(DATE_ATOM),'reviewedAt'=>date(DATE_ATOM)];
+        $state['requests'][$requestIndex]['creditRepaymentStatus']='Paid';$state['requests'][$requestIndex]['creditPaidAt']=date(DATE_ATOM);$state['requests'][$requestIndex]['creditSettlementId']=$settlementId;
         market_save($pdo,$state);$pdo->commit();response(['state'=>$state]);
     }
     if($path!=='/admin/credit-tiers'||$method!=='POST')return;

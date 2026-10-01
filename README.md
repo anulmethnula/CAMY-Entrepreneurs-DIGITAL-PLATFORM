@@ -20,7 +20,7 @@ There is no active customer portal. Entrepreneurs sell to their own clients and 
 7. CAMY keeps the CAMY catalogue value.
 8. The remaining margin is transferred to the entrepreneur's saved bank account.
 9. Admin records the CAMY-to-entrepreneur transfer reference and receipt.
-10. Successfully delivered CAMY product value feeds credit eligibility.
+10. Successfully delivered product selling value (selling price × quantity, excluding delivery charges) feeds credit eligibility; profit does not.
 
 ### Phase 2 credit stock
 
@@ -47,6 +47,8 @@ Outstanding credit decreases
 ```
 
 No upfront payment or stock-purchase receipt is required for the Phase 2 credit request.
+
+Only one dispatched credit-stock order may remain unpaid. Tier 1 has 21 days to settle and higher tiers have 10 days. Entrepreneurs may request extra time; CAMY Admin approves or rejects the requested deadline. Another credit-stock order cannot be requested or dispatched until CAMY verifies the full payment for the current order.
 
 ## Local XAMPP setup
 
