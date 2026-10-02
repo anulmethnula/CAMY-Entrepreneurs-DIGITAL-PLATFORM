@@ -1,0 +1,18 @@
+{
+  "name": "CAMY Entrepreneurs",
+  "short_name": "CAMY",
+  "description": "CAMY entrepreneur business, sales and growth platform in Sri Lanka.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f8fb",
+  "theme_color": "#0b314b",
+  "lang": "en-LK",
+  "icons": [
+    {
+      "src": "/camy-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
