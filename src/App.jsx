@@ -53,6 +53,68 @@ const applicationWhatsAppUrl = request => {
 const publicRegistrationUrl = () => new URL('/register', String(import.meta.env.VITE_PUBLIC_URL || window.location.origin).replace(/\/+$/, '') + '/').toString()
 const registrationLocationActive = () => window.location.pathname.replace(/\/+$/, '') === '/register' || new URLSearchParams(window.location.search).get('apply') === '1'
 
+const pageTitles = {
+  home: 'Business Dashboard',
+  products: 'Create Customer Order',
+  orders: 'Orders',
+  earnings: 'Commissions',
+  commissions: 'Commissions',
+  'commission-detail': 'Commission Details',
+  'credit-stock': 'Credit Items',
+  'credit-requests': 'Credit Orders',
+  'credit-inventory': 'Credit Inventory',
+  credit: 'Credit Payments',
+  repayments: 'Repayment History',
+  'repayment-detail': 'Repayment Details',
+  growth: 'Business Growth',
+  profile: 'My Profile',
+  overview: 'Admin Dashboard',
+  entrepreneurs: 'Entrepreneurs',
+  'admin-orders': 'Customer Orders',
+  'admin-products': 'Products and Stock',
+  'stock-supply': 'Stock Requests',
+  'credit-settlements': 'Credit Payments',
+  'credit-control': 'Credit Control',
+  reports: 'Reports',
+  'user-access': 'Users and Access',
+}
+
+function setMeta(name, content, property = false) {
+  const key = property ? 'property' : 'name'
+  let element = document.head.querySelector(`meta[${key}="${name}"]`)
+
+  if (!element) {
+    element = document.createElement('meta')
+    element.setAttribute(key, name)
+    document.head.appendChild(element)
+  }
+
+  element.setAttribute('content', content)
+}
+
+function updateSeo({ title, description, index = false, path = window.location.pathname }) {
+  const fullTitle = title.includes('CAMY') ? title : `${title} | CAMY Entrepreneurs`
+  const canonicalUrl = new URL(path, window.location.origin).toString()
+  document.title = fullTitle
+  setMeta('description', description)
+  setMeta('robots', index ? 'index, follow, max-image-preview:large' : 'noindex, nofollow, noarchive')
+  setMeta('og:title', fullTitle, true)
+  setMeta('og:description', description, true)
+  setMeta('og:url', canonicalUrl, true)
+  setMeta('og:image', new URL('/camy-logo.png', window.location.origin).toString(), true)
+  setMeta('twitter:title', fullTitle)
+  setMeta('twitter:description', description)
+
+  let canonical = document.head.querySelector('link[rel="canonical"]')
+  if (!canonical) {
+    canonical = document.createElement('link')
+    canonical.rel = 'canonical'
+    document.head.appendChild(canonical)
+  }
+
+  canonical.href = canonicalUrl
+}
+
 function useStoredState(key, fallback) {
   const [value, setValue] = useState(() => {
     try { return JSON.parse(localStorage.getItem(key)) ?? fallback } catch { return fallback }
@@ -744,36 +806,109 @@ function AdminEntrepreneurs({ entrepreneurs, orders, setEntrepreneurs, openEntre
 }
 
 function AdminOverview({ entrepreneurs, orders, requests = [], setPage }) {
-  const active=entrepreneurs.filter(person=>person.active!==false&&person.stage!=='Departed')
-  const delivered=orders.filter(order=>order.status==='Delivered')
-  const inProgress=orders.filter(order=>!['Delivered','Returned','Rejected','Cancelled'].includes(order.status))
-  const clientCollections=delivered.reduce((sum,order)=>sum+Number(order.amount||0),0)
-  const commissions=delivered.filter(order=>order.orderMode==='dropship').reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0)
-  const paidCommissions=delivered.filter(order=>order.orderMode==='dropship'&&order.payoutStatus==='paid').reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0)
-  const pendingCommissions=delivered.filter(order=>order.orderMode==='dropship'&&order.payoutStatus==='pending_transfer').reduce((sum,order)=>sum+Number(order.entrepreneurMargin||0),0)
-  const camyRevenue=Math.max(0,clientCollections-commissions)
-  const outstanding=active.reduce((sum,person)=>sum+Number(person.used||0),0)
-  const readyPayouts=orders.filter(order=>order.orderMode==='dropship'&&order.payoutStatus==='pending_transfer').length
-  const pendingStock=requests.filter(item=>item.status==='Pending').length
-  const approvedStock=requests.filter(item=>item.status==='Approved').length
-  const processing=orders.filter(item=>item.status==='Processing').length
-  const tasks=[
-    [WalletCards,readyPayouts,'Commission payouts ready','Transfer entrepreneur earnings and attach proof.','payouts'],
-    [PackageOpen,pendingStock,'Stock requests waiting','Review credit eligibility and available stock.','stock-supply'],
-    [PackageCheck,approvedStock,'Stock ready to dispatch','Complete approved credit-stock dispatches.','stock-supply'],
-    [Truck,processing,'Orders to prepare','Process customer orders for dispatch.','admin-orders'],
-  ].filter(([,count])=>count>0)
+  const activeEntrepreneurs = entrepreneurs.filter(
+    person => person.active !== false && person.stage !== 'Departed',
+  )
+  const deliveredOrders = orders.filter(order => order.status === 'Delivered')
+  const openOrders = orders.filter(
+    order => !['Delivered', 'Returned', 'Rejected', 'Cancelled'].includes(order.status),
+  )
+  const dropshipOrders = deliveredOrders.filter(order => order.orderMode === 'dropship')
+  const customerPayments = deliveredOrders.reduce(
+    (sum, order) => sum + Number(order.amount || 0),
+    0,
+  )
+  const commissions = dropshipOrders.reduce(
+    (sum, order) => sum + Number(order.entrepreneurMargin || 0),
+    0,
+  )
+  const paidCommissions = dropshipOrders
+    .filter(order => order.payoutStatus === 'paid')
+    .reduce((sum, order) => sum + Number(order.entrepreneurMargin || 0), 0)
+  const pendingCommissions = dropshipOrders
+    .filter(order => order.payoutStatus === 'pending_transfer')
+    .reduce((sum, order) => sum + Number(order.entrepreneurMargin || 0), 0)
+  const camyEarnings = Math.max(0, customerPayments - commissions)
+  const creditInUse = activeEntrepreneurs.reduce(
+    (sum, person) => sum + Number(person.used || 0),
+    0,
+  )
+  const accountsUsingCredit = activeEntrepreneurs.filter(
+    person => Number(person.used || 0) > 0,
+  ).length
+  const dispatchedOrders = orders.filter(order => order.status === 'Dispatched').length
+
+  const tasks = [
+    {
+      Icon: WalletCards,
+      count: orders.filter(order => order.orderMode === 'dropship' && order.payoutStatus === 'pending_transfer').length,
+      title: 'Commission payments ready',
+      description: 'Pay entrepreneur commissions and add payment proof.',
+      page: 'payouts',
+    },
+    {
+      Icon: PackageOpen,
+      count: requests.filter(item => item.status === 'Pending').length,
+      title: 'Stock requests to review',
+      description: 'Check the account credit and available stock.',
+      page: 'stock-supply',
+    },
+    {
+      Icon: PackageCheck,
+      count: requests.filter(item => item.status === 'Approved').length,
+      title: 'Stock ready to send',
+      description: 'Send the approved stock requests.',
+      page: 'stock-supply',
+    },
+    {
+      Icon: Truck,
+      count: orders.filter(item => item.status === 'Processing').length,
+      title: 'Orders to prepare',
+      description: 'Prepare customer orders for delivery.',
+      page: 'admin-orders',
+    },
+  ].filter(task => task.count > 0)
+  const taskCount = tasks.reduce((sum, task) => sum + task.count, 0)
+
   return <div className="content-page admin-overview-clean">
-    <section className="overview-welcome"><div><span>ADMIN OVERVIEW</span><h1>Today at CAMY</h1><p>Important business totals and work that needs attention.</p></div><button type="button" onClick={()=>setPage('admin-orders')}>Manage orders <ArrowRight/></button></section>
+    <section className="overview-welcome">
+      <div>
+        <span>ADMIN DASHBOARD</span>
+        <h1>Today at CAMY</h1>
+        <p>See the latest totals and tasks that need your attention.</p>
+      </div>
+      <button type="button" onClick={() => setPage('admin-orders')}>
+        View orders <ArrowRight />
+      </button>
+    </section>
     <section className="metric-row overview-shortcuts">
-      <Metric icon={UsersRound} label="Active entrepreneurs" value={active.length} detail="Open entrepreneur accounts" tone="purple" onClick={()=>setPage('entrepreneurs')}/>
-      <Metric icon={CircleDollarSign} label="COD collected" value={shortMoney(clientCollections)} detail={`${delivered.length} delivered orders`} onClick={()=>setPage('reports')}/>
-      <Metric icon={WalletCards} label="Credit outstanding" value={money(outstanding)} detail={`${active.filter(person=>Number(person.used||0)>0).length} accounts with a balance`} tone="gold" onClick={()=>setPage('credit-control')}/>
-      <Metric icon={Truck} label="Orders in progress" value={inProgress.length} detail={`${orders.filter(order=>order.status==='Dispatched').length} dispatched`} tone="green" onClick={()=>setPage('admin-orders')}/>
+      <Metric icon={UsersRound} label="Active entrepreneurs" value={activeEntrepreneurs.length} detail="Active entrepreneur accounts" tone="purple" onClick={() => setPage('entrepreneurs')} />
+      <Metric icon={CircleDollarSign} label="Customer payments" value={shortMoney(customerPayments)} detail={`From ${deliveredOrders.length} delivered orders`} onClick={() => setPage('reports')} />
+      <Metric icon={WalletCards} label="Credit in use" value={money(creditInUse)} detail={`${accountsUsingCredit} accounts are using credit`} tone="gold" onClick={() => setPage('credit-control')} />
+      <Metric icon={Truck} label="Open orders" value={openOrders.length} detail={`${dispatchedOrders} sent for delivery`} tone="green" onClick={() => setPage('admin-orders')} />
     </section>
     <section className="overview-essential-grid">
-      <article className="overview-money-card"><header><div><span>DELIVERED ORDER FINANCE</span><h2>Money summary</h2></div><button onClick={()=>setPage('payouts')}>Open payouts <ArrowRight/></button></header><div><button onClick={()=>setPage('reports')}><small>CLIENT COD COLLECTED</small><strong>{money(clientCollections)}</strong><span>View reports <ChevronRight/></span></button><button onClick={()=>setPage('reports')}><small>CAMY REVENUE</small><strong>{money(camyRevenue)}</strong><span>After entrepreneur commissions <ChevronRight/></span></button><button onClick={()=>setPage('payouts')}><small>ENTREPRENEUR COMMISSIONS</small><strong>{money(commissions)}</strong><span>{money(paidCommissions)} paid · {money(pendingCommissions)} pending <ChevronRight/></span></button></div></article>
-      <article className="card overview-tasks"><header><div><span>NEEDS ATTENTION</span><h2>Next actions</h2></div><b>{tasks.reduce((sum,item)=>sum+item[1],0)}</b></header>{tasks.length?tasks.map(([Icon,count,title,text,target])=><button type="button" key={title} onClick={()=>setPage(target)}><i><Icon/></i><span><strong>{count} {title}</strong><small>{text}</small></span><ChevronRight/></button>):<div className="overview-all-clear"><Check/><span><strong>Everything is up to date</strong><small>No urgent admin action is waiting.</small></span></div>}</article>
+      <article className="overview-money-card">
+        <header>
+          <div><span>DELIVERED ORDER PAYMENTS</span><h2>Payment summary</h2></div>
+          <button onClick={() => setPage('payouts')}>Pay commissions <ArrowRight /></button>
+        </header>
+        <div>
+          <button onClick={() => setPage('reports')}><small>CUSTOMER PAYMENTS RECEIVED</small><strong>{money(customerPayments)}</strong><span>View report <ChevronRight /></span></button>
+          <button onClick={() => setPage('reports')}><small>CAMY EARNINGS</small><strong>{money(camyEarnings)}</strong><span>After commissions <ChevronRight /></span></button>
+          <button onClick={() => setPage('payouts')}><small>ENTREPRENEUR COMMISSIONS</small><strong>{money(commissions)}</strong><span>{money(paidCommissions)} paid · {money(pendingCommissions)} to pay <ChevronRight /></span></button>
+        </div>
+      </article>
+      <article className="card overview-tasks">
+        <header><div><span>TASKS TO DO</span><h2>What needs your attention</h2></div><b>{taskCount}</b></header>
+        {tasks.length ? tasks.map(({ Icon, count, title, description, page: targetPage }) => (
+          <button type="button" key={title} onClick={() => setPage(targetPage)}>
+            <i><Icon /></i>
+            <span><strong>{count} {title}</strong><small>{description}</small></span>
+            <ChevronRight />
+          </button>
+        )) : <div className="overview-all-clear"><Check /><span><strong>Everything is up to date</strong><small>There are no tasks waiting for you.</small></span></div>}
+      </article>
     </section>
   </div>
 }
@@ -1838,6 +1973,24 @@ function LoginScreen({ onLogin }) {
   const [success,setSuccess]=useState('')
   const [busy,setBusy]=useState(false)
   const [showLoginPassword,setShowLoginPassword]=useState(false)
+  useEffect(() => {
+    if (view === 'register') {
+      updateSeo({
+        title: 'Become a CAMY Entrepreneur in Sri Lanka',
+        description: 'Apply online to become a CAMY entrepreneur. Build your business, place customer orders, earn commissions and unlock business credit as you grow.',
+        index: true,
+        path: '/register',
+      })
+      return
+    }
+
+    updateSeo({
+      title: 'Sign In',
+      description: 'Secure sign in for CAMY entrepreneurs and staff.',
+      index: false,
+      path: '/',
+    })
+  }, [view])
   useEffect(()=>{const syncLocation=()=>{setView(registrationLocationActive()?'register':'login');setStep(1);setError('')};window.addEventListener('popstate',syncLocation);return()=>window.removeEventListener('popstate',syncLocation)},[])
   const update=(key,value)=>setForm(old=>({...old,[key]:value}))
   const uploadNic=(key,event)=>{const file=event.target.files?.[0];event.target.value='';if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){setError('Use a JPG, PNG or WebP NIC photo up to 5 MB.');return}const reader=new FileReader();reader.onload=()=>update(key,String(reader.result));reader.onerror=()=>setError('Could not read the NIC photo.');reader.readAsDataURL(file)}
@@ -1917,6 +2070,19 @@ export default function App() {
   const [favourites,setFavourites]=useStoredState('camy-favourites-v2',[]); const [settlements,setSettlements]=useState([]); const [cart,setCart]=useState([]); const [cartOpen,setCartOpen]=useState(false); const [notifyOpen,setNotifyOpen]=useState(false); const [globalQuery,setGlobalQuery]=useState(''); const [productModal,setProductModal]=useState(null); const [orderModal,setOrderModal]=useState(null); const [settlementModal,setSettlementModal]=useState(false); const [addEntrepreneur,setAddEntrepreneur]=useState(false); const [personModal,setPersonModal]=useState(null); const orderReturnRef=useRef(null); const [addProduct,setAddProduct]=useState(false); const [addCategory,setAddCategory]=useState(false); const [toast,setToast]=useState('')
   const [orderCartCount,setOrderCartCount]=useState(0)
   const [selectedCommission,setSelectedCommission]=useState(null); const [selectedRepayment,setSelectedRepayment]=useState(null)
+  useEffect(() => {
+    if (!authUser) return
+
+    const accountArea = mode === 'admin' ? 'Admin' : 'Entrepreneur'
+    const pageTitle = pageTitles[page] || 'Dashboard'
+
+    updateSeo({
+      title: `${pageTitle} – ${accountArea}`,
+      description: 'Private CAMY Entrepreneurs account page.',
+      index: false,
+      path: window.location.pathname,
+    })
+  }, [authUser, mode, page])
   useEffect(()=>{window.scrollTo({top:0,left:0,behavior:'instant'});document.querySelector('.app-v2>main')?.scrollTo?.({top:0,left:0,behavior:'instant'})},[page,mode])
   const [stockRequests,setStockRequests]=useState([]); const [shopInventory,setShopInventory]=useState([]); globalThis.__camyCreditRequests=stockRequests; globalThis.__camyCreditSettlements=settlements; globalThis.__camyProducts=products
   const [catalogueLive,setCatalogueLive]=useState(false)
