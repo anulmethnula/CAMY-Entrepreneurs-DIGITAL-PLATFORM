@@ -741,21 +741,27 @@
   .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line {
     margin-inline: 14px !important;
     padding: 16px 0 !important;
+    display: block !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-heading {
     display: grid !important;
     grid-template-columns: 72px minmax(0, 1fr) 42px !important;
     gap: 10px !important;
     align-items: start !important;
+    width: 100%;
+    min-width: 0;
   }
 
-  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line > img {
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-heading > img {
     width: 72px !important;
     height: 72px !important;
-    grid-row: 1 / 3;
     object-fit: contain;
   }
 
-  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line > div,
-  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line > span {
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-product,
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-controls,
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-controls > label {
     min-width: 0 !important;
   }
 
@@ -763,7 +769,7 @@
     overflow-wrap: break-word;
   }
 
-  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line > button {
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-heading > button {
     grid-column: 3;
     grid-row: 1;
   }
@@ -925,11 +931,12 @@
 
   .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-image img {
     display: block;
-    width: 100% !important;
-    height: 100% !important;
+    width: auto !important;
+    height: auto !important;
     max-width: 100% !important;
     max-height: 100% !important;
     object-fit: contain !important;
+    object-position: center !important;
   }
 
   .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-products > article > div:nth-child(2) {
