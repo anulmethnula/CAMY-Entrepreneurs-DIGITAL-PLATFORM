@@ -302,9 +302,9 @@
   :is(.admin-assisted-order, .admin-order-detail) * { animation: none!important; transition: none!important; }
 }
 
-/* Keep the order-detail scroll surface attached to the full dialog. Without
-   an explicit shared height the outer modal can outgrow the inner scroller,
-   leaving a blank panel over the invoice upload controls. */
+/* Keep one bounded scroll surface without forcing short order details to fill
+   the viewport. A fixed outer height leaves a large blank panel after the
+   invoice controls when an order has little content. */
 @media (min-width: 621px) {
   .modal-layer:has(.admin-order-detail) {
     display: grid;
@@ -314,18 +314,17 @@
   }
 
   .modal-v2.admin-order-detail {
-    height: calc(100dvh - 36px) !important;
     min-height: 0 !important;
     max-height: calc(100dvh - 36px) !important;
-    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-gutter: stable;
   }
 
   .admin-order-detail .order-detail-v3 {
-    height: 100% !important;
     min-height: 0 !important;
     max-height: none !important;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: visible !important;
   }
 }
 
@@ -591,8 +590,8 @@
   background: #fff;
   box-shadow: none;
 }
-.admin-orders-page .management-filters > label.order-filter-field { display: block; min-width: 0; min-height: 0; height: auto; padding: 0; border: 0; border-radius: 0; background: transparent; }
-.admin-orders-page .order-filter-field > span,
+.admin-orders-page .management-filters > .order-filter-field { display: block; min-width: 0; min-height: 0; height: auto; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.admin-orders-page .order-filter-field > :is(span,label),
 .admin-orders-page .date-range-shortcuts > span,
 .admin-orders-page .date-inputs label { display: block; margin: 0 0 6px; color: #516c7f; font-size: 10px; font-weight: 700; line-height: 1.3; }
 .admin-orders-page .order-filter-field > div {
@@ -600,15 +599,24 @@
   align-items: center;
   gap: 9px;
   min-height: 44px;
-  padding: 0 12px;
+  padding: 4px 7px 4px 5px;
   border: 1px solid #d5e0e8;
   border-radius: 9px;
   color: #6b8394;
-  background: #fbfcfd;
+  background: linear-gradient(180deg,#fbfdfe,#f7fafc);
+  transition: border-color .16s ease,box-shadow .16s ease,background-color .16s ease;
 }
-.admin-orders-page .order-filter-field > div:focus-within { border-color: #69a7c5; background: #fff; box-shadow: 0 0 0 3px rgba(39,121,159,.09); }
+.admin-orders-page .order-filter-field > div:hover { border-color: #aecbd9; background: #fff; }
+.admin-orders-page .order-filter-field > div:focus-within { border-color: #3189b1; background: #fff; box-shadow: 0 0 0 4px rgba(39,121,159,.11),0 7px 18px rgba(20,77,105,.07); }
+.admin-orders-page .order-filter-field > div.has-value { border-color: #9dc5d8; background: #fff; }
 .admin-orders-page .order-filter-field svg { width: 17px; height: 17px; flex: 0 0 auto; }
-.admin-orders-page .management-filters .order-filter-field input { width: 100%; height: 40px; padding: 0; border: 0; outline: 0; background: transparent; font-size: 12px; }
+.admin-orders-page .order-search-icon { width: 34px; height: 34px; margin: 0; border-radius: 8px; display: grid; place-items: center; color: #277c9f; background: #eaf5fa; }
+.admin-orders-page .management-filters .order-filter-field input[type="search"] { appearance: none; -webkit-appearance: none; width: 100%; height: 34px; min-height: 0; padding: 0 4px; border: 0!important; border-radius: 0; outline: 0!important; color: #173f57; background: transparent!important; box-shadow: none!important; font-family: inherit; font-size: 12px; }
+.admin-orders-page .management-filters .order-filter-field input[type="search"]::-webkit-search-cancel-button { display: none; }
+.admin-orders-page .management-filters .order-filter-field input[type="search"]::placeholder { color: #8193a0; }
+.admin-orders-page .order-search-clear { width: 30px; height: 30px; min-height: 30px; padding: 0; border: 0; border-radius: 7px; display: grid; place-items: center; color: #56788b; background: #edf4f7; cursor: pointer; }
+.admin-orders-page .order-search-clear:hover { color: #155d7d; background: #dfeef4; }
+.admin-orders-page .order-search-clear svg { width: 14px; height: 14px; }
 .admin-orders-page .management-filters .order-filter-field select {
   width: 100%;
   min-height: 44px;

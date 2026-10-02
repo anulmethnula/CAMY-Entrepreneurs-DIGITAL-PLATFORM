@@ -261,7 +261,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
         if($index===null){$pdo->rollBack();response(['message'=>'Credit stock request not found.'],404);}
         $request=$state['requests'][$index];
         if(($request['creditMode'] ?? false)!==true){$pdo->rollBack();response(['message'=>'Legacy paid stock requests can no longer be edited in the active CAMY flow.'],409);}
-        if($request['status']!=='Pending'){$pdo->rollBack();response(['message'=>'Only pending credit requests can be edited.'],409);}
+        if(!in_array($request['status'],['Pending','Rejected'],true)){$pdo->rollBack();response(['message'=>'Only pending or rejected credit requests can be edited.'],409);}
         $items=workflow_items($data['items'] ?? []);if(!$items){$pdo->rollBack();response(['message'=>'Keep at least one product in the request.'],422);}
         $clean=[];$total=0;
         foreach($items as $item){
@@ -274,8 +274,10 @@ function market_route(PDO $pdo, string $path, string $method): void {
         $committed=0;foreach($state['requests'] as $entry)if($entry['id']!==$request['id']&&(string)($entry['entrepreneurId'] ?? '')===(string)$request['entrepreneurId']&&($entry['creditMode'] ?? false)===true&&in_array($entry['status'],['Pending','Approved'],true))$committed+=(float)($entry['total'] ?? 0);
         $available=max(0,(float)$person['credit']-(float)($person['used'] ?? 0)-$committed);$total=round($total,2);
         if($total>$available+0.009){$pdo->rollBack();response(['message'=>'Edited request exceeds the entrepreneur\'s available credit.'],422);}
-        $state['requests'][$index]['items']=$clean;$state['requests'][$index]['total']=$total;$state['requests'][$index]['updatedAt']=date(DATE_ATOM);
-        $pdo->prepare('UPDATE stock_supply_requests SET total=? WHERE id=?')->execute([$total,$request['id']]);
+        $reopened=$request['status']==='Rejected';$state['requests'][$index]['items']=$clean;$state['requests'][$index]['total']=$total;$state['requests'][$index]['updatedAt']=date(DATE_ATOM);
+        if($reopened){$state['requests'][$index]['status']='Pending';$state['requests'][$index]['reopenedAt']=date(DATE_ATOM);unset($state['requests'][$index]['reviewedAt']);}
+        if($reopened)$pdo->prepare("UPDATE stock_supply_requests SET total=?,status='Pending',reviewed_at=NULL WHERE id=?")->execute([$total,$request['id']]);
+        else $pdo->prepare('UPDATE stock_supply_requests SET total=? WHERE id=?')->execute([$total,$request['id']]);
         $pdo->prepare('DELETE FROM stock_supply_request_items WHERE request_id=?')->execute([$request['id']]);
         foreach($clean as $item){$code='';foreach($state['products'] as $product)if((string)$product['id']===(string)$item['productId']){$code=(string)($product['code'] ?? $product['id']);break;}$pdo->prepare('INSERT INTO stock_supply_request_items(request_id,product_code,quantity,purchase_price) VALUES(?,?,?,?)')->execute([$request['id'],$code,$item['qty'],$item['price']]);}
         market_save($pdo,$state);$pdo->commit();response(['state'=>$state]);

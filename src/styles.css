@@ -4050,6 +4050,11 @@ input:focus, select:focus, textarea:focus {
 /* Dedicated finance dialog keeps commission payment separate from fulfilment. */
 .commission-payment-modal { width:min(980px,calc(100vw - 48px))!important; }
 .commission-payment-dialog { padding:30px; }
+.commission-payment-nav { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.commission-payment-nav .order-modal-back { margin:0; }
+.manage-deliveries-button { min-height:40px; padding:0 15px; border:1px solid #a9d8cd; border-radius:11px; color:#11765f; background:#edf9f5; display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:800; cursor:pointer; transition:border-color .2s,background .2s,transform .2s; }
+.manage-deliveries-button:hover { border-color:#54ad97; background:#dff4ed; transform:translateY(-1px); }
+.manage-deliveries-button svg { width:16px; }
 .commission-payment-dialog > header { display:flex; align-items:center; gap:14px; padding:0 52px 20px 0; border-bottom:1px solid #dce7ef; }
 .commission-payment-dialog > header > span { width:52px; height:52px; flex:0 0 auto; border-radius:15px; color:#fff; background:linear-gradient(135deg,#176fa1,#25a27e); display:grid; place-items:center; }
 .commission-payment-dialog > header span svg { width:22px; }
@@ -4131,7 +4136,7 @@ input:focus, select:focus, textarea:focus {
 .commission-bank-card > button svg { width:15px; }
 .commission-payment-dialog > .payout-panel-v3 { margin:0; }
 @media(max-width:760px){.commission-order-meta{grid-template-columns:1fr 1fr}.commission-order-meta span:last-child{grid-column:1/-1}.commission-products article{grid-template-columns:1fr}.commission-bank-card>div{grid-template-columns:1fr 1fr}}
-@media(max-width:620px){.commission-payment-modal{width:100%!important;min-height:100dvh}.commission-payment-dialog{padding:18px 12px}.commission-payment-summary{grid-template-columns:1fr}.commission-payment-dialog>header h2{font-size:21px}.commission-order-meta,.commission-bank-card>div{grid-template-columns:1fr}.commission-order-meta span:last-child{grid-column:auto}.commission-products dl{grid-template-columns:1fr 1fr}.commission-bank-card>header{grid-template-columns:38px 1fr}.commission-bank-card>header b{grid-column:2}.commission-bank-card>button{width:100%;justify-content:center}.admin-commission-history>header{flex-direction:column}.admin-commission-history>header>span{width:100%}.admin-commission-identity{grid-template-columns:42px 1fr}.admin-commission-identity>b{grid-column:2;text-align:left}.admin-commission-history-list article{grid-template-columns:32px 1fr auto}.admin-commission-history-list article>div:nth-of-type(2){grid-column:2}.admin-commission-history-list article>a,.admin-commission-history-list article>em{grid-column:3}}
+@media(max-width:620px){.commission-payment-modal{width:100%!important;min-height:100dvh}.commission-payment-dialog{padding:18px 12px}.commission-payment-nav{align-items:stretch;flex-direction:column}.commission-payment-nav button{width:100%;justify-content:center}.commission-payment-summary{grid-template-columns:1fr}.commission-payment-dialog>header h2{font-size:21px}.commission-order-meta,.commission-bank-card>div{grid-template-columns:1fr}.commission-order-meta span:last-child{grid-column:auto}.commission-products dl{grid-template-columns:1fr 1fr}.commission-bank-card>header{grid-template-columns:38px 1fr}.commission-bank-card>header b{grid-column:2}.commission-bank-card>button{width:100%;justify-content:center}.admin-commission-history>header{flex-direction:column}.admin-commission-history>header>span{width:100%}.admin-commission-identity{grid-template-columns:42px 1fr}.admin-commission-identity>b{grid-column:2;text-align:left}.admin-commission-history-list article{grid-template-columns:32px 1fr auto}.admin-commission-history-list article>div:nth-of-type(2){grid-column:2}.admin-commission-history-list article>a,.admin-commission-history-list article>em{grid-column:3}}
 
 /* Product catalogue import experience */
 .product-import-overlay{z-index:250;align-items:center;padding:24px;background:rgba(7,27,41,.72);backdrop-filter:blur(8px)}
