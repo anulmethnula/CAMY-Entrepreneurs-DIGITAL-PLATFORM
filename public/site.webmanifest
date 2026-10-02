@@ -9,7 +9,7 @@
   "lang": "en-LK",
   "icons": [
     {
-      "src": "/camy-logo.png",
+      "src": "/camy-logo-transparent.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"

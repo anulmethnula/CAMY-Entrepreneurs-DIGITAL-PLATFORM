@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import { initialEntrepreneurs, initialNotifications, initialOrders, initialProducts, initialTiers } from './data'
 import { AdminCreditStockPage, CreditInventoryPage, CreditStockPage, ShopHome, StockSupplyPage } from './Marketplace'
-import camyLogo from '../camy-logo-official.png'
+import camyLogo from '../camy-logo-transparent.png'
 
 const money = (value) => `Rs. ${Number(value || 0).toLocaleString('en-LK')}`
 const SUPPORT_PHONE_DISPLAY = '+94 77 716 5336'
@@ -101,7 +101,7 @@ function updateSeo({ title, description, index = false, path = window.location.p
   setMeta('og:title', fullTitle, true)
   setMeta('og:description', description, true)
   setMeta('og:url', canonicalUrl, true)
-  setMeta('og:image', new URL('/camy-logo.png', window.location.origin).toString(), true)
+  setMeta('og:image', new URL('/camy-logo-transparent.png', window.location.origin).toString(), true)
   setMeta('twitter:title', fullTitle)
   setMeta('twitter:description', description)
 
