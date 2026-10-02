@@ -116,7 +116,7 @@ function catalogue_route(PDO $pdo,string $path,string $method): void {
         if($required>(float)($state['entrepreneurs'][$index]['used'] ?? 0)+0.009)response(['message'=>'The outstanding balance changed. Review this order before recording payment.'],409);
         foreach($state['settlements'] as $entry)if((string)$entry['entrepreneurId']===$member && $entry['reference']===$reference && $entry['status']!=='Rejected')response(['message'=>'This payment reference has already been recorded or is awaiting verification.'],409);
         $amount=$required;$state['entrepreneurs'][$index]['used']=max(0,round((float)$state['entrepreneurs'][$index]['used']-$amount,2));
-        $settlementId='SET-'.bin2hex(random_bytes(5));$state['settlements'][]=['id'=>$settlementId,'requestId'=>$requestId,'entrepreneurId'=>$member,'amount'=>$amount,'reference'=>$reference,'method'=>'cash_at_camy','status'=>'Verified','recordedBy'=>$actor['id'],'createdAt'=>date(DATE_ATOM),'reviewedAt'=>date(DATE_ATOM)];
+        $settlementId='SET-'.bin2hex(random_bytes(5));$state['settlements'][]=['id'=>$settlementId,'requestId'=>$requestId,'entrepreneurId'=>$member,'amount'=>$amount,'reference'=>$reference,'method'=>'cash','collectionStatus'=>'collected','status'=>'Verified','recordedBy'=>$actor['id'],'createdAt'=>date(DATE_ATOM),'reviewedAt'=>date(DATE_ATOM)];
         $state['requests'][$requestIndex]['creditRepaymentStatus']='Paid';$state['requests'][$requestIndex]['creditPaidAt']=date(DATE_ATOM);$state['requests'][$requestIndex]['creditSettlementId']=$settlementId;
         market_save($pdo,$state);$pdo->commit();response(['state'=>$state]);
     }

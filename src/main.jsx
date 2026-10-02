@@ -14,6 +14,7 @@ import './entrepreneurs-ui.css'
 import './admin-orders-ui.css'
 import './shell-fixes.css'
 import './mobile-app.css'
+import './search-ui.css'
 
 class AppBoundary extends React.Component {
   state = { failed: false }

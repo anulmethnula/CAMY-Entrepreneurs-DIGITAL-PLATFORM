@@ -1,0 +1,284 @@
+/* One calm, single-outline search pattern across every CAMY workspace. */
+:where(
+  .top-search,
+  .catalog-controls > label,
+  .management-filters > label,
+  .application-filters > label,
+  .inventory-search label,
+  .catalogue-browser > label,
+  .credit-catalogue-tools > label,
+  .shop-search,
+  .admin-feedback-filters > label,
+  .supply-toolbar > label,
+  .orders-toolbar .order-search,
+  .commission-search-filter > div,
+  .credit-request-search > div,
+  .commission-workspace-tools > label > div,
+  .order-search-field > div
+) {
+  min-width: 0;
+  min-height: 48px;
+  padding: 5px 14px;
+  border: 1px solid transparent !important;
+  border-radius: 14px !important;
+  color: #56788d;
+  background: #f1f6f8 !important;
+  box-shadow: inset 0 0 0 1px #dbe7ec !important;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+
+:where(
+  .top-search,
+  .catalog-controls > label,
+  .management-filters > label,
+  .application-filters > label,
+  .inventory-search label,
+  .catalogue-browser > label,
+  .credit-catalogue-tools > label,
+  .shop-search,
+  .admin-feedback-filters > label,
+  .supply-toolbar > label,
+  .orders-toolbar .order-search,
+  .commission-search-filter > div,
+  .credit-request-search > div,
+  .commission-workspace-tools > label > div,
+  .order-search-field > div
+):hover {
+  border-color: #bfd5df !important;
+  background: #f7fafb !important;
+}
+
+:where(
+  .top-search,
+  .catalog-controls > label,
+  .management-filters > label,
+  .application-filters > label,
+  .inventory-search label,
+  .catalogue-browser > label,
+  .credit-catalogue-tools > label,
+  .shop-search,
+  .admin-feedback-filters > label,
+  .supply-toolbar > label,
+  .orders-toolbar .order-search,
+  .commission-search-filter > div,
+  .credit-request-search > div,
+  .commission-workspace-tools > label > div,
+  .order-search-field > div
+):focus-within {
+  border-color: #3592b5 !important;
+  background: #fff !important;
+  box-shadow: 0 5px 16px rgba(24, 92, 122, .08) !important;
+}
+
+:where(
+  .top-search,
+  .catalog-controls > label,
+  .management-filters > label,
+  .application-filters > label,
+  .inventory-search label,
+  .catalogue-browser > label,
+  .credit-catalogue-tools > label,
+  .shop-search,
+  .admin-feedback-filters > label,
+  .supply-toolbar > label,
+  .orders-toolbar .order-search,
+  .commission-search-filter > div,
+  .credit-request-search > div,
+  .commission-workspace-tools > label > div
+) > svg {
+  position: static !important;
+  width: 19px !important;
+  height: 19px !important;
+  padding: 0;
+  flex: 0 0 19px;
+  border-radius: 0;
+  color: #64879a !important;
+  background: transparent;
+  transition: color .18s ease, background-color .18s ease;
+}
+
+:where(
+  .top-search,
+  .catalog-controls > label,
+  .management-filters > label,
+  .application-filters > label,
+  .inventory-search label,
+  .catalogue-browser > label,
+  .credit-catalogue-tools > label,
+  .shop-search,
+  .admin-feedback-filters > label,
+  .supply-toolbar > label,
+  .orders-toolbar .order-search,
+  .commission-search-filter > div,
+  .credit-request-search > div,
+  .commission-workspace-tools > label > div
+):focus-within > svg {
+  color: #1d82aa !important;
+  background: transparent;
+}
+
+:where(
+  .top-search,
+  .catalog-controls > label,
+  .management-filters > label,
+  .application-filters > label,
+  .inventory-search label,
+  .catalogue-browser > label,
+  .credit-catalogue-tools > label,
+  .shop-search,
+  .admin-feedback-filters > label,
+  .supply-toolbar > label,
+  .orders-toolbar .order-search,
+  .commission-search-filter > div,
+  .credit-request-search > div,
+  .commission-workspace-tools > label > div,
+  .order-search-field > div
+) input {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 34px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 3px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  color: #173f58 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font: inherit;
+  font-size: 13px !important;
+  line-height: 34px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+:where(
+  .top-search,
+  .catalog-controls > label,
+  .management-filters > label,
+  .application-filters > label,
+  .inventory-search label,
+  .catalogue-browser > label,
+  .credit-catalogue-tools > label,
+  .shop-search,
+  .admin-feedback-filters > label,
+  .supply-toolbar > label,
+  .orders-toolbar .order-search,
+  .commission-search-filter > div,
+  .credit-request-search > div,
+  .commission-workspace-tools > label > div,
+  .order-search-field > div
+) input::placeholder {
+  color: #8497a5 !important;
+  opacity: 1;
+}
+
+:where(
+  .top-search,
+  .catalog-controls > label,
+  .management-filters > label,
+  .application-filters > label,
+  .inventory-search label,
+  .catalogue-browser > label,
+  .credit-catalogue-tools > label,
+  .shop-search,
+  .admin-feedback-filters > label,
+  .supply-toolbar > label,
+  .orders-toolbar .order-search,
+  .commission-search-filter > div,
+  .credit-request-search > div,
+  .commission-workspace-tools > label > div,
+  .order-search-field > div
+) input::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* Search inputs without an icon still use the same visual language. */
+.credit-stock-admin-filters input,
+.entrepreneur-customers input[type="search"] {
+  min-height: 48px !important;
+  padding: 0 16px !important;
+  border: 1px solid transparent !important;
+  border-radius: 14px !important;
+  outline: 0 !important;
+  color: #173f58 !important;
+  background: #f1f6f8 !important;
+  box-shadow: inset 0 0 0 1px #dbe7ec !important;
+  font-size: 13px !important;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.credit-stock-admin-filters input:focus,
+.entrepreneur-customers input[type="search"]:focus {
+  border-color: #2f8fb6 !important;
+  box-shadow: 0 5px 16px rgba(24, 92, 122, .08) !important;
+}
+
+:where(.smart-picker > label, .credit-ledger-filters > label, .access-search) {
+  min-width: 0;
+  min-height: 48px;
+  padding: 5px 14px !important;
+  border: 1px solid transparent !important;
+  border-radius: 14px !important;
+  color: #56788d;
+  background: #f1f6f8 !important;
+  box-shadow: inset 0 0 0 1px #dbe7ec !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+:where(.smart-picker > label, .credit-ledger-filters > label, .access-search):focus-within {
+  border-color: #2f8fb6 !important;
+  background: #fff !important;
+  box-shadow: 0 5px 16px rgba(24, 92, 122, .08) !important;
+}
+
+:where(.smart-picker > label, .credit-ledger-filters > label, .access-search) > svg {
+  width: 19px !important;
+  height: 19px !important;
+  padding: 0;
+  flex: 0 0 19px;
+  border-radius: 0;
+  color: #64879a !important;
+  background: transparent;
+}
+
+:where(.smart-picker > label, .credit-ledger-filters > label, .access-search):focus-within > svg {
+  color: #1d82aa !important;
+  background: transparent;
+}
+
+:where(.smart-picker > label, .credit-ledger-filters > label, .access-search) input {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 34px !important;
+  margin: 0 !important;
+  padding: 0 3px !important;
+  border: 0 !important;
+  outline: 0 !important;
+  color: #173f58 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font: inherit;
+  font-size: 13px !important;
+}
+
+@media (max-width: 760px) {
+  :where(
+    .catalog-controls > label,
+    .management-filters > label,
+    .application-filters > label,
+    .inventory-search label,
+    .catalogue-browser > label,
+    .credit-catalogue-tools > label,
+    .shop-search,
+    .admin-feedback-filters > label,
+    .supply-toolbar > label,
+    .orders-toolbar .order-search
+  ) {
+    min-height: 52px;
+  }
+}

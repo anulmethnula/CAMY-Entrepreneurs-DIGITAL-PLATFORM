@@ -100,12 +100,55 @@
 .credit-payments-page .credit-payment-order .status-pill { margin-top: 7px; font-size: 11px; }
 .credit-payments-page .credit-payment-order > button { min-height: 44px; min-width: 160px; padding: 0 15px; border-radius: 10px; justify-content: center; font-size: 12px; box-shadow: 0 5px 13px rgba(198, 79, 71, .15); transition: background .18s ease, box-shadow .18s ease, transform .18s ease; }
 .credit-payments-page .credit-payment-order > button:hover { background: #aa3f39; box-shadow: 0 8px 18px rgba(179, 68, 59, .22); transform: translateY(-1px); }
+.credit-payments-page .credit-payment-order.rejected > button.retry-payment {
+  border: 1px solid #d99a31;
+  color: #7a4c08;
+  background: #fff7e8;
+  box-shadow: 0 5px 13px rgba(189, 126, 25, .12);
+}
+.credit-payments-page .credit-payment-order.rejected > button.retry-payment:hover {
+  border-color: #bd7610;
+  color: #653c00;
+  background: #ffedc8;
+  box-shadow: 0 8px 18px rgba(189, 126, 25, .2);
+}
 .credit-payments-page .credit-paid-mark,
 .credit-payments-page .credit-review-mark,
 .credit-payments-page .credit-not-due { min-height: 36px; justify-content: center; font-size: 11px; line-height: 1.35; text-align: center; }
 .credit-payments-page .credit-rejection-reason { max-width: none !important; font-size: 11px; }
 .credit-payments-page .credit-due-countdown { max-width: 100%; font-size: 11px; line-height: 1.35; }
+.credit-payments-page .credit-order-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.credit-payments-page .credit-order-actions > button { min-height: 38px; padding: 0 12px; border: 1px solid #c8dce7; border-radius: 9px; color: #176f9a; background: #f5fafc; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 850; cursor: pointer; }
+.credit-payments-page .credit-order-actions > button svg { width: 15px; height: 15px; }
+.credit-payments-page .credit-order-actions > button:not(.view-credit-order) { border-color: #d99a31; color: #754704; background: #fff6e4; }
+.credit-payments-page .credit-order-actions > b { width: 100%; }
 .credit-payments-page button:focus-visible { outline: 3px solid #57b9df; outline-offset: 3px; }
+
+.credit-payment-detail-dialog { position: relative; }
+.credit-payment-detail-dialog > .modal-x { position: absolute; top: 18px; right: 18px; float: none; margin: 0; }
+.credit-order-detail-modal { padding: 34px; display: grid; gap: 24px; color: #153d58; }
+.credit-order-detail-modal > header { min-height: 66px; padding-right: 66px; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.credit-order-detail-modal > header > div { min-width: 0; }
+.credit-order-detail-modal > header > .status-pill { flex: 0 0 auto; margin-top: 1px; }
+.credit-order-detail-modal > header h2 { margin: 7px 0 4px; font-size: 26px; }
+.credit-order-detail-modal > header p { margin: 0; color: #687f90; font-size: 12px; }
+.credit-order-detail-summary { padding: 0; border: 1px solid #dbe7ed; border-radius: 14px; background: #f7fafc; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); overflow: hidden; }
+.credit-order-detail-summary span { min-height: 78px; padding: 18px 20px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.credit-order-detail-summary span + span { border-left: 1px solid #dbe7ed; }
+.credit-order-detail-summary small,.credit-payment-attempts small { color: #708797; font-size: 9px; font-weight: 850; letter-spacing: .05em; }
+.credit-order-detail-items,.credit-payment-attempts { min-width: 0; }
+.credit-order-detail-items h3,.credit-payment-attempts h3 { margin: 0 0 12px; font-size: 16px; }
+.credit-order-detail-items article { min-height: 64px; padding: 14px 16px; border: 1px solid #e0e9ee; border-radius: 12px; background: #fff; display: grid; grid-template-columns: minmax(0,1fr) minmax(130px,auto) minmax(90px,auto); align-items: center; gap: 24px; font-size: 12px; }
+.credit-order-detail-items article span { display: grid; gap: 3px; }
+.credit-order-detail-items article small { color: #718899; }
+.credit-order-detail-items article > b,.credit-order-detail-items article > strong { text-align: right; white-space: nowrap; }
+.credit-payment-attempts > header { display: flex; justify-content: space-between; }
+.credit-payment-attempts > div { display: grid; gap: 8px; }
+.credit-payment-attempts article { padding: 12px; border: 1px solid #dbe7ed; border-radius: 12px; display: grid; grid-template-columns: minmax(120px,.8fr) 1fr 1fr; gap: 12px; align-items: center; }
+.credit-payment-attempts article > span { display: grid; gap: 5px; }
+.credit-payment-attempts article.rejected { border-color: #efcaca; background: #fff8f8; }
+.credit-payment-attempts article > p { grid-column: 1/-1; margin: 0; padding-top: 9px; border-top: 1px solid #f0d4d4; color: #963f3f; font-size: 12px; }
+.credit-order-detail-modal > footer { padding-top: 2px; display: flex; justify-content: flex-end; }
 
 @media (max-width: 1450px) {
   .credit-payments-page .money-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -149,6 +192,17 @@
   .credit-payments-page .credit-payment-order > .credit-paid-mark,
   .credit-payments-page .credit-payment-order > .credit-review-mark,
   .credit-payments-page .credit-payment-order > .credit-not-due { grid-column: 1 / -1; width: 100%; max-width: none; justify-self: stretch; }
+  .credit-payments-page .credit-order-actions { grid-column: 1 / -1 !important; justify-content: stretch; }
+  .credit-payments-page .credit-order-actions > button { flex: 1 1 150px; }
+  .credit-payment-detail-dialog > .modal-x { position: absolute !important; top: 12px !important; right: 12px !important; margin: 0 !important; }
+  .credit-order-detail-modal { padding: 64px 18px calc(24px + env(safe-area-inset-bottom)); gap: 18px; }
+  .credit-order-detail-modal > header { min-height: 0; padding-right: 0; flex-direction: column; gap: 12px; }
+  .credit-order-detail-summary,.credit-payment-attempts article { grid-template-columns: 1fr; }
+  .credit-order-detail-summary span { min-height: 0; padding: 14px 16px; }
+  .credit-order-detail-summary span + span { border-left: 0; border-top: 1px solid #dbe7ed; }
+  .credit-order-detail-items article { grid-template-columns: minmax(0,1fr) auto; gap: 8px 14px; }
+  .credit-order-detail-items article > span { grid-column: 1 / -1; }
+  .credit-payment-attempts article > p { grid-column: 1; }
 }
 @media (max-width: 440px) {
   .credit-payments-page .money-summary-grid { grid-template-columns: 1fr; }
