@@ -1,0 +1,385 @@
+/* Final shared shell rules. Page-specific workspaces must not resize or scroll
+   the primary desktop navigation. */
+@media (min-width: 901px) {
+  .app-v2.admin-shell,
+  .app-v2.entrepreneur-shell {
+    --sidebar: 310px !important;
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .app-v2.admin-shell > main,
+  .app-v2.entrepreneur-shell > main {
+    width: calc(100vw - 310px);
+    height: 100dvh;
+    margin-left: 310px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .app-v2.admin-shell .sidebar-v2,
+  .app-v2.entrepreneur-shell .sidebar-v2 {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 310px !important;
+    min-width: 310px;
+    max-width: 310px;
+    height: 100dvh;
+    overflow: hidden !important;
+    scrollbar-width: none;
+  }
+
+  .app-v2 .sidebar-v2::-webkit-scrollbar { display: none; }
+}
+
+/* Fit the full navigation into shorter laptop viewports without introducing
+   an independent sidebar scroll area. */
+@media (min-width: 901px) and (max-height: 900px) {
+  .app-v2.admin-shell .sidebar-v2,
+  .app-v2.entrepreneur-shell .sidebar-v2 { padding-block: 16px !important; }
+  .app-v2.admin-shell .side-brand,
+  .app-v2.entrepreneur-shell .side-brand { width: 120px; min-height: 70px; height: 70px; }
+  .app-v2.admin-shell .side-brand .brand img,
+  .app-v2.entrepreneur-shell .side-brand .brand img { width: 108px; height: 66px; }
+  .app-v2.admin-shell .workspace-card,
+  .app-v2.entrepreneur-shell .workspace-card { min-height: 66px; margin: 14px 0 15px; padding-block: 10px; }
+  .app-v2.admin-shell .workspace-card > span,
+  .app-v2.entrepreneur-shell .workspace-card > span { width: 40px; height: 40px; }
+  .app-v2.admin-shell .side-label,
+  .app-v2.entrepreneur-shell .side-label { margin-block: 7px 9px; }
+  .app-v2.admin-shell .side-links,
+  .app-v2.entrepreneur-shell .side-links { gap: 5px; }
+  .app-v2.admin-shell .side-links button,
+  .app-v2.entrepreneur-shell .side-links button { min-height: 44px; height: 44px; }
+  .app-v2.admin-shell .logout,
+  .app-v2.entrepreneur-shell .logout { min-height: 46px; height: 46px; margin-top: 10px; }
+}
+
+@media (min-width: 901px) and (max-height: 720px) {
+  .app-v2.admin-shell .sidebar-v2,
+  .app-v2.entrepreneur-shell .sidebar-v2 { padding-block: 10px !important; }
+  .app-v2.admin-shell .side-brand,
+  .app-v2.entrepreneur-shell .side-brand { min-height: 54px; height: 54px; }
+  .app-v2.admin-shell .side-brand .brand img,
+  .app-v2.entrepreneur-shell .side-brand .brand img { height: 50px; }
+  .app-v2.admin-shell .workspace-card,
+  .app-v2.entrepreneur-shell .workspace-card { min-height: 56px; margin-block: 8px 9px; }
+  .app-v2.admin-shell .side-label,
+  .app-v2.entrepreneur-shell .side-label { margin-block: 3px 4px; }
+  .app-v2.admin-shell .side-links,
+  .app-v2.entrepreneur-shell .side-links { gap: 2px; }
+  .app-v2.admin-shell .side-links button,
+  .app-v2.entrepreneur-shell .side-links button { min-height: 39px; height: 39px; }
+  .app-v2.admin-shell .logout,
+  .app-v2.entrepreneur-shell .logout { min-height: 41px; height: 41px; margin-top: 5px; }
+}
+
+/* Higher text contrast on light surfaces throughout both workspaces. */
+:root {
+  --ink: #102f4c;
+  --muted: #526b80;
+}
+
+body { color: #102f4c; }
+.app-v2 > main { color: #102f4c; }
+.app-v2 > main input::placeholder,
+.app-v2 > main textarea::placeholder { color: #647b8f; opacity: 1; }
+
+.app-v2 > main :is(.card, .metric-v2, .data-row, .home-essential-stats > button,
+  .home-destinations, .management-filters, .order-filter-shell,
+  .credit-request-centre, .credit-request-filter-panel, .commission-workspace)
+  :is(p, small, em, label, dt) { color: #526b80; }
+
+.app-v2 > main :is(.card, .metric-v2, .data-row, .home-essential-stats > button,
+  .home-destinations, .management-filters, .order-filter-shell,
+  .credit-request-centre, .credit-request-filter-panel, .commission-workspace)
+  :is(strong, h1, h2, h3, h4, dd) { color: #102f4c; }
+
+.sidebar-v2 .side-links button { color: #d0deeb; }
+.sidebar-v2 .workspace-card small,
+.sidebar-v2 .logout,
+.sidebar-v2 .logout small { color: #aac0d4; }
+.sidebar-v2 .side-label { color: #8eabc4; }
+
+/* Entrepreneur navigation mirrors the management rail without changing the
+   admin shell. Keep the same reserved desktop width so switching workspaces
+   never makes the content column jump. */
+.entrepreneur-shell .sidebar-v2 {
+  border-right-color: rgba(137, 184, 218, .16);
+  background:
+    radial-gradient(circle at 12% 1%, rgba(38, 132, 190, .25), transparent 18rem),
+    linear-gradient(180deg, #0a2a45 0%, #09243d 54%, #071d33 100%);
+  box-shadow: 18px 0 48px rgba(7, 31, 52, .16);
+}
+
+.entrepreneur-shell .workspace-card {
+  border-color: rgba(113, 183, 226, .28);
+  background: linear-gradient(135deg, rgba(30, 106, 157, .34), rgba(20, 71, 109, .3));
+  box-shadow: inset 0 1px rgba(255, 255, 255, .06);
+}
+
+.entrepreneur-shell .workspace-card > span {
+  color: #91d6ff;
+  background: rgba(68, 157, 215, .18);
+}
+
+.entrepreneur-shell .workspace-card > svg { color: #82b8d9; }
+.entrepreneur-shell .side-label { color: #82a5bf; }
+.entrepreneur-shell .side-links button { color: #d3e1ec; }
+.entrepreneur-shell .side-links button svg { color: #8fc4df; }
+.entrepreneur-shell .side-links button:nth-child(3n + 2):not(.active) svg { color: #a69af0; }
+.entrepreneur-shell .side-links button:nth-child(3n):not(.active) svg { color: #55c5a1; }
+
+.entrepreneur-shell .side-links button:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(70, 151, 204, .13);
+}
+
+.entrepreneur-shell .side-links button.active {
+  color: #fff;
+  background: linear-gradient(135deg, #328dca, #2474ae);
+  box-shadow: 0 9px 22px rgba(3, 22, 38, .24), inset 0 1px rgba(255, 255, 255, .16);
+}
+
+.entrepreneur-shell .side-links button.active svg { color: #cceeff; }
+
+.entrepreneur-shell .sidebar-v2 > .logout {
+  border-color: rgba(128, 174, 207, .22);
+  color: #c8d9e6;
+  background: rgba(255, 255, 255, .045);
+}
+
+.entrepreneur-shell .sidebar-v2 > .logout:hover {
+  border-color: rgba(108, 187, 232, .5);
+  background: rgba(46, 130, 184, .17);
+}
+
+/* Drop-shipping order directory: filters first, status overview second, then
+   the results table. Separate surfaces keep the controls from feeling packed. */
+.entrepreneur-shell[data-page="orders"] .order-filter-workspace {
+  margin-bottom: 28px;
+}
+.entrepreneur-shell[data-page="orders"] .orders-summary-strip {
+  margin-bottom: 28px;
+}
+.entrepreneur-shell[data-page="orders"] .order-results-workspace {
+  margin-top: 0;
+}
+.entrepreneur-shell[data-page="orders"] .order-filter-workspace .orders-date-export {
+  padding-bottom: 22px;
+  border-bottom: 0;
+}
+.entrepreneur-shell[data-page="orders"] {
+  --order-ink: #0e3049;
+  --order-muted: #405d73;
+}
+.entrepreneur-shell[data-page="orders"] > main :is(
+  .page-title p,
+  .orders-workspace-head p,
+  .orders-summary-strip small,
+  .orders-toolbar small,
+  .order-select-field > span,
+  .control-caption,
+  .orders-date-export label > span,
+  .orders-export-action small,
+  .order-result-bar,
+  .order-result-bar small,
+  .order-table .data-row small,
+  .order-table .data-row em
+) { color: #405d73; }
+.entrepreneur-shell[data-page="orders"] > main :is(input, select) {
+  color: #16384f;
+  font-weight: 600;
+}
+.entrepreneur-shell[data-page="orders"] > main input::placeholder {
+  color: #587084;
+  opacity: 1;
+}
+
+.entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  height: 58px;
+  padding: 7px 14px 7px 10px;
+  border: 1px solid #cbdbe5;
+  border-radius: 12px;
+  background: #f8fbfd;
+  box-shadow: 0 2px 8px rgba(20, 57, 80, .04);
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search > svg {
+  width: 38px;
+  height: 38px;
+  padding: 10px;
+  border-radius: 10px;
+  color: #176b91;
+  background: #e7f3f8;
+}
+.entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search small {
+  min-height: 0;
+  color: #3f647b;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search input {
+  width: 100%;
+  height: 24px;
+  min-height: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  outline: 0 !important;
+  color: #12364e;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 13px;
+  font-weight: 600;
+}
+.entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search:focus-within {
+  border-color: #3f94b9;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(41, 132, 172, .12), 0 6px 16px rgba(20, 57, 80, .07);
+}
+.entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search:focus-within > svg {
+  color: #fff;
+  background: #247da6;
+}
+
+@media (max-width: 760px) {
+  .entrepreneur-shell[data-page="orders"] .order-filter-workspace,
+  .entrepreneur-shell[data-page="orders"] .orders-summary-strip { margin-bottom: 20px; }
+}
+/* Keep transient feedback in the user's current focus area on every viewport. */
+.toast-v2 {
+  position: fixed !important;
+  z-index: 1000 !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: 50% !important;
+  width: max-content !important;
+  max-width: min(520px, calc(100vw - 32px)) !important;
+  transform: translate(-50%, -50%) !important;
+  white-space: normal !important;
+  text-align: left;
+  animation: camy-toast-center-in .2s ease both !important;
+}
+
+@keyframes camy-toast-center-in {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 12px)) scale(.97); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Cross-page alignment guardrails. Many screens use their own grids, but they
+   all need to respect the width assigned by the application shell. */
+.app-v2,
+.app-v2 > main,
+.topbar-v2,
+.content-page { min-width: 0; }
+
+.app-v2 > main > :not(.topbar-v2),
+.content-page > *,
+.card > *,
+.page-title-copy,
+.page-actions,
+.topbar-left,
+.topbar-actions { min-width: 0; }
+
+.content-page :is(img, video, canvas) { max-width: 100%; }
+.content-page :is(h1, h2, h3, h4, p, small, strong, span) { overflow-wrap: break-word; }
+
+.page-title,
+.section-title,
+.card-head,
+.table-toolbar,
+.market-heading {
+  max-width: 100%;
+}
+
+.page-actions,
+.section-title,
+.card-head,
+.table-toolbar {
+  flex-wrap: wrap;
+}
+
+.content-page :is(
+  .metric-row,
+  .dashboard-grid,
+  .overview-kpis,
+  .admin-overview-grid,
+  .reports-grid,
+  .profile-layout,
+  .growth-main-grid,
+  .growth-lower-grid,
+  .stock-buy-layout,
+  .customer-buy-layout,
+  .product-grid-v2,
+  .quick-products
+) > * { min-width: 0; }
+
+.table-card,
+.table-shell,
+.data-table,
+.people-table,
+.order-table,
+.admin-order-table,
+.application-table-wrap {
+  max-width: 100%;
+}
+
+.table-card,
+.table-shell,
+.application-table-wrap { overflow-x: auto; }
+
+/* The 310px navigation works well on large monitors, but it was being forced
+   onto small laptops after an earlier 250px breakpoint had already applied. */
+@media (min-width: 901px) and (max-width: 1180px) {
+  .app-v2.admin-shell,
+  .app-v2.entrepreneur-shell { --sidebar: 260px !important; }
+
+  .app-v2.admin-shell > main,
+  .app-v2.entrepreneur-shell > main {
+    width: calc(100vw - 260px);
+    margin-left: 260px;
+  }
+
+  .app-v2.admin-shell .sidebar-v2,
+  .app-v2.entrepreneur-shell .sidebar-v2 {
+    width: 260px !important;
+    min-width: 260px;
+    max-width: 260px;
+    padding-inline: 14px !important;
+  }
+
+  .app-v2 .topbar-v2 { gap: 14px; padding-inline: 18px; }
+  .app-v2 .top-search { width: min(310px, 32vw); }
+  .app-v2 .topbar-actions { gap: 8px; }
+  .app-v2 .topbar-commerce .new-order-top span { display: none; }
+  .app-v2 .content-page { padding-inline: 18px; }
+}
+
+/* Tablet widths use the off-canvas rail. Keep every toolbar inside the canvas
+   while retaining horizontally scrollable tables where columns are essential. */
+@media (min-width: 761px) and (max-width: 900px) {
+  .app-v2 > main { width: 100%; margin-left: 0; }
+  .topbar-v2 { gap: 14px; }
+  .topbar-actions { margin-left: auto; }
+  .top-search { width: min(340px, 42vw); }
+  .content-page { width: 100%; padding-inline: 20px; }
+  .page-title { align-items: flex-start; }
+  .page-actions { width: 100%; }
+}

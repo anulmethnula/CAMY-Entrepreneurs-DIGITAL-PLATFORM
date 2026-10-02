@@ -3405,7 +3405,7 @@ input:focus, select:focus, textarea:focus {
 .payout-panel-v3 header small { color:#1b8b68; font-size:8px; font-weight:850; letter-spacing:.1em; }
 .payout-panel-v3 header h3 { margin:3px 0; color:#123955; font-size:18px; }
 .payout-panel-v3 header p { margin:0; color:#718697; font-size:10px; }
-.money-flow-v3 { margin-top:16px; display:grid; grid-template-columns:1fr 28px 1fr 28px 1fr; align-items:center; gap:8px; }
+.money-flow-v3 { margin-top:16px; display:grid; grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr) 28px minmax(0,1fr); align-items:stretch; gap:8px; }
 .money-flow-v3 > article { min-height:108px; padding:15px; border:1px solid #dbe7ee; border-radius:15px; background:#fff; display:flex; flex-direction:column; justify-content:center; }
 .money-flow-v3 > article.client { border-color:#c9dff0; background:#f3f9fd; }
 .money-flow-v3 > article.profit { border-color:#bfe4d4; background:#f0faf5; }
@@ -3414,7 +3414,7 @@ input:focus, select:focus, textarea:focus {
 .money-flow-v3 strong { margin:6px 0 5px; color:#123b59; font-size:20px; }
 .money-flow-v3 .profit strong { color:#147c59; }
 .money-flow-v3 span { color:#7a8e9d; font-size:9px; }
-.money-flow-v3 > svg,.money-plus { justify-self:center; color:#6d91aa; }
+.money-flow-v3 > svg,.money-plus { align-self:center; justify-self:center; color:#6d91aa; }
 .money-flow-v3 > svg { width:18px; }
 .money-plus { font-size:18px; }
 .collection-state-v3 { margin-top:10px; padding:10px 13px; border-radius:11px; color:#2b5c76; background:#eaf4fa; display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:10px; }
@@ -3507,7 +3507,7 @@ input:focus, select:focus, textarea:focus {
 .fulfilment-panel-v3 .tracking-complete { padding:14px 16px; border-color:#bcded0; color:#176d51!important; background:#edf9f4; font-size:12px!important; font-weight:700; }
 .order-terminal-v3 { margin:0 24px 24px; padding:13px; border:1px solid #f0c6c1; border-radius:13px; color:#9e443d; background:#fff1ef; font-size:10px; font-weight:750; }
 @media (max-width:900px) { .order-glance-v3 { grid-template-columns:1fr 1fr; }.order-glance-v3 article:last-child { grid-column:1/-1; }.ordered-products-v3 article { grid-template-columns:1fr; }.ordered-products-v3 dl { grid-template-columns:repeat(4,1fr); }.line-total-v3 { text-align:left; }.payout-form-v3 { grid-template-columns:1fr; }.payout-form-v3 > .btn { grid-column:1; justify-self:stretch; width:100%; }.payout-bank-blocker-v3 { grid-template-columns:42px 1fr; }.payout-bank-blocker-v3 .btn { grid-column:1/-1; width:100%; }.payout-bank-ready-v3 { grid-template-columns:1fr; }.payout-bank-ready-v3 small { text-align:left; }.money-flow-v3 { grid-template-columns:1fr; }.money-flow-v3 > svg { transform:rotate(90deg); }.money-plus { padding:0; } }
-@media (max-width:620px) { .order-detail-shell,.order-detail-v3 { width:100%!important; max-height:100dvh!important; border-radius:0!important; }.order-hero-v3 { min-height:135px; padding:25px 62px 23px 18px; }.order-hero-v3 h2 { font-size:25px; }.order-glance-v3 { margin-inline:12px; grid-template-columns:1fr; }.order-glance-v3 article:last-child { grid-column:auto; }.ordered-products-v3,.payout-panel-v3,.fulfilment-panel-v3 { margin-inline:12px; padding:15px; }.order-total-v3 { margin-inline:12px; grid-template-columns:1fr; }.order-total-v3 > span { padding:8px 0; border-left:0; border-top:1px solid rgba(255,255,255,.14); }.ordered-products-v3 dl,.payout-form-fields { grid-template-columns:1fr 1fr; }.payout-panel-v3 > header { grid-template-columns:42px 1fr; }.payout-panel-v3 > header > .status-pill { grid-column:2; justify-self:start; }.fulfilment-panel-v3 > header,.tracking-status-head { align-items:flex-start; flex-direction:column; }.mini-progress-v3 { width:100%; overflow-x:auto; }.tracking-details { grid-template-columns:1fr; }.tracking-stage { min-height:34px; }.order-terminal-v3 { margin-inline:12px; } }
+@media (max-width:620px) { .order-detail-shell,.order-detail-v3 { width:100%!important; height:auto!important; max-height:100dvh!important; border-radius:0!important; }.order-hero-v3 { min-height:135px; padding:25px 62px 23px 18px; }.order-hero-v3 h2 { font-size:25px; }.order-glance-v3 { margin-inline:12px; grid-template-columns:1fr; }.order-glance-v3 article:last-child { grid-column:auto; }.ordered-products-v3,.payout-panel-v3,.fulfilment-panel-v3 { margin-inline:12px; padding:15px; }.order-total-v3 { margin-inline:12px; grid-template-columns:1fr; }.order-total-v3 > span { padding:8px 0; border-left:0; border-top:1px solid rgba(255,255,255,.14); }.ordered-products-v3 dl,.payout-form-fields { grid-template-columns:1fr 1fr; }.payout-panel-v3 > header { grid-template-columns:42px 1fr; }.payout-panel-v3 > header > .status-pill { grid-column:2; justify-self:start; }.fulfilment-panel-v3 > header,.tracking-status-head { align-items:flex-start; flex-direction:column; }.mini-progress-v3 { width:100%; overflow-x:auto; }.tracking-details { grid-template-columns:1fr; }.tracking-stage { min-height:34px; }.order-terminal-v3 { margin-inline:12px; } }
 
 /* Main commission payout workspace */
 .commission-kpis { margin:18px 0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }

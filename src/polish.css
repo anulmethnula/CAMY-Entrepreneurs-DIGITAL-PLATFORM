@@ -103,8 +103,9 @@
 .entrepreneur-overview .home-essential-stats{gap:16px}
 .entrepreneur-overview .home-essential-stats>button{min-height:160px;padding:23px;border-color:var(--home-line);border-radius:20px;grid-template-columns:52px minmax(0,1fr) 18px;gap:14px;box-shadow:0 6px 20px rgba(20,56,77,.045);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
 .entrepreneur-overview .home-essential-stats>button>span{width:52px;height:52px;border-radius:15px}
-.entrepreneur-overview .home-essential-stats small{font-size:11px;line-height:1.4;letter-spacing:.065em;color:#5c7690}
-.entrepreneur-overview .home-essential-stats strong{margin-top:8px;font-size:clamp(21px,1.6vw,28px);line-height:1.15;letter-spacing:-.025em;color:var(--home-ink)}
+.entrepreneur-overview .home-essential-stats>button>div{min-width:0}
+.entrepreneur-overview .home-essential-stats small{min-height:31px;font-size:11px;line-height:1.4;letter-spacing:.065em;color:#5c7690}
+.entrepreneur-overview .home-essential-stats strong{margin-top:8px;font-size:clamp(20px,1.4vw,25px);line-height:1.15;letter-spacing:-.025em;color:var(--home-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
 .entrepreneur-overview .home-essential-stats p{margin-top:9px;font-size:13px;line-height:1.45;color:var(--home-muted)}
 .entrepreneur-overview .home-attention{padding:20px 24px;border-radius:18px}
 .entrepreneur-overview .home-attention small{font-size:11px}.entrepreneur-overview .home-attention p{font-size:13px;line-height:1.5}.entrepreneur-overview .home-attention button{min-height:44px;padding-inline:16px}

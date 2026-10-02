@@ -59,7 +59,7 @@ try {
       const [product, setProduct] = React.useState(products[0])
       const [search, setSearch] = React.useState('')
       return h('div', { className:'admin-shell' },
-        h(AdminInventory, { products, visible: products.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())), categories:['Home Appliances','Cookware'], allCategories:['Home Appliances','Cookware'], categoryFilter:'All', setCategoryFilter:()=>{}, search, setSearch, openAdd:()=>{}, openAddCategory:()=>{}, openImport:()=>{}, openProduct:()=>{}, stock:()=>{}, togglePublished:()=>{}, manageCategory:()=>{}, exportProducts:()=>{} }),
+        h('div', { className:'admin-products-shell' }, h(AdminInventory, { products, visible: products.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())), categories:['Home Appliances','Cookware'], allCategories:['Home Appliances','Cookware'], categoryFilter:'All', setCategoryFilter:()=>{}, search, setSearch, openAdd:()=>{}, openAddCategory:()=>{}, openImport:()=>{}, openProduct:()=>{}, stock:()=>{}, togglePublished:()=>{}, manageCategory:()=>{}, exportProducts:()=>{} })),
         h('form', { id:'cost-fixture', style:{maxWidth:'700px',margin:'20px auto',padding:'16px'} }, h(ProductCostEditor, {product,onChange:setProduct})))
     }
     const fixture = document.createElement('div')
@@ -78,6 +78,7 @@ try {
   await send('Emulation.setDeviceMetricsOverride', {width:390,height:844,deviceScaleFactor:1,mobile:true})
   await pause(150)
   check(await evaluate("document.documentElement.scrollWidth <= innerWidth"), 'Mobile inventory overflows viewport')
+  check(await evaluate("document.querySelector('.inventory-row').getBoundingClientRect().right <= innerWidth"), 'Mobile product card escapes viewport')
   await writeFile('artifacts/inventory-costs-mobile.png', Buffer.from((await send('Page.captureScreenshot', {format:'png'})).data,'base64'))
   check(!errors.length, errors.join('\n'))
   console.log('Inventory browser checks passed: desktop/mobile layout and live manual price calculation.')

@@ -1,0 +1,599 @@
+/* CAMY mobile application shell
+   Loaded last so every workspace shares one intentional phone experience. */
+@media (max-width: 760px) {
+  :root {
+    --mobile-bg: #eef4f8;
+    --mobile-surface: #fff;
+    --mobile-ink: #102f46;
+    --mobile-muted: #60798b;
+    --mobile-line: #d8e5ed;
+    --mobile-primary: #167aa2;
+    --mobile-accent: #12a18d;
+    --mobile-radius: 18px;
+    --mobile-shadow: 0 8px 24px rgba(13, 51, 75, .075);
+    --mobile-nav-height: 78px;
+  }
+
+  html { background: var(--mobile-bg); }
+  html, body, #root, .app-v2 { width: 100%; min-width: 320px; min-height: 100%; overflow-x: clip; }
+  body { margin: 0; color: var(--mobile-ink); background: var(--mobile-bg); -webkit-tap-highlight-color: transparent; }
+  body:has(.modal-layer,.drawer-layer) { overflow: hidden; }
+  * { scrollbar-width: none; }
+  *::-webkit-scrollbar { display: none; }
+
+  .app-v2 { min-height: 100dvh; background: var(--mobile-bg); }
+  .app-v2 > main,
+  .admin-shell > main,
+  .entrepreneur-shell > main {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    background: var(--mobile-bg) !important;
+  }
+
+  /* Native-app header */
+  .topbar-v2,
+  .admin-shell .topbar-v2,
+  .entrepreneur-shell .topbar-v2 {
+    position: sticky !important;
+    z-index: 120 !important;
+    top: 0;
+    width: 100%;
+    height: calc(64px + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) 14px 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(192, 211, 223, .75) !important;
+    color: var(--mobile-ink);
+    background: rgba(247, 251, 253, .94) !important;
+    box-shadow: 0 5px 18px rgba(17, 57, 82, .06) !important;
+    backdrop-filter: blur(18px) saturate(1.25);
+  }
+  .topbar-left { min-width: 0; gap: 10px; }
+  .topbar-left > div { min-width: 0; }
+  .topbar-left small { display: block !important; color: #748b9b; font-size: 9px !important; letter-spacing: .08em; }
+  .topbar-left strong { display: block; max-width: 43vw !important; overflow: hidden; color: var(--mobile-ink); font-size: 16px !important; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar-left .icon-btn,
+  .topbar-actions .icon-btn,
+  .topbar-cart {
+    width: 42px !important;
+    min-width: 42px;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
+    border: 1px solid #d4e2ea !important;
+    border-radius: 13px !important;
+    color: #175b7b !important;
+    background: #fff !important;
+    box-shadow: 0 4px 12px rgba(20, 66, 93, .06) !important;
+  }
+  .topbar-actions { min-width: 0; gap: 7px !important; }
+  .topbar-actions > :is(.top-search,.user-chip,.topbar-signout) { display: none !important; }
+  .topbar-commerce { display: flex !important; }
+  .topbar-commerce .new-order-top { display: none !important; }
+  .topbar-cart span { display: none; }
+
+  /* Slide-out full navigation */
+  .sidebar-v2 {
+    position: fixed !important;
+    z-index: 180 !important;
+    inset: 0 auto 0 0 !important;
+    width: min(88vw, 340px) !important;
+    height: 100dvh !important;
+    padding: calc(18px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom)) !important;
+    overflow-y: auto !important;
+    border: 0 !important;
+    border-radius: 0 24px 24px 0;
+    transform: translateX(-105%);
+    transition: transform .24s cubic-bezier(.2,.8,.2,1);
+    box-shadow: 24px 0 70px rgba(3, 21, 35, .3) !important;
+  }
+  .sidebar-v2.open { transform: translateX(0); }
+  .side-brand { height: 54px !important; }
+  .side-brand .mobile-only { display: grid !important; }
+  .workspace-card { margin: 17px 0 !important; border-radius: 16px !important; }
+  .side-links { gap: 5px !important; }
+  .side-links button { min-height: 49px !important; border-radius: 13px !important; font-size: 13px !important; }
+  .logout { min-height: 50px !important; margin-top: 15px !important; border-radius: 13px !important; }
+  .scrim { z-index: 170 !important; background: rgba(4, 20, 32, .58) !important; backdrop-filter: blur(3px); }
+
+  /* Bottom app navigation */
+  .mobile-nav-v2,
+  .admin-shell .mobile-nav-v2 {
+    position: fixed !important;
+    z-index: 140 !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: max(7px, env(safe-area-inset-bottom)) !important;
+    width: auto !important;
+    height: var(--mobile-nav-height) !important;
+    padding: 7px !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    border-radius: 24px !important;
+    background: rgba(8, 37, 57, .96) !important;
+    box-shadow: 0 14px 38px rgba(5, 28, 44, .28) !important;
+    backdrop-filter: blur(18px);
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0,1fr)) !important;
+  }
+  .mobile-nav-v2 button {
+    min-width: 0;
+    min-height: 62px !important;
+    padding: 5px 2px !important;
+    border: 0 !important;
+    border-radius: 17px !important;
+    color: #9db4c3 !important;
+    background: transparent !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font: inherit;
+    font-size: 9px !important;
+    font-weight: 750;
+  }
+  .mobile-nav-v2 button svg { width: 20px !important; height: 20px !important; }
+  .mobile-nav-v2 button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-nav-v2 button.active { color: #fff !important; background: rgba(57, 139, 174, .32) !important; }
+  .entrepreneur-shell .mobile-nav-v2 .mobile-order-action {
+    height: 70px !important;
+    min-height: 70px !important;
+    margin-top: -16px !important;
+    border: 4px solid var(--mobile-bg) !important;
+    border-radius: 22px !important;
+    color: #fff !important;
+    background: linear-gradient(145deg,var(--mobile-primary),var(--mobile-accent)) !important;
+    box-shadow: 0 9px 22px rgba(10, 121, 137, .35) !important;
+  }
+
+  /* Page canvas and feature heading */
+  .content-page,
+  .admin-shell .content-page,
+  .entrepreneur-shell .content-page {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0;
+    padding: 14px 14px calc(var(--mobile-nav-height) + 34px + env(safe-area-inset-bottom)) !important;
+    background: transparent !important;
+  }
+  .content-page > * { min-width: 0; max-width: 100%; }
+  .page-title {
+    min-height: 0 !important;
+    margin: 0 0 14px !important;
+    padding: 21px 19px !important;
+    border: 0 !important;
+    border-radius: 21px !important;
+    background: radial-gradient(circle at 100% 0,rgba(63,189,190,.24),transparent 12rem),linear-gradient(135deg,#0b314b,#145f78) !important;
+    box-shadow: 0 12px 28px rgba(8, 50, 73, .17) !important;
+    display: grid !important;
+    gap: 16px !important;
+  }
+  .page-title::before { display: none !important; }
+  .page-title h1 { margin: 6px 0 !important; color: #fff !important; font-size: 25px !important; line-height: 1.12 !important; letter-spacing: -.035em; }
+  .page-title p { margin: 0 !important; color: #d2e6ed !important; font-size: 13px !important; line-height: 1.5 !important; }
+  .page-title :is(.page-title-copy>span,.page-title>div:first-child>span) { color: #8ee0df !important; font-size: 9px !important; }
+  .page-actions { width: 100%; display: grid !important; grid-template-columns: 1fr !important; gap: 8px !important; }
+  .page-actions .btn,.page-title > .btn { width: 100% !important; justify-content: center; }
+
+  /* Shared app surfaces */
+  .card,.metric-v2,.management-filters,.catalog-controls,.order-filter-shell,
+  .orders-summary-strip,.commission-workspace,.credit-request-centre,
+  .credit-request-filter-panel,.profile-summary,.profile-form,.membership-card {
+    border-color: var(--mobile-line) !important;
+    border-radius: var(--mobile-radius) !important;
+    box-shadow: var(--mobile-shadow) !important;
+  }
+  .metric-row,.home-essential-stats,.overview-kpis,.admin-order-summary,
+  .credit-overview,.access-overview,.commission-kpis,.growth-kpis {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 10px !important;
+  }
+  .metric-v2 { min-height: 118px !important; padding: 15px !important; align-items: flex-start !important; }
+  .metric-v2 > div:nth-child(2) { min-width: 0; }
+  .metric-v2 strong { font-size: 19px !important; overflow-wrap: anywhere; }
+  .metric-v2 small { line-height: 1.35; }
+  .dashboard-grid,.profile-layout,.growth-main-grid,.growth-lower-grid,
+  .reports-grid,.admin-overview-grid,.stock-buy-layout,.customer-buy-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .section-title,.card-head { align-items: flex-start !important; gap: 10px; }
+  .section-title h2,.card-head h2 { font-size: 19px !important; }
+  .section-title > button,.card-head > button { flex: 0 0 auto; }
+  .btn,.market-primary { min-height: 46px !important; border-radius: 13px !important; }
+  input,select,textarea { font-size: 16px !important; }
+
+  /* Filters become thumb-friendly horizontal controls. */
+  .management-filters,.catalog-controls,.order-filter-shell,
+  .orders-toolbar,.orders-date-export,.customer-shop-filters,.customer-product-tools {
+    padding: 13px !important;
+    gap: 9px !important;
+    grid-template-columns: 1fr !important;
+  }
+  .management-filters > label,.catalog-controls > label,.order-search,
+  .order-select-field,.customer-shop-filters label {
+    width: 100% !important;
+    min-height: 50px !important;
+  }
+  .catalog-controls > div,.filter-tabs,.status-filters,.orders-tabs {
+    width: 100%; overflow-x: auto; flex-wrap: nowrap !important; scroll-snap-type: x proximity;
+  }
+  .catalog-controls > div button,.filter-tabs button,.status-filters button,.orders-tabs button {
+    flex: 0 0 auto; min-height: 42px; scroll-snap-align: start; white-space: nowrap;
+  }
+
+  /* Catalogue and product browsing */
+  .product-grid,.quick-products,.stock-product-grid,.customer-product-grid,
+  .inventory-grid,.catalogue-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 10px !important;
+  }
+  .product-v2,.stock-product-card,.customer-product-grid > article { border-radius: 17px !important; overflow: hidden; }
+  .product-photo,.stock-product-image,.customer-product-photo { height: 155px !important; min-height: 0 !important; }
+  .product-body,.stock-product-body,.customer-product-body { padding: 12px !important; }
+  .product-body h3,.stock-product-body h3,.customer-product-name { font-size: 14px !important; line-height: 1.3; }
+
+  /* Desktop tables become readable record cards. */
+  .data-table,.people-table,.order-table,.admin-order-table,.application-table,
+  .credit-list,.report-table { overflow: visible !important; background: transparent !important; box-shadow: none !important; }
+  :is(.data-table,.people-table,.order-table,.admin-order-table,.application-table,.credit-list,.report-table) .data-row.head { display: none !important; }
+  :is(.data-table,.people-table,.order-table,.admin-order-table,.application-table,.credit-list,.report-table) .data-row:not(.head) {
+    min-height: 0 !important;
+    margin-bottom: 10px !important;
+    padding: 15px !important;
+    border: 1px solid var(--mobile-line) !important;
+    border-radius: 17px !important;
+    background: #fff !important;
+    box-shadow: var(--mobile-shadow) !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 11px 12px !important;
+    align-items: center;
+  }
+  :is(.data-table,.people-table,.order-table,.admin-order-table,.application-table,.credit-list,.report-table) .data-row:not(.head) > * { min-width: 0; grid-column: auto !important; }
+  :is(.data-table,.people-table,.order-table,.admin-order-table,.application-table,.credit-list,.report-table) .data-row:not(.head) > button:last-child { justify-self: end; }
+  .supply-table-wrap { margin-inline: -2px; overflow-x: auto !important; border-radius: 14px; }
+  table { min-width: 680px; }
+
+  /* Drawers and dialogs behave like app sheets. */
+  .modal-layer,.drawer-layer { z-index: 220 !important; padding: 0 !important; align-items: flex-end !important; place-items: end stretch !important; background: rgba(4,22,35,.66) !important; backdrop-filter: blur(6px); }
+  .modal-v2,.modal-v2.wide,.drawer,.notifications {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-height: 94dvh !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 25px 25px 0 0 !important;
+    background: #f7fafc !important;
+    box-shadow: 0 -18px 55px rgba(3,22,35,.24) !important;
+    overflow-y: auto !important;
+  }
+  .modal-v2::before,.drawer::before,.notifications::before {
+    content: ''; display: block; position: sticky; z-index: 20; top: 7px; width: 42px; height: 5px; margin: 7px auto -12px; border-radius: 99px; background: #b7c8d2;
+  }
+  .modal-x { position: sticky !important; z-index: 30 !important; top: 12px !important; float: right !important; width: 42px !important; height: 42px !important; margin: 12px 12px -54px 0 !important; border-radius: 13px !important; }
+  .form-modal,.detail-modal { padding: 62px 14px calc(22px + env(safe-area-inset-bottom)) !important; }
+  .form-modal > footer { position: sticky; z-index: 15; bottom: 0; margin-inline: -14px !important; padding: 13px 14px calc(13px + env(safe-area-inset-bottom)) !important; background: rgba(255,255,255,.96) !important; backdrop-filter: blur(14px); }
+  .order-detail-shell { width: 100% !important; height: 94dvh !important; max-height: 94dvh !important; border-radius: 25px 25px 0 0 !important; }
+  .order-detail-v3 { height: 100% !important; max-height: 100% !important; border-radius: inherit; }
+  .order-hero-v3 { min-height: 145px !important; padding: 30px 64px 24px 18px !important; align-items: flex-end !important; }
+  .order-hero-v3 h2 { font-size: 27px !important; }
+  .order-glance-v3,.order-client-meta-v3 { margin-inline: 12px !important; grid-template-columns: 1fr !important; }
+  .ordered-products-v3,.order-invoice-panel,.entrepreneur-commission-card,.payout-panel-v3,.fulfilment-panel-v3 { margin-inline: 12px !important; padding: 15px !important; border-radius: 17px !important; }
+  .ordered-products-v3 article { grid-template-columns: 1fr !important; }
+  .ordered-products-v3 dl { grid-template-columns: 1fr 1fr !important; }
+  .order-invoice-panel .invoice-admin-form { grid-template-columns: 1fr !important; padding: 13px !important; }
+  .money-flow-v3 { grid-template-columns: 1fr !important; }
+  .money-flow-v3 > svg { transform: rotate(90deg); }
+
+  /* Mobile feedback and touch behavior */
+  .toast-v2 { z-index: 260 !important; left: 14px !important; right: 14px !important; bottom: calc(var(--mobile-nav-height) + 18px + env(safe-area-inset-bottom)) !important; max-width: none !important; border-radius: 15px !important; white-space: normal !important; }
+  button,a { touch-action: manipulation; }
+  button:active,.btn:active,.data-row:active,.product-v2:active { transform: scale(.985); }
+}
+
+@media (max-width: 430px) {
+  .metric-row,.home-essential-stats,.overview-kpis,.admin-order-summary,
+  .credit-overview,.access-overview,.commission-kpis,.growth-kpis { grid-template-columns: 1fr 1fr !important; }
+  .metric-v2 { min-height: 110px !important; padding: 13px !important; }
+  .metric-icon { width: 38px !important; height: 38px !important; }
+  .product-grid,.quick-products,.stock-product-grid,.customer-product-grid,
+  .inventory-grid,.catalogue-grid { grid-template-columns: 1fr !important; }
+  .product-photo,.stock-product-image,.customer-product-photo { height: 210px !important; }
+  .topbar-left strong { max-width: 38vw !important; }
+}
+
+@media (display-mode: standalone) and (max-width: 760px) {
+  .topbar-v2 { padding-top: env(safe-area-inset-top) !important; }
+  .mobile-nav-v2 { bottom: max(7px,env(safe-area-inset-bottom)) !important; }
+}
+
+/* The assisted-order footer must remain fully tappable inside short phone
+   viewports. Its own modal already provides the safe-area boundary. */
+@media (max-width: 760px) {
+  .modal-v2.admin-assisted-order .multi-order-form {
+    max-height: calc(94dvh - 2px) !important;
+  }
+
+  .modal-v2.admin-assisted-order .multi-order-form > footer {
+    padding: 11px 14px max(9px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .modal-v2.admin-assisted-order .multi-order-form > footer > button {
+    min-height: 44px !important;
+  }
+}
+
+/* Final phone layout pass: predictable gutters, stackable headings and
+   controls that never inherit a desktop minimum width. */
+@media (max-width: 760px) {
+  .app-v2 :is(button, a, input, select, textarea, label, fieldset) { min-width: 0; }
+
+  .content-page {
+    padding-inline: clamp(12px, 4vw, 18px) !important;
+  }
+
+  .content-page > :is(.card, .page-title, section, article, form),
+  .content-page :is(.card, .management-filters, .catalog-controls, .order-filter-shell) {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .page-title,
+  .section-title,
+  .card-head,
+  .table-toolbar,
+  .market-heading,
+  .orders-workspace-head,
+  .order-result-bar {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .page-title > *,
+  .section-title > *,
+  .card-head > *,
+  .table-toolbar > *,
+  .market-heading > *,
+  .orders-workspace-head > * { min-width: 0; max-width: 100%; }
+
+  .page-actions,
+  .page-actions > *,
+  .section-title > button,
+  .section-title > .btn,
+  .card-head > button,
+  .table-toolbar > .btn {
+    width: 100% !important;
+  }
+
+  .section-title > button,
+  .section-title > .btn,
+  .card-head > button,
+  .table-toolbar > .btn {
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .topbar-v2 { gap: 8px; }
+  .topbar-left { flex: 1 1 auto; }
+  .topbar-left strong { max-width: min(52vw, 220px) !important; }
+  .topbar-actions { flex: 0 0 auto; }
+
+  .mobile-nav-v2 button span {
+    display: -webkit-box;
+    max-width: 100%;
+    overflow: hidden;
+    line-height: 1.08;
+    text-align: center;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .management-filters > *,
+  .catalog-controls > *,
+  .orders-toolbar > *,
+  .orders-date-export > *,
+  .date-inputs,
+  .date-inputs > label,
+  .order-date-fields,
+  .order-date-fields > label {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .date-inputs,
+  .order-date-fields { grid-template-columns: 1fr !important; }
+
+  .date-quick-filters {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    overflow: visible !important;
+  }
+
+  .date-quick-filters > button {
+    width: 100%;
+    min-width: 0 !important;
+    white-space: normal !important;
+  }
+
+  .content-page :is(input, select, textarea) { width: 100%; max-width: 100%; }
+
+  .content-page :is(.data-row, .order-row, .people-row, .application-row) > * {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .drawer-items article,
+  .notifications article { max-width: 100%; }
+
+  .drawer-items article > div,
+  .notifications article > div { min-width: 0; }
+}
+
+@media (max-width: 430px) {
+  /* Full-size business metrics need one column at true phone widths. Compact
+     status summaries retain two columns because their content is intentionally
+     short. */
+  .metric-row,
+  .home-essential-stats,
+  .overview-kpis,
+  .credit-overview,
+  .access-overview,
+  .commission-kpis,
+  .growth-kpis {
+    grid-template-columns: 1fr !important;
+  }
+
+  .orders-summary-strip,
+  .admin-order-summary,
+  .credit-stock-admin-metrics,
+  .application-kpis,
+  .report-summary section {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .metric-v2 {
+    min-height: 0 !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    align-items: center !important;
+  }
+
+  .metric-v2 > .metric-icon { width: 42px !important; height: 42px !important; }
+
+  .topbar-left strong { max-width: min(48vw, 180px) !important; }
+  .mobile-nav-v2 button { font-size: 8.5px !important; }
+
+  .page-title h1,
+  .page-title p,
+  .section-title h2,
+  .card-head h2 { overflow-wrap: anywhere; }
+
+  .modal-v2,
+  .drawer,
+  .notifications { max-width: 100vw !important; }
+}
+
+/* Real-device record cards. These rules deliberately replace the desktop
+   table grid instead of merely shrinking it; otherwise inherited column
+   placements can reduce names and IDs to a one-character-wide track. */
+@media (max-width: 760px) {
+  .camy-entrepreneurs-workspace .people-table .data-row:not(.head) {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    align-items: start !important;
+  }
+
+  .camy-entrepreneurs-workspace .people-table .data-row:not(.head) > * {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    justify-self: stretch !important;
+    text-align: left !important;
+  }
+
+  .camy-entrepreneurs-workspace .people-table .data-row:not(.head) > .person {
+    width: 100% !important;
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    grid-template-columns: max-content 48px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--mobile-line);
+  }
+
+  .camy-entrepreneurs-workspace .people-table .person > div,
+  .camy-entrepreneurs-workspace .people-table .person > div > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .camy-entrepreneurs-workspace .people-table .person strong {
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+  }
+
+  .camy-entrepreneurs-workspace .people-table .row-action {
+    width: 100% !important;
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+    justify-self: stretch !important;
+  }
+
+  .admin-orders-page .admin-order-table .order-row {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-auto-flow: row !important;
+    align-items: start !important;
+  }
+
+  .admin-orders-page .admin-order-table .order-row > * {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    justify-self: stretch !important;
+    text-align: left !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .admin-orders-page .admin-order-table .order-id-cell {
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .admin-orders-page .admin-order-table .order-id-cell > i {
+    display: grid !important;
+  }
+
+  .admin-orders-page .admin-order-table .order-id-cell > span,
+  .admin-orders-page .admin-order-table .order-id-cell :is(strong, small),
+  .admin-orders-page .admin-order-table .admin-order-person :is(strong, small),
+  .admin-orders-page .admin-order-table .admin-order-client :is(strong, small, em) {
+    width: auto !important;
+    min-width: 0 !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+  }
+
+  .admin-orders-page .admin-order-table .view-order-btn {
+    width: 100% !important;
+    min-height: 46px !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .camy-entrepreneurs-workspace .people-table .data-row:not(.head) {
+    grid-template-columns: 1fr !important;
+  }
+
+  .camy-entrepreneurs-workspace .people-table .data-row:not(.head) > * {
+    grid-column: 1 !important;
+  }
+
+  .camy-entrepreneurs-workspace .people-table .data-row:not(.head) > .person {
+    grid-column: 1 !important;
+    grid-template-columns: max-content 44px minmax(0, 1fr) !important;
+  }
+}
