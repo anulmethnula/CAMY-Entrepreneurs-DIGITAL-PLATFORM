@@ -82,7 +82,7 @@ function CreditSensor({ person, tiers = [], orders = [] }) {
   </section>
 }
 
-export function DropshipOrderPage({ products = [], person, notify, catalogueLive, orders = [], tiers = [], setPage }) {
+export function DropshipOrderPage({ products = [], person, notify, catalogueLive, orders = [], tiers = [], setPage, workspaceView = 'catalogue', setWorkspaceView }) {
   const cartStorageKey = `camy-dropship-cart-${person?.id || 'current'}`
   const [cart, setCart] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem(cartStorageKey)) || [] } catch { return [] }
@@ -93,7 +93,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   const [category, setCategory] = useState('All products')
   const [catalogueQuery, setCatalogueQuery] = useState('')
   const [detailProduct, setDetailProduct] = useState(null)
-  const [mobileCheckout, setMobileCheckout] = useState(false)
+  const mobileCheckout = workspaceView === 'cart'
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [addedProductId, setAddedProductId] = useState(null)
@@ -177,7 +177,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
       setClient(blankClient)
       setSubmitAttempted(false)
       setSubmitError('')
-      setMobileCheckout(false)
+      setWorkspaceView?.('catalogue')
       window.dispatchEvent(new Event('camy-business-updated'))
       window.setTimeout(() => setPage?.('orders'), 1400)
     } catch (error) {
@@ -191,11 +191,11 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   const canSubmit = catalogueLive && selected.length > 0 && !validationError && !busy
   const continueMessage = !selected.length ? 'Add a product to continue' : validationError || ''
   const showMobileCheckout = () => {
-    setMobileCheckout(true)
+    setWorkspaceView?.('cart')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
   const showMobileCatalogue = () => {
-    setMobileCheckout(false)
+    setWorkspaceView?.('catalogue')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
