@@ -102,14 +102,74 @@ body { color: #102f4c; }
 .sidebar-v2 .logout small { color: #aac0d4; }
 .sidebar-v2 .side-label { color: #8eabc4; }
 
+/* Keep the navigation rail one consistent dark colour across every admin and
+   entrepreneur page. This final shell rule intentionally overrides the
+   page-specific gradients used by orders, payouts, credit stock, and CRM. */
+.app-v2.admin-shell .sidebar-v2,
+.app-v2.entrepreneur-shell .sidebar-v2 {
+  background: #071d33 !important;
+}
+
+/* Use the same sidebar type scale and control format in both workspaces. */
+.app-v2.admin-shell .workspace-card strong,
+.app-v2.entrepreneur-shell .workspace-card strong {
+  font-size: 14px !important;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.app-v2.admin-shell .workspace-card small,
+.app-v2.entrepreneur-shell .workspace-card small {
+  margin-top: 4px;
+  font-size: 11px !important;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.app-v2.admin-shell .side-label,
+.app-v2.entrepreneur-shell .side-label {
+  font-size: 10px !important;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: .12em;
+}
+
+.app-v2.admin-shell .side-links button,
+.app-v2.entrepreneur-shell .side-links button {
+  min-height: 46px;
+  padding: 11px 13px;
+  gap: 13px;
+  border-radius: 12px;
+  font-size: 13px !important;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.app-v2.admin-shell .side-links button svg,
+.app-v2.entrepreneur-shell .side-links button svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 19px;
+}
+
+.app-v2.admin-shell .logout,
+.app-v2.entrepreneur-shell .logout {
+  font-size: 12px !important;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.app-v2.admin-shell .logout small,
+.app-v2.entrepreneur-shell .logout small {
+  font-size: 10px !important;
+  line-height: 1.25;
+}
+
 /* Entrepreneur navigation mirrors the management rail without changing the
    admin shell. Keep the same reserved desktop width so switching workspaces
    never makes the content column jump. */
 .entrepreneur-shell .sidebar-v2 {
   border-right-color: rgba(137, 184, 218, .16);
-  background:
-    radial-gradient(circle at 12% 1%, rgba(38, 132, 190, .25), transparent 18rem),
-    linear-gradient(180deg, #0a2a45 0%, #09243d 54%, #071d33 100%);
   box-shadow: 18px 0 48px rgba(7, 31, 52, .16);
 }
 

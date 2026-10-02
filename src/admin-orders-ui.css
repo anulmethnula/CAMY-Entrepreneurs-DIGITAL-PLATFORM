@@ -302,6 +302,33 @@
   :is(.admin-assisted-order, .admin-order-detail) * { animation: none!important; transition: none!important; }
 }
 
+/* Keep the order-detail scroll surface attached to the full dialog. Without
+   an explicit shared height the outer modal can outgrow the inner scroller,
+   leaving a blank panel over the invoice upload controls. */
+@media (min-width: 621px) {
+  .modal-layer:has(.admin-order-detail) {
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    overflow: hidden;
+  }
+
+  .modal-v2.admin-order-detail {
+    height: calc(100dvh - 36px) !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 36px) !important;
+    overflow: hidden !important;
+  }
+
+  .admin-order-detail .order-detail-v3 {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}
+
 /* 2026 Orders workspace refinement --------------------------------------- */
 .admin-shell[data-page="admin-orders"] {
   --orders-navy: #0a304f;
