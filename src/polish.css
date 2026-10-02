@@ -1881,9 +1881,9 @@ html,body,#root,.app-v2{width:100%;max-width:100%;overflow-x:hidden}.app-v2>main
 @media(max-width:1250px) and (min-width:1051px){.entrepreneur-shell[data-page="products"] .stock-buy-layout{grid-template-columns:minmax(0,1fr) 405px}.entrepreneur-shell[data-page="products"] .stock-product-actions{grid-template-columns:1fr}.entrepreneur-shell[data-page="products"] .stock-product-copy h3{min-height:46px}}
 @media(max-width:560px){.entrepreneur-shell[data-page="products"] .dropship-checkout .customer-fields>div,.entrepreneur-shell[data-page="products"] .dropship-line-controls{grid-template-columns:1fr}.entrepreneur-shell[data-page="products"] .dropship-stepper,.entrepreneur-shell[data-page="products"] .dropship-quantity{width:100%}}
 
-/* On phones the order summary is a normal page view, not an overlay above the
-   catalogue and navigation. */
-@media(max-width:650px){
+/* The top-bar Cart action opens the order summary as its own page on every
+   viewport. This avoids showing the product-order catalogue when the user has
+   explicitly asked to view their cart. */
   .entrepreneur-shell[data-page="products"] .mobile-checkout-page>.order-workspace-head,
   .entrepreneur-shell[data-page="products"] .mobile-checkout-page>.order-progress,
   .entrepreneur-shell[data-page="products"] .mobile-checkout-page>.market-warning,
@@ -1893,32 +1893,44 @@ html,body,#root,.app-v2{width:100%;max-width:100%;overflow-x:hidden}.app-v2>main
   }
   .entrepreneur-shell[data-page="products"] .mobile-checkout-page{
     min-height:calc(100dvh - 70px);
-    padding:12px 12px 96px;
+    padding:24px 28px 96px;
     background:#f5f9fc;
   }
   .entrepreneur-shell[data-page="products"] .mobile-checkout-page .stock-buy-layout{
     display:block;
-    margin:0;
+    width:min(760px,100%);
+    margin:0 auto;
   }
   .entrepreneur-shell[data-page="products"] .mobile-checkout-page .dropship-checkout.mobile-open{
     position:static!important;
     inset:auto;
-    width:100%;
+    width:100%!important;
+    max-width:none!important;
     height:auto;
     min-height:0;
-    max-height:none;
+    max-height:none!important;
     margin:0;
     padding:0 0 18px!important;
-    overflow:visible;
-    border:1px solid #d7e5ee;
+    overflow:visible!important;
+    border:1px solid #d7e5ee!important;
     border-radius:18px!important;
     background:#fff;
-    box-shadow:0 12px 30px rgba(13,49,76,.08);
+    box-shadow:0 12px 30px rgba(13,49,76,.08)!important;
   }
   .entrepreneur-shell[data-page="products"] .mobile-checkout-page .dropship-checkout.mobile-open>header{
-    position:relative;
-    top:auto;
+    position:relative!important;
+    top:auto!important;
     border-radius:18px 18px 0 0;
+  }
+  .entrepreneur-shell[data-page="products"] .mobile-checkout-page .mobile-checkout-back{
+    display:grid;
+  }
+
+/* On phones the focused cart remains a normal page view, not an overlay above
+   the catalogue and navigation. */
+@media(max-width:650px){
+  .entrepreneur-shell[data-page="products"] .mobile-checkout-page{
+    padding:12px 12px 96px;
   }
 }
 

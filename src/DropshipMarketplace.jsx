@@ -205,11 +205,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
 
   useEffect(() => {
     const openOrderCart = () => {
-      if (window.matchMedia('(max-width: 720px)').matches) {
-        showMobileCheckout()
-        return
-      }
-      document.querySelector('.dropship-checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      showMobileCheckout()
     }
     window.addEventListener('camy-open-order-cart', openOrderCart)
     return () => window.removeEventListener('camy-open-order-cart', openOrderCart)
