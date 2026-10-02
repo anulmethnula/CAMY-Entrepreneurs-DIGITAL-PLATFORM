@@ -597,3 +597,381 @@
     grid-template-columns: max-content 44px minmax(0, 1fr) !important;
   }
 }
+
+/* Phone-only page repairs. Keep these after the shared mobile rules so the
+   record-card layouts cannot inherit desktop grid tracks or generic table
+   columns. Desktop and tablet compositions are intentionally untouched. */
+@media (max-width: 760px) {
+  html { scroll-padding-bottom: calc(var(--mobile-nav-height) + 32px); }
+
+  .entrepreneur-shell .content-page {
+    padding-bottom: calc(var(--mobile-nav-height) + 54px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Drop-shipping order directory */
+  .entrepreneur-shell[data-page="orders"] .orders-page-v2 {
+    padding-top: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .page-title {
+    padding: 20px 18px !important;
+    border-radius: 18px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .page-title h1 {
+    font-size: clamp(24px, 7.4vw, 31px) !important;
+    overflow-wrap: normal;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-filter-workspace {
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-workspace-head {
+    padding: 18px 16px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-workspace-head .clear-order-filters {
+    width: 100%;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar,
+  .entrepreneur-shell[data-page="orders"] .orders-date-export {
+    padding: 14px 16px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search,
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar .order-select-field,
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar .order-select-field select {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search input {
+    min-width: 0 !important;
+    text-overflow: ellipsis;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-results-workspace {
+    padding: 0 !important;
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table {
+    padding: 0 12px 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 16px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    gap: 14px 16px !important;
+    align-items: start !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head) > * {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    grid-row: auto !important;
+    justify-self: stretch !important;
+    text-align: left !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .order-id-cell,
+  .entrepreneur-shell[data-page="orders"] .order-table .order-customer-cell,
+  .entrepreneur-shell[data-page="orders"] .order-table .view-order-btn {
+    grid-column: 1 / -1 !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .order-id-cell {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .order-id-cell > span,
+  .entrepreneur-shell[data-page="orders"] .order-table .order-id-cell strong,
+  .entrepreneur-shell[data-page="orders"] .order-table .order-customer-cell strong {
+    min-width: 0 !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+    white-space: normal !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table :is(.order-date-cell,.order-profit-cell) {
+    grid-column: 1 !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table :is(.order-value-cell,.order-progress-cell) {
+    grid-column: 2 !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .profit-status,
+  .entrepreneur-shell[data-page="orders"] .order-table .status-pill {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  /* New client order checkout */
+  .entrepreneur-shell[data-page="products"] .mobile-checkout-page {
+    padding: 10px 10px calc(var(--mobile-nav-height) + 42px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .mobile-checkout-page .dropship-checkout.mobile-open {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open > header {
+    padding: 16px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line {
+    margin-inline: 14px !important;
+    padding: 16px 0 !important;
+    display: grid !important;
+    grid-template-columns: 72px minmax(0, 1fr) 42px !important;
+    gap: 10px !important;
+    align-items: start !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line > img {
+    width: 72px !important;
+    height: 72px !important;
+    grid-row: 1 / 3;
+    object-fit: contain;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line > div,
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line > span {
+    min-width: 0 !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line :is(strong,small,p) {
+    overflow-wrap: break-word;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line > button {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .customer-fields {
+    margin-inline: 14px !important;
+    padding: 16px !important;
+  }
+
+  /* Commission list */
+  .entrepreneur-shell[data-page="earnings"] .commission-ledger-panel {
+    padding: 14px !important;
+  }
+
+  .entrepreneur-shell[data-page="earnings"] .commission-ledger-row {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 15px 14px !important;
+    grid-template-columns: 42px minmax(0, 1fr) 34px !important;
+  }
+
+  .entrepreneur-shell[data-page="earnings"] .commission-ledger-row > span {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .entrepreneur-shell[data-page="earnings"] .commission-row-main :is(strong,small,em),
+  .entrepreneur-shell[data-page="earnings"] .commission-row-reference strong {
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  /* Commission details: replace the desktop seven-column product table with
+     a compact two-column metric card. */
+  .entrepreneur-shell[data-page="commission-detail"] .standalone-money-page {
+    padding-inline: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-card {
+    padding: 16px !important;
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-product-head {
+    display: none !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 18px 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > img {
+    width: 64px !important;
+    height: 64px !important;
+    grid-column: 1 !important;
+    object-fit: contain;
+    align-self: center;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > div {
+    min-width: 0 !important;
+    grid-column: 2 !important;
+    align-self: center;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > div :is(strong,small) {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > span {
+    min-width: 0 !important;
+    grid-column: auto !important;
+    padding: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > span :is(small,strong) {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > b {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Credit catalogue and request summary */
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero {
+    padding: 20px 18px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero h1 {
+    font-size: clamp(25px, 7vw, 30px) !important;
+    line-height: 1.12 !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero p {
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero .stock-buy-steps {
+    padding: 13px !important;
+    gap: 8px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero .stock-buy-steps span {
+    min-height: 38px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout > .stock-request-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 16px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout > .stock-request-card header {
+    margin: -16px -16px 16px !important;
+    padding: 16px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .stock-request-card .market-total,
+  .entrepreneur-shell[data-page="credit-stock"] .stock-request-card :is(.market-warning,.credit-safe-note) {
+    min-width: 0;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .stock-request-card .market-warning {
+    overflow-wrap: anywhere;
+  }
+
+  /* Issued credit inventory */
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-page {
+    gap: 12px;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-products > article {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 16px !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-image {
+    width: 100% !important;
+    height: 190px !important;
+    min-height: 0 !important;
+    padding: 12px !important;
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-image img {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-products > article > div:nth-child(2) {
+    min-width: 0;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-products h2 {
+    margin-top: 6px;
+    font-size: 20px !important;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-products dl {
+    width: 100%;
+    min-width: 0;
+    grid-column: 1 !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-products dl span {
+    min-width: 0;
+    padding: 13px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-page > header {
+    padding: 18px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-page > header h1 {
+    font-size: 25px !important;
+    line-height: 1.15;
+  }
+}
