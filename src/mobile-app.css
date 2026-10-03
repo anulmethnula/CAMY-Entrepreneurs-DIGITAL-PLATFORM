@@ -9,10 +9,10 @@
 
 /* Shared filter disclosure. JavaScript adds this only to established filter
    panels; desktop keeps the original layouts and phone pages start compact. */
-.mobile-filter-toggle-mount { display: none; }
+.mobile-filter-toggle-mount { display: none !important; }
 
 @media (max-width: 760px) {
-  .mobile-filter-toggle-mount { display: block; }
+  .mobile-filter-toggle-mount { display: block !important; }
   .mobile-filter-toggle {
     width: 100%; min-height: 58px; padding: 10px 12px; border: 1px solid #cbdce6;
     border-radius: 12px; color: #18374e; background: #f8fbfd; box-shadow: 0 4px 14px rgba(19,57,81,.05);
