@@ -1,6 +1,29 @@
 <?php
 declare(strict_types=1);
 
+function catalogue_demo_data(): array {
+    $legacy=json_decode((string)file_get_contents(__DIR__.'/../database/demo_catalog.json'),true,64,JSON_THROW_ON_ERROR);
+    $rows=json_decode((string)file_get_contents(__DIR__.'/../database/camy_price_list.json'),true,64,JSON_THROW_ON_ERROR);
+    $categoryNames=['AC'=>'Air Conditioners','COOK WARE'=>'Cookware','TV'=>'Televisions','NATIONAL MIXER GRINDER'=>'Mixer Grinders','MIXER GRINDER-CAMY'=>'Mixer Grinders','CAMY MIXER GRINDER NEW'=>'Mixer Grinders'];
+    $products=[];
+    foreach($rows as $index=>$row){
+        $airConditioner=$row['category']==='AC';$article=(string)$row['article'];
+        $category=$categoryNames[$row['category']] ?? ucwords(strtolower((string)$row['category']));
+        $name=ucwords(strtolower($article));$name=preg_replace('/\bBtu\b/i','BTU',$name);
+        $slug=trim((string)preg_replace('/[^A-Z0-9]+/','-',strtoupper($article)),'-');
+        $prefix=$airConditioner?'AC':substr((string)preg_replace('/[^A-Z0-9]/','',strtoupper((string)$row['category'])),0,5);
+        $image='/products/classic-set.png';
+        if($airConditioner)$image=str_contains($article,'12000')?'/products/ac-12000.png':(str_contains($article,'18000')?'/products/ac-18000.png':'/products/ac-24000.png');
+        elseif($row['category']==='TV')$image='/products/smart-tv.png';
+        elseif($row['category']==='COOK WARE'){
+            if(str_contains($article,'HOPPER'))$image='/products/hopper-pan.png';elseif(str_contains($article,'FRY PAN 22'))$image='/products/frypan-22.png';elseif(str_contains($article,'FRY PAN 24'))$image='/products/frypan-24.png';elseif(str_contains($article,'CASSEROLE'))$image='/products/casserole.png';elseif(str_contains($article,'SET'))$image='/products/cookware-set.png';
+        }
+        $billing=round((float)$row['rrp'],2);$delivery=round((float)$row['delivery'],2);$packaging=round((float)$row['packaging'],2);
+        $products[]=['id'=>$index+1,'name'=>$name,'category'=>$category,'price'=>$airConditioner?$billing:round($billing+$delivery+$packaging,2),'billingPrice'=>$billing,'deliveryCost'=>$delivery,'packagingCost'=>$packaging,'freeDelivery'=>!$airConditioner,'deliveryChargeVisible'=>$airConditioner,'image'=>$image,'tag'=>'','stock'=>0,'code'=>$prefix.'-'.$slug.'-'.str_pad((string)($index+1),3,'0',STR_PAD_LEFT),'rating'=>5,'warranty'=>'Ask CAMY','description'=>$airConditioner?'Air conditioner supplied without installation. Delivery is charged separately.':'CAMY quality product available for entrepreneur sales.','specs'=>[(string)($row['remarks'] ?: 'CAMY quality assured')],'published'=>true];
+    }
+    return ['products'=>$products,'tiers'=>$legacy['tiers'] ?? []];
+}
+
 function catalogue_products(array $products): array {
     $ids=[];$codes=[];$clean=[];
     if(count($products)>1000)response(['message'=>'A catalogue can contain up to 1,000 products.'],422);

@@ -1,4 +1,6 @@
-export const initialProducts = [
+import { camyPriceProducts } from './camyPriceCatalogue'
+
+const legacyInitialProducts = [
   { id: 1, name: '12,000 BTU Inverter AC', category: 'Home Appliances', price: 160000, image: '/products/ac-12000.png', tag: 'Best seller', stock: 14, code: 'CY-12INV', rating: 4.9, warranty: '5 years', description: 'Fast, quiet cooling designed for comfortable Sri Lankan homes.', specs: ['Super Cool technology', 'Low-noise operation', 'Free installation up to 3m', '5-year compressor warranty'] },
   { id: 2, name: '18,000 BTU Air Conditioner', category: 'Home Appliances', price: 175000, image: '/products/ac-18000.png', tag: 'Popular', stock: 8, code: 'CY-18AC', rating: 4.8, warranty: '5 years', description: 'High-volume cooling with an elegant, efficient design.', specs: ['Maximum air volume', '3 free services', 'Free installation up to 3m', 'Low-noise operation'] },
   { id: 3, name: '18cm Non-stick Hopper Pan', category: 'Cookware', price: 1950, image: '/products/hopper-pan.png', tag: 'Fast moving', stock: 32, code: 'HPL001', rating: 4.9, warranty: '1 year', description: 'A durable everyday hopper pan made with pride in Sri Lanka.', specs: ['Made in Sri Lanka', 'Stick-proof coating', 'Stainless-steel lid', 'Easy-clean surface'] },
@@ -10,6 +12,8 @@ export const initialProducts = [
   { id: 9, name: '43-inch Smart TV', category: 'Electronics', price: 37000, image: '/products/smart-tv.png', tag: 'Hot deal', stock: 11, code: 'CY43-QLED', rating: 4.7, warranty: '2 years', description: 'A slim smart television with the connections customers need.', specs: ['Android 14', 'Frameless slim design', '2 × HDMI and 2 × USB', '2-year warranty'] },
   { id: 10, name: 'Classic Cookware Set', category: 'Cookware', price: 3950, image: '/products/classic-set.png', tag: '', stock: 19, code: 'CWS-CLASSIC', rating: 4.7, warranty: '1 year', description: 'A simple, reliable cookware bundle for daily use.', specs: ['Everyday cookware set', 'Easy-clean finish', 'Comfort-grip handles', 'Durable construction'] },
 ]
+
+export const initialProducts = camyPriceProducts.length ? camyPriceProducts : legacyInitialProducts
 
 export const initialOrders = [
   { id: 'CMY-2849', customer: 'N. Perera', phone: '077 234 8891', product: '12,000 BTU Inverter AC', qty: 1, amount: 160000, date: '2026-09-09', status: 'Dispatched', entrepreneur: 'Supun Kumara', address: '22, Lake Road, Kurunegala' },

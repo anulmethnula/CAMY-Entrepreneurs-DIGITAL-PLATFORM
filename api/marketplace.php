@@ -50,7 +50,7 @@ function market_state(PDO $pdo, bool $lock = false): array {
     if(empty($state['products'])&&empty($state['catalogue_seeded'])){
         $rows=$pdo->query("SELECT id,code,name,category,description,price,billing_price,delivery_cost,packaging_cost,free_delivery,stock,image FROM products WHERE status='active' ORDER BY id")->fetchAll();
         if($rows){$state['products']=array_map(static fn($row)=>['id'=>(int)$row['id'],'code'=>$row['code'],'name'=>$row['name'],'category'=>$row['category'],'description'=>$row['description'],'price'=>(float)$row['price'],'billingPrice'=>(float)($row['billing_price'] ?? $row['price']),'deliveryCost'=>(float)($row['delivery_cost'] ?? 0),'packagingCost'=>(float)($row['packaging_cost'] ?? 0),'freeDelivery'=>(bool)($row['free_delivery'] ?? true),'stock'=>(int)$row['stock'],'image'=>$row['image'] ?: '/products/classic-set.png','specs'=>[]],$rows);$state['catalogue_live']=true;}
-        else{$demo=json_decode((string)file_get_contents(__DIR__.'/../database/demo_catalog.json'),true);$state['products']=$demo['products'] ?? [];$state['tiers']=$demo['tiers'] ?? [];$state['catalogue_live']=false;}
+        else{$demo=catalogue_demo_data();$state['products']=$demo['products'];$state['tiers']=$demo['tiers'];$state['catalogue_live']=false;}
         $state['catalogue_seeded']=true;$changed=true;
     }
     if(!array_key_exists('catalogue_live',$state)){$state['catalogue_live']=!empty($state['inventory'])||!empty($state['requests'])||!empty($state['orders'])||(int)$pdo->query('SELECT COUNT(*) FROM products')->fetchColumn()>0;$changed=true;}
@@ -123,7 +123,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
     return_route($pdo,$path,$method);
     workflow_route($pdo,$path,$method);
     if($path==='/marketplace/preview' && $method==='GET'){
-        $catalogue=json_decode((string)file_get_contents(__DIR__.'/../database/demo_catalog.json'),true,64,JSON_THROW_ON_ERROR);
+        $catalogue=catalogue_demo_data();
         $shops=[['id'=>'PREVIEW-COLOMBO','name'=>'Colombo Home Essentials · Sample','city'=>'Colombo','stage'=>'Preview'],['id'=>'PREVIEW-KANDY','name'=>'Kandy Living · Sample','city'=>'Kandy','stage'=>'Preview']];
         $inventory=[];foreach($catalogue['products'] as $index=>$product){$inventory[]=['entrepreneurId'=>$shops[$index%2]['id'],'productId'=>$product['id'],'qty'=>999999,'price'=>$product['price']];if($index<3)$inventory[]=['entrepreneurId'=>$shops[($index+1)%2]['id'],'productId'=>$product['id'],'qty'=>999999,'price'=>round($product['price']*1.03,2)];}
         response(['preview'=>true,'products'=>$catalogue['products'],'entrepreneurs'=>$shops,'inventory'=>$inventory,'ratingSummary'=>[]]);
@@ -146,9 +146,15 @@ function market_route(PDO $pdo, string $path, string $method): void {
         }
         $member=(string) $user['member_id'];
         $self=null;foreach($state['entrepreneurs'] ?? [] as $person)if((string)$person['id']===$member){$self=$person;break;}
-        // Entrepreneurs receive the complete CAMY product information, but never the
-        // warehouse quantity. `stock` is deliberately reduced to an availability flag.
-        $entrepreneurProducts=array_map(static fn($product)=>array_merge($product,['stock'=>(($product['stock'] ?? 0)>0?1:0)]),array_values(array_filter($state['products'] ?? [],static fn($product)=>($product['published'] ?? true)===true)));
+        // Entrepreneurs receive a single bundled CAMY price for ordinary products.
+        // The internal delivery/packaging breakdown is admin-only. Air conditioners
+        // retain their separate delivery charge because it must be shown at checkout.
+        $entrepreneurProducts=array_map(static function($product){
+            $airConditioner=($product['deliveryChargeVisible'] ?? false)===true||strcasecmp((string)($product['category'] ?? ''),'Air Conditioners')===0;
+            $product['stock']=(($product['stock'] ?? 0)>0?1:0);
+            if(!$airConditioner){unset($product['billingPrice'],$product['deliveryCost'],$product['packagingCost'],$product['deliveryChargeVisible']);$product['freeDelivery']=true;}
+            return $product;
+        },array_values(array_filter($state['products'] ?? [],static fn($product)=>($product['published'] ?? true)===true)));
         response(['products'=>$entrepreneurProducts,'catalogue_live'=>$state['catalogue_live'] ?? false,'entrepreneurs'=>market_public($state)['entrepreneurs'],'self'=>$self,'tiers'=>$state['tiers'] ?? [],'inventory'=>array_values(array_filter($state['inventory'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'requests'=>array_values(array_filter($state['requests'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'orders'=>array_map('market_safe_order',array_values(array_filter($state['orders'] ?? [],static fn($item)=>$item['entrepreneurId']===$member))),'settlements'=>array_map('market_safe_settlement',array_values(array_filter($state['settlements'] ?? [],static fn($item)=>(string)$item['entrepreneurId']===$member)))]);
     }
     if (preg_match('#^/marketplace/requests/([^/]+)/receipt$#',$path,$matches) && $method==='GET') {

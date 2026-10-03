@@ -2346,3 +2346,93 @@
     padding-top: 0;
   }
 }
+
+/* Admin phone cards: use a true two-column dashboard grid. Do not turn these
+   summaries into either a vertical one-by-one list or a horizontal carousel. */
+@media (max-width: 760px) {
+  .admin-shell .content-page :is(
+    .metric-row,
+    .overview-kpis,
+    .admin-order-summary,
+    .orders-summary-strip,
+    .credit-overview,
+    .credit-inventory-summary,
+    .credit-stock-admin-metrics,
+    .access-overview,
+    .commission-kpis,
+    .application-kpis,
+    .credit-health-grid,
+    .achievement-row
+  ),
+  .admin-shell :is(
+    .inventory-overview,
+    .supply-kpis,
+    .overview-finance-summary > div,
+    .registration-summary,
+    .report-summary,
+    .settlement-summary,
+    .leave-checks
+  ) {
+    width: 100% !important;
+    margin-inline: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 10px !important;
+    overflow: visible !important;
+    scroll-snap-type: none !important;
+  }
+
+  .admin-shell .content-page :is(
+    .metric-row,
+    .overview-kpis,
+    .admin-order-summary,
+    .orders-summary-strip,
+    .credit-overview,
+    .credit-inventory-summary,
+    .credit-stock-admin-metrics,
+    .access-overview,
+    .commission-kpis,
+    .application-kpis,
+    .credit-health-grid,
+    .achievement-row
+  ) > *,
+  .admin-shell :is(
+    .inventory-overview,
+    .supply-kpis,
+    .overview-finance-summary > div,
+    .registration-summary,
+    .report-summary,
+    .settlement-summary,
+    .leave-checks
+  ) > * {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 108px !important;
+    margin: 0 !important;
+    flex: initial !important;
+    scroll-snap-align: none !important;
+  }
+
+  .admin-shell .metric-v2,
+  .admin-products-shell .inventory-overview article,
+  .admin-shell[data-page="payouts"] .commission-kpis article,
+  .admin-shell .admin-order-summary article {
+    padding: 12px !important;
+    grid-template-columns: 38px minmax(0,1fr) !important;
+    gap: 9px !important;
+    align-items: center !important;
+  }
+
+  .admin-shell :is(.metric-v2,.inventory-overview article,.commission-kpis article,.admin-order-summary article) :is(strong,h3) {
+    max-width: 100%;
+    font-size: clamp(18px,5.3vw,23px) !important;
+    line-height: 1.12 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-shell :is(.metric-v2,.inventory-overview article,.commission-kpis article,.admin-order-summary article) :is(p,span) {
+    line-height: 1.3 !important;
+  }
+}

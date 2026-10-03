@@ -27,6 +27,9 @@ const headerKey = value => Object.entries(aliases).find(([, names]) => names.inc
 const splitValues = value => String(value ?? '').split(/[|\n]/).map(item => item.trim()).filter(Boolean)
 const mediaType = src => /\.(mp4|webm)(?:[?#]|$)/i.test(src) ? 'video' : 'image'
 const publishedValue = value => value === '' || value == null || !['no', 'false', '0', 'hidden'].includes(String(value).trim().toLowerCase())
+const sourceCategories = { ac: 'Air Conditioners', 'cook ware': 'Cookware', tv: 'Televisions', 'national mixer grinder': 'Mixer Grinders', 'mixer grinder camy': 'Mixer Grinders', 'camy mixer grinder new': 'Mixer Grinders' }
+const sourceCategory = value => sourceCategories[clean(value)] || String(value ?? '').trim().toLowerCase().replace(/\b\w/g, letter => letter.toUpperCase())
+const sourceCode = (category, article, position) => `${clean(category) === 'ac' ? 'AC' : String(category).replace(/[^a-z0-9]/gi, '').slice(0, 5).toUpperCase()}-${String(article).replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toUpperCase()}-${String(position).padStart(3, '0')}`
 
 function validMediaUrl(value) {
   if (!value) return true
@@ -73,6 +76,31 @@ async function fileMatrix(file) {
 
 export async function parseFile(file, products, categories) {
   const matrix = await fileMatrix(file)
+  const priceHeaderIndex = matrix.findIndex(row => ['pro cate', 'article', 'rrp', 'delivery', 'packaging cost'].every(header => row.some(cell => clean(cell) === header)))
+  if (priceHeaderIndex >= 0) {
+    const headers = matrix[priceHeaderIndex].map(clean)
+    const value = (cells, key) => cells[headers.indexOf(key)]
+    const amount = raw => Number(String(raw ?? '').replace(/(?:Rs\.?|\s|,)/gi, '')) || 0
+    const existingByCode = new Map(products.map(product => [clean(product.code), product]))
+    return matrix.slice(priceHeaderIndex + 1).map((cells, index) => {
+      const rowNumber = priceHeaderIndex + index + 2
+      const rawCategory = String(value(cells, 'pro cate') ?? '').trim()
+      const article = String(value(cells, 'article') ?? '').trim()
+      if (!rawCategory || !article) return null
+      const isAirConditioner = clean(rawCategory) === 'ac'
+      const code = sourceCode(rawCategory, article, index + 1)
+      const existing = existingByCode.get(clean(code))
+      const billingPrice = amount(value(cells, 'rrp'))
+      const deliveryCost = amount(value(cells, 'delivery'))
+      const packagingCost = amount(value(cells, 'packaging cost'))
+      const freeDelivery = !isAirConditioner
+      const price = productCosts({ billingPrice, deliveryCost, packagingCost, freeDelivery }).price
+      const remarks = String(value(cells, 'remarks') ?? '').trim()
+      const product = { ...(existing || {}), id: existing?.id, code, name: article, category: sourceCategory(rawCategory), price, billingPrice, deliveryCost, packagingCost, freeDelivery, deliveryChargeVisible: isAirConditioner, stock: Number(existing?.stock || 0), rating: Number(existing?.rating || 5), description: isAirConditioner ? 'Air conditioner supplied without installation. Delivery is charged separately.' : 'CAMY quality product available for entrepreneur sales.', specs: [remarks || 'CAMY quality assured'], warranty: existing?.warranty || 'Ask CAMY', tag: existing?.tag || '', image: existing?.image || (isAirConditioner ? (article.includes('12000') ? '/products/ac-12000.png' : article.includes('18000') ? '/products/ac-18000.png' : '/products/ac-24000.png') : '/products/classic-set.png'), media: existing?.media || [], published: existing?.published ?? true }
+      const errors = billingPrice <= 0 ? ['RRP must be greater than 0'] : []
+      return { rowNumber, action: existing ? 'Update' : 'New', errors, product }
+    }).filter(Boolean)
+  }
   const headerIndex = matrix.findIndex(row => requiredHeaders.every(required => row.some(cell => headerKey(cell) === required)) && row.some(cell => ['price', 'billingPrice'].includes(headerKey(cell))))
   if (headerIndex < 0) throw new Error('Include Product code, Product name, Category, Billing price and Opening stock. Legacy Price sheets are also supported.')
 
