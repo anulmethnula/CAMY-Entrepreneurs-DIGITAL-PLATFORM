@@ -564,13 +564,30 @@ export function DropshipHome({ person, orders = [], setPage, openOrders }) {
   const creditEligible=Number(person?.credit||0)>0
   const availableCredit=Math.max(0,Number(person?.credit||0)-Number(person?.used||0))
   const firstName=person?.name?.split(' ')[0]||'Partner'
+  const closedOrders=myOrders.filter(order=>['Delivered','Returned'].includes(order.status))
+  const deliveryRate=closedOrders.length?Math.round((delivered.length/closedOrders.length)*100):100
+  const nextAction=inProgress.length
+    ? { icon: Truck, label: 'Follow active deliveries', detail: `${inProgress.length} order${inProgress.length===1?' is':'s are'} moving through fulfilment`, action: ()=>openOrders?.('Active') }
+    : { icon: ShoppingCart, label: 'Create your next sale', detail: 'The live catalogue is ready for your next client', action: ()=>setPage('products') }
+  const NextActionIcon=nextAction.icon
   return <div className="content-page entrepreneur-overview">
-    <section className="home-welcome"><div><small>YOUR CAMY BUSINESS</small><h1>Good to see you, {firstName}.</h1><p>Here is the important picture today. Open a section below when you need its full details.</p></div><button type="button" onClick={()=>setPage('products')}><ShoppingCart/> Create client order <ArrowRight/></button></section>
+    <section className="home-welcome"><div><small>YOUR CAMY BUSINESS</small><h1>Good to see you, <em>{firstName}.</em></h1><p>Everything you need to sell, track orders and grow your CAMY business — all in one place.</p><span className="home-live-pill"><i/> Business overview is up to date</span></div><button type="button" onClick={()=>setPage('products')}><ShoppingCart/> Create client order <ArrowRight/></button></section>
+    <nav className="home-quick-actions" aria-label="Quick actions">
+      <button type="button" onClick={()=>setPage('products')}><ShoppingCart/><span>New order</span></button>
+      <button type="button" onClick={()=>openOrders?.('Active')}><Truck/><span>Track</span>{inProgress.length>0&&<b>{inProgress.length}</b>}</button>
+      <button type="button" onClick={()=>setPage('earnings')}><BadgeDollarSign/><span>Earnings</span></button>
+      <button type="button" onClick={()=>setPage('credit')}><PackageCheck/><span>Credit</span></button>
+    </nav>
     <section className="home-essential-stats">
       <button type="button" onClick={()=>openOrders?.('Active')}><span><Truck/></span><div><small>ACTIVE ORDERS</small><strong>{inProgress.length}</strong><p>{delivered.length} successfully delivered</p></div><ArrowRight/></button>
       <button type="button" onClick={()=>setPage('earnings')}><span><BadgeDollarSign/></span><div><small>YOUR VERIFIED EARNINGS</small><strong>{money(lifetimeMargin)}</strong><p>{money(paidMargin)} transferred by CAMY</p></div><ArrowRight/></button>
       <button type="button" onClick={()=>setPage('credit')}><span><PackageCheck/></span><div><small>AVAILABLE CREDIT</small><strong>{money(availableCredit)}</strong><p>{creditEligible?'View your credit balance and repayments':'Unlocks through verified earnings'}</p></div><ArrowRight/></button>
       <button type="button" onClick={()=>setPage('earnings')}><span><CircleDollarSign/></span><div><small>RECEIVABLE COMMISSION</small><strong>{money(pendingMargin)}</strong><p>Commission ready for transfer</p></div><ArrowRight/></button>
+    </section>
+    <section className="home-business-pulse">
+      <header><div><small>BUSINESS PULSE</small><h2>Your progress at a glance</h2></div><span>{deliveryRate}% delivery success</span></header>
+      <div className="home-pulse-progress"><i style={{width:`${deliveryRate}%`}}/></div>
+      <button type="button" onClick={nextAction.action}><span><NextActionIcon/></span><div><small>NEXT BEST ACTION</small><strong>{nextAction.label}</strong><p>{nextAction.detail}</p></div><ArrowRight/></button>
     </section>
     {pendingMargin>0&&<section className="home-attention"><span><BadgeDollarSign/></span><div><small>PAYMENT UPDATE</small><strong>{money(pendingMargin)} is waiting for CAMY transfer</strong><p>Open Your Earnings to see each order and payment status.</p></div><button type="button" onClick={()=>setPage('earnings')}>View your earnings <ArrowRight/></button></section>}
     <button type="button" className="home-tools-toggle" aria-expanded={mobileToolsOpen} aria-controls="home-business-tools" onClick={()=>setMobileToolsOpen(open=>!open)}><span><PackageOpen/></span><div><strong>More business tools</strong><small>Credit stock, growth and order shortcuts</small></div><ArrowRight/></button>

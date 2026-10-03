@@ -304,8 +304,11 @@
 
   .entrepreneur-shell[data-page="home"] .home-welcome {
     min-height: 0 !important;
-    padding: 18px !important;
-    gap: 15px !important;
+    padding: 22px 19px 19px !important;
+    gap: 18px !important;
+    border-radius: 22px !important;
+    background: radial-gradient(circle at 92% 8%,rgba(64,214,205,.28),transparent 9rem),linear-gradient(145deg,#082b46 0%,#105c78 72%,#138c8d 135%) !important;
+    box-shadow: 0 16px 34px rgba(9,55,79,.2) !important;
   }
 
   .entrepreneur-shell[data-page="home"] .home-welcome h1 {
@@ -313,13 +316,29 @@
     font-size: clamp(24px, 7vw, 30px) !important;
   }
 
+  .entrepreneur-shell[data-page="home"] .home-welcome h1 em { color: #7de4dc; font-style: normal; }
+
   .entrepreneur-shell[data-page="home"] .home-welcome p {
-    display: none;
+    display: block;
+    margin-top: 8px !important;
+    color: #d3eaf0 !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
   }
+
+  .home-live-pill { margin-top: 13px; color: #c6f4ec; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 750; }
+  .home-live-pill i { width: 7px; height: 7px; border-radius: 50%; background: #5af0bf; box-shadow: 0 0 0 4px rgba(90,240,191,.13); }
 
   .entrepreneur-shell[data-page="home"] .home-welcome > button {
     min-height: 46px !important;
+    border-radius: 14px !important;
   }
+
+  .home-quick-actions { margin-top: -3px; padding: 5px; border: 1px solid #d7e5ed; border-radius: 18px; background: rgba(255,255,255,.9); box-shadow: var(--mobile-shadow); display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 3px; }
+  .home-quick-actions button { position: relative; min-width: 0; min-height: 68px; padding: 8px 2px; border: 0; border-radius: 14px; color: #567184; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font: inherit; font-size: 9px; font-weight: 800; }
+  .home-quick-actions button:first-child { color: #fff; background: linear-gradient(145deg,#167aa2,#12a18d); box-shadow: 0 7px 16px rgba(18,132,144,.2); }
+  .home-quick-actions svg { width: 19px; height: 19px; }
+  .home-quick-actions b { position: absolute; top: 7px; right: 13px; min-width: 17px; height: 17px; padding: 0 4px; border: 2px solid #fff; border-radius: 99px; color: #fff; background: #e55f5f; display: grid; place-items: center; font-size: 8px; }
 
   .entrepreneur-shell[data-page="home"] .home-essential-stats {
     width: calc(100% + 28px);
@@ -340,6 +359,8 @@
     grid-template-columns: 42px minmax(0,1fr) 16px !important;
     gap: 10px !important;
     scroll-snap-align: start;
+    border: 0 !important;
+    box-shadow: 0 9px 22px rgba(16,56,81,.08) !important;
   }
 
   .entrepreneur-shell[data-page="home"] .home-essential-stats > button > span {
@@ -425,10 +446,26 @@
   .entrepreneur-shell[data-page="home"] .home-attention {
     padding: 14px !important;
   }
+
+  .home-business-pulse { padding: 17px; border: 1px solid var(--mobile-line); border-radius: 19px; background: #fff; box-shadow: var(--mobile-shadow); }
+  .home-business-pulse > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .home-business-pulse > header small { color: #1683a0; font-size: 8px; font-weight: 900; letter-spacing: .1em; }
+  .home-business-pulse > header h2 { margin: 4px 0 0; color: var(--mobile-ink); font-size: 17px; letter-spacing: -.02em; }
+  .home-business-pulse > header > span { padding: 6px 8px; border-radius: 99px; color: #08775d; background: #e7f7f0; font-size: 8px; font-weight: 850; white-space: nowrap; }
+  .home-pulse-progress { height: 7px; margin: 14px 0; overflow: hidden; border-radius: 99px; background: #e7eff3; }
+  .home-pulse-progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#167aa2,#18ae8d); }
+  .home-business-pulse > button { width: 100%; padding: 12px; border: 0; border-radius: 14px; color: inherit; background: #f3f8fb; display: grid; grid-template-columns: 38px minmax(0,1fr) 16px; align-items: center; gap: 10px; text-align: left; font: inherit; }
+  .home-business-pulse > button > span { width: 38px; height: 38px; border-radius: 11px; color: #16769b; background: #dff0f7; display: grid; place-items: center; }
+  .home-business-pulse > button svg { width: 17px; }
+  .home-business-pulse > button > svg { color: #8aa1af; }
+  .home-business-pulse > button small,.home-business-pulse > button strong,.home-business-pulse > button p { display: block; }
+  .home-business-pulse > button small { color: #648091; font-size: 7px; font-weight: 900; letter-spacing: .08em; }
+  .home-business-pulse > button strong { margin-top: 3px; color: #143c57; font-size: 12px; }
+  .home-business-pulse > button p { margin: 3px 0 0; color: #718796; font-size: 9px; line-height: 1.35; }
 }
 
 @media (min-width: 761px) {
-  .home-tools-toggle { display: none; }
+  .home-tools-toggle,.home-quick-actions,.home-business-pulse,.home-live-pill { display: none; }
 }
 
 @media (max-width: 430px) {
