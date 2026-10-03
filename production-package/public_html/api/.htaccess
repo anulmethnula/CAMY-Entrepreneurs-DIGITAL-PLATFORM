@@ -1,0 +1,12 @@
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+<FilesMatch "^(?:config|security|storage|workflow|marketplace|catalogue|customers|customer_features|profiles|returns|staff)\.php$">
+  Require all denied
+</FilesMatch>
