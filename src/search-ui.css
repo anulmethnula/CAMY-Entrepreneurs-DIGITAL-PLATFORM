@@ -1396,6 +1396,12 @@
     background: #f5f9fb !important;
   }
 
+  /* Keep the shared phone filter disclosure authoritative. This panel's
+     grid layout is restored only after the user opens it. */
+  .content-page.commission-ledger-page .commission-filter-panel.mobile-collapsible-filter:not(.mobile-filter-open) {
+    display: none !important;
+  }
+
   .content-page.commission-ledger-page .commission-filter-panel > * {
     width: 100% !important;
     min-width: 0 !important;

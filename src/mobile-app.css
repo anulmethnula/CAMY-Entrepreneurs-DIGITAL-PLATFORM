@@ -1,6 +1,12 @@
 /* CAMY mobile application shell
    Loaded last so every workspace shares one intentional phone experience. */
 
+@media (display-mode: standalone) {
+  html, body { overscroll-behavior-y: none; }
+  body { user-select: none; -webkit-user-select: none; }
+  input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-select: text; }
+}
+
 /* Shared filter disclosure. JavaScript adds this only to established filter
    panels; desktop keeps the original layouts and phone pages start compact. */
 .mobile-filter-toggle-mount { display: none; }
@@ -313,7 +319,32 @@
   .money-flow-v3 > svg { transform: rotate(90deg); }
 
   /* Mobile feedback and touch behavior */
-  .toast-v2 { z-index: 260 !important; left: 14px !important; right: 14px !important; bottom: calc(var(--mobile-nav-height) + 18px + env(safe-area-inset-bottom)) !important; max-width: none !important; border-radius: 15px !important; white-space: normal !important; }
+  .toast-v2 {
+    z-index: 260 !important;
+    top: auto !important;
+    right: 14px !important;
+    bottom: calc(var(--mobile-nav-height) + 14px + env(safe-area-inset-bottom)) !important;
+    left: 14px !important;
+    width: auto !important;
+    min-height: 56px;
+    max-width: none !important;
+    padding: 10px 14px 10px 10px !important;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 16px !important;
+    align-items: center;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    white-space: normal !important;
+    transform: none !important;
+    animation: mobile-toast-in .2s ease both !important;
+  }
+
+  .toast-v2 > span {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: 11px;
+  }
   button,a { touch-action: manipulation; }
   button:active,.btn:active,.data-row:active,.product-v2:active { transform: scale(.985); }
 }

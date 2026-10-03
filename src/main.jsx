@@ -35,3 +35,13 @@ createRoot(document.getElementById('root')).render(
     <AppBoundary><App /><MobileFilterEnhancer /></AppBoundary>
   </React.StrictMode>,
 )
+
+// Keep the application shell available when the installed mobile app is
+// reopened with an unreliable connection. API traffic remains network-only.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // The web experience remains fully usable if registration is unavailable.
+    })
+  })
+}

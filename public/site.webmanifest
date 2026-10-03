@@ -2,17 +2,33 @@
   "name": "CAMY Entrepreneurs",
   "short_name": "CAMY",
   "description": "CAMY entrepreneur business, sales and growth platform in Sri Lanka.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
   "background_color": "#f4f8fb",
   "theme_color": "#0b314b",
   "lang": "en-LK",
+  "categories": ["business", "shopping", "productivity"],
   "icons": [
     {
       "src": "/camy-logo-transparent.png",
       "sizes": "any",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/camy-logo-tight.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard", "short_name": "Home", "url": "/?page=home" },
+    { "name": "New customer order", "short_name": "New order", "url": "/?page=products" },
+    { "name": "My orders", "short_name": "Orders", "url": "/?page=orders" }
   ]
 }
