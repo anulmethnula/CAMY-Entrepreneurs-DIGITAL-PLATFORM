@@ -56,13 +56,23 @@ function Toggle({ panel }) {
 export default function MobileFilterEnhancer() {
   useEffect(() => {
     const roots = new Map()
+    const mobileViewport = window.matchMedia('(max-width: 760px)')
+    const removeEnhancement = (panel, entry) => {
+      entry.root.unmount()
+      entry.mount.remove()
+      panel.classList.remove('mobile-collapsible-filter','mobile-filter-open')
+      delete panel.dataset.mobileFilterReady
+      roots.delete(panel)
+    }
     const enhance = () => {
       roots.forEach(({ root, mount }, panel) => {
-        if (panel.isConnected) return
-        root.unmount()
-        mount.remove()
-        roots.delete(panel)
+        if (mobileViewport.matches && panel.isConnected) return
+        removeEnhancement(panel, { root, mount })
       })
+      // Do not add mobile disclosure controls to the desktop DOM. Besides
+      // avoiding unnecessary React roots, this keeps the page correct while
+      // CSS is loading and prevents an unstyled native button from flashing.
+      if (!mobileViewport.matches) return
       document.querySelectorAll(filterSelector).forEach(panel => {
         if (panel.matches('.credit-request-filter-panel') || panel.dataset.mobileFilterReady) return
         const parentFilter = panel.parentElement?.closest(filterSelector)
@@ -80,14 +90,11 @@ export default function MobileFilterEnhancer() {
     enhance()
     const observer = new MutationObserver(enhance)
     observer.observe(document.getElementById('root'), { childList: true, subtree: true })
+    mobileViewport.addEventListener('change', enhance)
     return () => {
       observer.disconnect()
-      roots.forEach(({ root, mount }, panel) => {
-        root.unmount()
-        mount.remove()
-        panel.classList.remove('mobile-collapsible-filter','mobile-filter-open')
-        delete panel.dataset.mobileFilterReady
-      })
+      mobileViewport.removeEventListener('change', enhance)
+      roots.forEach((entry, panel) => removeEnhancement(panel, entry))
     }
   }, [])
   return null

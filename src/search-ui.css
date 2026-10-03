@@ -1228,29 +1228,32 @@
     width: min(36vw,430px) !important;
     min-width: 260px !important;
     max-width: 430px !important;
-    height: 40px !important;
+    height: 36px !important;
     flex: 0 1 430px !important;
     align-self: center !important;
   }
 
   .content-page.commission-ledger-page .commission-search-filter > div {
-    min-height: 40px !important;
-    height: 40px !important;
+    min-height: 36px !important;
+    height: 36px !important;
     padding-block: 0 !important;
     display: flex !important;
     align-items: center !important;
   }
 
   .content-page.commission-ledger-page .commission-search-filter input {
-    min-height: 38px !important;
-    height: 38px !important;
+    min-height: 36px !important;
+    height: 36px !important;
     padding: 0 10px 0 38px !important;
+    text-align: left !important;
     line-height: normal !important;
   }
 
   .content-page.commission-ledger-page .commission-search-filter svg {
+    position: absolute !important;
+    left: 13px !important;
     top: 50% !important;
-    transform: translateY(-50%);
+    transform: translateY(-50%) !important;
   }
 }
 
@@ -1425,12 +1428,15 @@
     min-height: 36px !important;
     height: 36px !important;
     padding: 0 10px 0 38px !important;
+    text-align: left !important;
     line-height: normal !important;
   }
 
   .content-page.commission-ledger-page .commission-search-filter svg {
+    position: absolute !important;
+    left: 13px !important;
     top: 50% !important;
-    transform: translateY(-50%);
+    transform: translateY(-50%) !important;
   }
 
   .content-page.commission-ledger-page .commission-filter-panel label:has(input[type="date"]) {

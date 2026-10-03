@@ -7,6 +7,46 @@
   input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-select: text; }
 }
 
+/* Mobile profile: the app bar already identifies this screen, so avoid a
+   second hero title and keep editing controls with the details they affect. */
+@media (max-width: 760px) {
+  .entrepreneur-shell[data-page="profile"] > main > .content-page > .page-title {
+    display: none !important;
+  }
+
+  .entrepreneur-shell[data-page="profile"] .content-page {
+    padding-top: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="profile"] .profile-form .card-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-direction: row !important;
+    gap: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="profile"] .profile-card-actions {
+    width: auto !important;
+    display: flex !important;
+    grid-template-columns: none !important;
+    flex: 0 0 auto;
+  }
+
+  .entrepreneur-shell[data-page="profile"] .profile-card-actions > svg {
+    display: none !important;
+  }
+
+  .entrepreneur-shell[data-page="profile"] .profile-card-actions button {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 38px !important;
+    padding: 0 11px !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap;
+  }
+}
+
 /* Shared filter disclosure. JavaScript adds this only to established filter
    panels; desktop keeps the original layouts and phone pages start compact. */
 .mobile-filter-toggle-mount { display: none !important; }
