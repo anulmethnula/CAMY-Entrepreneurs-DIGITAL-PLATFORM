@@ -90,7 +90,7 @@
 .credit-payments-page .credit-order-register > nav button:hover:not(.active) { border-color: #8db9cc; background: #f2f8fb; color: #155b7b; }
 .credit-payments-page .credit-order-register > nav button.active { border-color: #176f9a; color: #fff; background: #176f9a; box-shadow: 0 5px 12px rgba(23,111,154,.16); }
 .credit-payments-page .credit-order-register > div { gap: 12px; }
-.credit-payments-page .credit-payment-order { min-width: 0; min-height: 122px; padding: 18px 20px; grid-template-columns: 48px minmax(170px, 1.3fr) minmax(155px, .78fr) minmax(165px, .8fr) minmax(160px, auto); column-gap: 18px; border-color: #dbe7ed; border-left-width: 4px; border-radius: 15px; background: #fff; box-shadow: 0 3px 12px rgba(16, 53, 76, .025); transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.credit-payments-page .credit-payment-order { min-width: 0; min-height: 122px; padding: 18px 20px; grid-template-columns: 48px minmax(170px, 1.2fr) minmax(145px, .7fr) minmax(145px, .72fr) minmax(125px, .6fr) minmax(160px, auto); column-gap: 18px; border-color: #dbe7ed; border-left-width: 4px; border-radius: 15px; background: #fff; box-shadow: 0 3px 12px rgba(16, 53, 76, .025); transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
 .credit-payments-page .credit-payment-order:hover { box-shadow: 0 8px 20px rgba(16, 53, 76, .075); transform: translateY(-1px); }
 .credit-payments-page .credit-payment-order > span { width: 48px; height: 48px; border-radius: 13px; }
 .credit-payments-page .credit-payment-order > span svg { width: 22px; height: 22px; }
@@ -118,6 +118,7 @@
 .credit-payments-page .credit-rejection-reason { max-width: none !important; font-size: 11px; }
 .credit-payments-page .credit-due-countdown { max-width: 100%; font-size: 11px; line-height: 1.35; }
 .credit-payments-page .credit-order-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.credit-payments-page .credit-payment-method strong { display: block; font-size: 13px; }
 .credit-payments-page .credit-order-actions > button { min-height: 38px; padding: 0 12px; border: 1px solid #c8dce7; border-radius: 9px; color: #176f9a; background: #f5fafc; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 850; cursor: pointer; }
 .credit-payments-page .credit-order-actions > button svg { width: 15px; height: 15px; }
 .credit-payments-page .credit-order-actions > button:not(.view-credit-order) { border-color: #d99a31; color: #754704; background: #fff6e4; }
@@ -153,6 +154,8 @@
 @media (max-width: 1450px) {
   .credit-payments-page .money-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .credit-payments-page .credit-payment-order { grid-template-columns: 48px minmax(0, 1.2fr) minmax(150px, .8fr) minmax(155px, .8fr); }
+  .credit-payments-page .credit-payment-method { grid-column: 3; }
+  .credit-payments-page .credit-order-actions { grid-column: 2 / -1; }
   .credit-payments-page .credit-payment-order > button,
   .credit-payments-page .credit-payment-order > .credit-paid-mark,
   .credit-payments-page .credit-payment-order > .credit-review-mark,
@@ -188,6 +191,7 @@
   .credit-payments-page .credit-payment-order > div { grid-column: 2 / -1; }
   .credit-payments-page .credit-payment-order > div:nth-of-type(2),
   .credit-payments-page .credit-payment-order > div:nth-of-type(3) { padding-top: 11px; border-top: 1px solid #e9eff3; }
+  .credit-payments-page .credit-payment-method { grid-column: 2 / -1; padding-top: 11px; border-top: 1px solid #e9eff3; }
   .credit-payments-page .credit-payment-order > button,
   .credit-payments-page .credit-payment-order > .credit-paid-mark,
   .credit-payments-page .credit-payment-order > .credit-review-mark,
