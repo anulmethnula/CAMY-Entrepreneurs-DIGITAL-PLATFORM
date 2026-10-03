@@ -2676,7 +2676,7 @@ input:focus, select:focus, textarea:focus {
 
 /* Mobile dropship order: catalogue first, then a dedicated cart/checkout page. */
 .mobile-order-cart,
-.mobile-checkout-back {
+.cart-back-to-products {
   display: none;
 }
 
@@ -2871,17 +2871,23 @@ input:focus, select:focus, textarea:focus {
     font-size: 20px;
   }
 
-  .mobile-checkout-back {
-    width: 42px;
-    height: 42px;
+  .cart-back-to-products {
+    min-height: 42px;
+    padding: 0 12px;
     margin-left: auto;
     border: 1px solid #d4e2ed;
     border-radius: 13px;
     color: #164d76;
     background: #f8fbfe;
-    display: grid;
-    place-items: center;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 800;
   }
+
+  .cart-back-to-products svg { transform: rotate(180deg); }
 
   .dropship-checkout.mobile-open .market-line,
   .dropship-checkout.mobile-open .customer-fields,

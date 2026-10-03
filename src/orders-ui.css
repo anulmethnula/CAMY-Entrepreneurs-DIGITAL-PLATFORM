@@ -77,7 +77,9 @@
 .entrepreneur-shell[data-page="orders"] .orders-export-action > span { display: none; }
 .entrepreneur-shell[data-page="orders"] .orders-export-action strong { font-size: 10px; }
 .entrepreneur-shell[data-page="orders"] .orders-export-action small { font-size: 10px; }
-.entrepreneur-shell[data-page="orders"] .orders-export-action .btn { min-width: 0; min-height: 40px; padding: 0 12px; border: 1px solid #cbdde8; border-radius: 8px; color: #245775; background: #f6fafc; font-size: 12px; }
+.entrepreneur-shell[data-page="orders"] .orders-export-action .btn { min-width: 0; min-height: 40px; padding: 0 14px; border: 1px solid #107c41; border-radius: 8px; color: #fff; background: #107c41; font-size: 12px; box-shadow: 0 6px 14px rgba(16,124,65,.18); }
+.entrepreneur-shell[data-page="orders"] .orders-export-action .btn svg { width: 18px; height: 18px; stroke-width: 2.2; }
+.entrepreneur-shell[data-page="orders"] .orders-export-action .btn:hover:not(:disabled) { border-color: #0b6634; color: #fff; background: #0b6634; box-shadow: 0 8px 18px rgba(16,124,65,.26); }
 .entrepreneur-shell[data-page="orders"] .order-result-bar { min-height: 50px; margin: 0; padding: 12px 22px; }
 .entrepreneur-shell[data-page="orders"] .order-result-bar > span,
 .entrepreneur-shell[data-page="orders"] .order-result-bar > small { color: var(--order-muted); font-size: 12px; }
@@ -283,4 +285,75 @@
 @media (prefers-reduced-motion: reduce) {
   .entrepreneur-shell:is([data-page="orders"], [data-page="products"]) *,
   .entrepreneur-order-detail * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* Keep the order catalogue scannable: products sit side-by-side on desktop
+   and tablet instead of consuming one full row each. */
+@media (min-width: 761px) {
+  .entrepreneur-shell[data-page="products"] .stock-product-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-card {
+    min-width: 0;
+    min-height: 220px;
+    padding: 12px !important;
+    grid-template-columns: 112px minmax(0,1fr) !important;
+    gap: 13px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-image {
+    height: 100% !important;
+    min-height: 196px !important;
+    max-height: 230px !important;
+    padding: 27px 7px 8px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-image img {
+    height: 118px !important;
+    max-height: 118px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-copy {
+    padding: 0 !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-copy h3 {
+    min-height: 0 !important;
+    font-size: 15px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-copy > p {
+    height: 34px !important;
+    margin-bottom: 6px !important;
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-meta {
+    margin: 8px 0 !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-actions {
+    grid-template-columns: minmax(82px,.8fr) minmax(112px,1.2fr) !important;
+    gap: 6px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-actions button {
+    min-width: 0;
+    min-height: 38px !important;
+    padding-inline: 7px !important;
+    font-size: 10px !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1150px) {
+  .entrepreneur-shell[data-page="products"] .stock-product-card {
+    grid-template-columns: 96px minmax(0,1fr) !important;
+    gap: 10px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-actions {
+    grid-template-columns: 1fr !important;
+  }
 }

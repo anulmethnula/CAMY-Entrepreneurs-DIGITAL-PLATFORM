@@ -34,6 +34,13 @@
 .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero h1 br { display: none; }
 .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero h1 em { margin-left: .2em; color: #c4eaf0; font-style: normal; }
 .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero p { max-width: 720px; margin: 0; color: #d1e5ec; font-size: 13px; line-height: 1.72; }
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero-action {
+  min-height: 42px; margin-top: 18px; padding: 0 14px; border: 1px solid rgba(190,235,246,.42); border-radius: 10px;
+  color: #fff; background: rgba(255,255,255,.12); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: inherit; font-size: 12px; font-weight: 700; box-shadow: 0 8px 20px rgba(2,29,45,.14); backdrop-filter: blur(6px); cursor: pointer;
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero-action:hover { border-color: rgba(255,255,255,.72); background: rgba(255,255,255,.2); transform: translateY(-1px); }
+.entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero-action svg { width: 17px; height: 17px; }
 .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero .stock-buy-steps { width: 292px; min-width: 292px; padding: 18px; border: 1px solid rgba(255,255,255,.16); border-radius: 15px; background: rgba(4,35,52,.18); box-shadow: inset 0 1px rgba(255,255,255,.06); backdrop-filter: blur(6px); }
 .entrepreneur-shell[data-page="credit-stock"] .stock-buy-steps span { min-height: 34px; margin: 0; padding: 0; gap: 11px; color: #e7f3f5; font-size: 11px; font-weight: 650; }
 .entrepreneur-shell[data-page="credit-stock"] .stock-buy-steps i { width: 27px; height: 27px; border: 1px solid #ffffff28; border-radius: 8px; background: #ffffff12; color: #83e1de; font-size: 11px; }
@@ -71,13 +78,13 @@
 .entrepreneur-shell[data-page="credit-stock"] .credit-category-tabs button { min-height: 36px; padding: 0 13px; border: 1px solid #dbe5eb; border-radius: 9px; color: var(--credit-muted); background: #fff; font-size: 11px; font-weight: 650; box-shadow: none; }
 .entrepreneur-shell[data-page="credit-stock"] .credit-category-tabs button:hover { border-color: #9ec7d8; color: #146d92; background: #f5fafc; }
 .entrepreneur-shell[data-page="credit-stock"] .credit-category-tabs button.active { border-color: #176f94; color: #fff; background: #176f94; }
-.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout .stock-product-grid { grid-template-columns: minmax(0,1fr); gap: 14px; }
-.entrepreneur-shell[data-page="credit-stock"] .credit-product-card { display: grid; grid-template-columns: 148px minmax(0,1fr); gap: 20px; height: auto; min-height: 0; padding: 18px; border: 1px solid var(--credit-line); border-radius: 15px; background: #fff; box-shadow: 0 6px 18px rgba(16,53,76,.035); }
+.entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout .stock-product-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 14px; align-items: stretch; }
+.entrepreneur-shell[data-page="credit-stock"] .credit-product-card { display: flex; flex-direction: column; gap: 0; height: 100%; min-width: 0; min-height: 0; padding: 0; border: 1px solid var(--credit-line); border-radius: 15px; background: #fff; box-shadow: 0 6px 18px rgba(16,53,76,.035); }
 .entrepreneur-shell[data-page="credit-stock"] .credit-product-card:hover { transform: translateY(-2px); border-color: #9fc3d4; box-shadow: 0 14px 30px rgba(16,53,76,.09); }
-.entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-image { height: 100%; min-height: 150px; padding: 32px 8px 10px; border-radius: 8px; background: #f8fafc; }
+.entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-image { height: 170px; min-height: 170px; padding: 32px 12px 12px; border-radius: 14px 14px 0 0; background: #f8fafc; }
 .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-image img { width: 100%; height: 130px; object-fit: contain; }
 .entrepreneur-shell[data-page="credit-stock"] .stock-product-image > span { top: 8px; left: 8px; max-width: calc(100% - 16px); padding: 5px 6px; border: 0; border-radius: 5px; color: #63788b; background: #fff; font-size: 9px; font-weight: 500; box-shadow: none; }
-.entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-copy { min-width: 0; min-height: 0; padding: 0; display: flex; flex-direction: column; }
+.entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-copy { min-width: 0; min-height: 0; height: 100%; padding: 16px; display: flex; flex-direction: column; }
 .entrepreneur-shell[data-page="credit-stock"] .stock-product-copy > small { color: var(--credit-muted); font-size: 10px; font-weight: 500; }
 .entrepreneur-shell[data-page="credit-stock"] .stock-product-copy h3 { margin: 5px 0 7px; color: var(--credit-ink); font-size: 17px; font-weight: 650; line-height: 1.4; letter-spacing: -.02em; }
 .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-copy > p { height: auto; min-height: 0; max-height: none; margin: 0 0 12px; color: var(--credit-muted); font-size: 12px; line-height: 1.6; -webkit-line-clamp: unset; }
@@ -149,17 +156,28 @@
 @media (max-width:1280px) and (min-width:1101px) {
   .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-page { padding-inline: 24px; }
   .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout { grid-template-columns: minmax(0,1fr) 340px; gap: 20px; }
-  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card { grid-template-columns: 122px minmax(0,1fr); gap: 16px; padding: 15px; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card { padding: 0; }
 }
 @media (max-width:760px) {
   .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-page { padding: 18px 16px 104px !important; }
   .entrepreneur-shell[data-page="credit-stock"] .credit-stock-page-actions { gap: 12px; padding: 16px; }
   .entrepreneur-shell[data-page="credit-stock"] .credit-stock-page-actions button { min-height: 44px; }
-  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero { padding: 24px 20px; border-radius: 16px; box-shadow: 0 12px 28px rgba(9,48,70,.14); }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-mobile-details-toggle { width: 100%; min-height: 62px; margin-bottom: 12px; padding: 10px 15px; border: 1px solid #c9dce7; border-radius: 15px; color: #164a68; background: #fff; display: flex; align-items: center; justify-content: space-between; text-align: left; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-mobile-details-toggle span { display: grid; gap: 3px; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-mobile-details-toggle small { color: #6a8799; font-size: 9px; font-weight: 800; letter-spacing: .1em; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-mobile-details-toggle strong { font-size: 14px; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-mobile-details-toggle svg { transition: transform .2s ease; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-overview-open .credit-mobile-details-toggle svg { transform: rotate(180deg); }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-mobile-overview { display: none; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-overview-open .credit-mobile-overview { display: block; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero { padding: 19px 17px; border-radius: 16px; box-shadow: 0 12px 28px rgba(9,48,70,.14); }
   .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-page .credit-stock-hero { display: flex; }
   .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero h1 { font-size: 28px; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero-action { width: 100%; min-height: 42px; margin-top: 14px; }
   .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero .stock-buy-steps { flex-direction: column; gap: 12px; }
-  .entrepreneur-shell[data-page="credit-stock"] .shop-home-stats { display: grid; grid-template-columns: minmax(0,1fr); gap: 10px; }
+  .entrepreneur-shell[data-page="credit-stock"] .shop-home-stats { display: flex; gap: 9px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+  .entrepreneur-shell[data-page="credit-stock"] .shop-home-stats::-webkit-scrollbar { display: none; }
+  .entrepreneur-shell[data-page="credit-stock"] .shop-home-stats article { min-width: 78%; scroll-snap-align: start; }
   .entrepreneur-shell[data-page="credit-stock"] .shop-home-stats article { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; column-gap: 12px; min-height: 0; padding: 14px 16px; }
   .entrepreneur-shell[data-page="credit-stock"] .shop-home-stats strong { grid-column: 2; grid-row: 1; margin: 0; font-size: 22px; }
   .entrepreneur-shell[data-page="credit-stock"] .shop-home-stats p { grid-column: 1 / -1; margin-top: 6px; }
@@ -169,20 +187,25 @@
   .entrepreneur-shell[data-page="credit-stock"] .stock-catalogue-title > div { width: 100%; text-align: left; }
   .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-tools { grid-template-columns: minmax(0,1fr); }
   .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-tools input { font-size: 16px; }
-  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card { grid-template-columns: 94px minmax(0,1fr); gap: 14px; padding: 14px; border-radius: 14px; }
-  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-image { height: 100% !important; min-height: 100px; padding: 28px 6px 10px; }
-  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-image img { height: 90px; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout .stock-product-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 10px !important; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card { display: flex; flex-direction: column; gap: 0; height: auto; padding: 0; border-radius: 14px; overflow: hidden; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-image { width: 100%; height: 128px !important; min-height: 128px; padding: 27px 8px 9px; border-right: 0; border-bottom: 1px solid #e1ebf0; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-image img { height: 94px; }
   .entrepreneur-shell[data-page="credit-stock"] .stock-product-image > span { font-size: 8px; }
-  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-copy { padding: 0 !important; }
-  .entrepreneur-shell[data-page="credit-stock"] .stock-product-copy h3 { font-size: 15px !important; }
-  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-copy > p { font-size: 12px !important; }
-  .entrepreneur-shell[data-page="credit-stock"] .credit-product-facts { flex-wrap: wrap; gap: 10px; }
-  .entrepreneur-shell[data-page="credit-stock"] .stock-product-meta { flex-wrap: wrap; gap: 8px; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-copy { padding: 11px !important; display: flex; flex: 1; flex-direction: column; }
+  .entrepreneur-shell[data-page="credit-stock"] .stock-product-copy h3 { min-height: 38px; margin: 4px 0 7px; font-size: 13px !important; line-height: 1.4; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-product-card .stock-product-copy > p,.entrepreneur-shell[data-page="credit-stock"] .credit-product-facts { display: none; }
+  .entrepreneur-shell[data-page="credit-stock"] .stock-product-meta { margin-top: auto; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .entrepreneur-shell[data-page="credit-stock"] .stock-product-meta strong { font-size: 13px; }
   .entrepreneur-shell[data-page="credit-stock"] .credit-product-actions { grid-template-columns: minmax(0,1fr); }
-  .entrepreneur-shell[data-page="credit-stock"] .credit-product-actions button { min-height: 44px; }
+  .entrepreneur-shell[data-page="credit-stock"] .credit-product-actions button { min-height: 38px; padding: 6px; font-size: 10px; }
   .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout > .stock-request-card { padding: 18px !important; border-radius: 15px !important; }
   .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout > .stock-request-card header { margin: -18px -18px 16px; padding: 18px; }
   .entrepreneur-shell[data-page="credit-stock"] .credit-request-history { border-radius: 15px; }
+}
+.entrepreneur-shell[data-page="credit-stock"] .credit-mobile-details-toggle { display: none; }
+@media (max-width:760px) {
+  .entrepreneur-shell[data-page="credit-stock"] .credit-mobile-details-toggle { display: flex; }
 }
 @media (prefers-reduced-motion:reduce) {
   .entrepreneur-shell[data-page="credit-stock"] *, .credit-product-dialog * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
