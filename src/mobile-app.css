@@ -736,15 +736,15 @@
   .credit-payments-page .credit-payment-order {
     min-height: 0 !important;
     padding: 12px !important;
-    grid-template-columns: 36px minmax(0,1fr) auto !important;
-    gap: 8px 10px !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows: auto auto auto !important;
+    gap: 9px !important;
+    align-items: start !important;
     border-radius: 13px !important;
   }
 
   .credit-payments-page .credit-payment-order > span {
-    width: 36px !important;
-    height: 36px !important;
-    border-radius: 10px !important;
+    display: none !important;
   }
 
   .credit-payments-page .credit-payment-order > span svg {
@@ -760,12 +760,15 @@
   }
 
   .credit-payments-page .credit-payment-order > div:nth-of-type(1) {
-    grid-column: 2;
+    grid-column: 1;
     grid-row: 1;
+    padding: 10px !important;
+    border-radius: 10px !important;
+    background: #f5f8fa;
   }
 
   .credit-payments-page .credit-payment-order > div:nth-of-type(2) {
-    grid-column: 1 / 3;
+    grid-column: 1;
     grid-row: 2;
     padding: 9px 10px !important;
     border-radius: 10px !important;
@@ -773,19 +776,24 @@
   }
 
   .credit-payments-page .credit-payment-order > div:nth-of-type(3) {
-    grid-column: 3;
+    grid-column: 2;
     grid-row: 1;
+    height: 100%;
+    padding: 10px !important;
+    border-radius: 10px !important;
+    background: #f5f8fa;
     align-self: start;
-    text-align: right;
+    text-align: left;
   }
 
   .credit-payments-page .credit-payment-method {
-    grid-column: 3 !important;
+    grid-column: 2 !important;
     grid-row: 2;
-    padding: 8px !important;
+    height: 100%;
+    padding: 9px 10px !important;
     border-radius: 10px !important;
     background: #edf4f7;
-    text-align: center;
+    text-align: left;
   }
 
   .credit-payments-page .credit-payment-order > div:nth-of-type(1) > p,
@@ -826,17 +834,43 @@
   }
 
   .credit-payments-page .credit-order-actions > button {
-    min-height: 38px !important;
-    padding: 0 8px !important;
-    font-size: 9px !important;
+    width: 100%;
+    min-height: 44px !important;
+    padding: 0 10px !important;
+    border-width: 1px !important;
+    border-radius: 11px !important;
+    font-size: 10px !important;
+    line-height: 1.25;
+    white-space: normal;
+    box-shadow: none !important;
+  }
+
+  .credit-payments-page .credit-order-actions > .view-credit-order {
+    border-color: #217da5 !important;
+    color: #fff !important;
+    background: #217da5 !important;
+  }
+
+  .credit-payments-page .credit-order-actions > button:not(.view-credit-order) {
+    border-color: #c98a21 !important;
+    color: #704400 !important;
+    background: #fff1cf !important;
   }
 
   .credit-payments-page .credit-order-actions > b {
-    min-height: 34px !important;
-    grid-column: 1 / -1;
+    width: 100% !important;
+    min-height: 44px !important;
+    grid-column: 2;
+    padding: 7px 9px !important;
+    border-radius: 11px !important;
     font-size: 9px !important;
+    line-height: 1.35;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
   }
 }
+
 
 /* New client order: retain a two-column catalogue on phones. Cards switch to
    a compact vertical composition so content does not squeeze or overflow. */
