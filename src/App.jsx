@@ -1377,7 +1377,7 @@ function CartDrawer({ cart, setCart, close, placeOrder }) {
                   <div>
                     <strong>{item.name}</strong>
                     <small>{money(customerProductPrice(item))} per item</small>
-                    <small className={item.freeDelivery===false?'cart-item-delivery charged':'cart-item-delivery'}>{item.freeDelivery===false?`${money(Number(item.deliveryCost||0))} delivery per item`:'Free delivery'}</small>
+                    {item.freeDelivery===false&&<small className="cart-item-delivery charged">{Number(item.deliveryCost||0)>0?`${money(Number(item.deliveryCost))} delivery per item`:'Delivery charge applies'}</small>}
                     <span>
                       <button aria-label={`Remove one ${item.name}`} onClick={() => changeQuantity(item.id, -1)}><Minus /></button>
                       {item.qty}
@@ -1414,7 +1414,7 @@ function CartDrawer({ cart, setCart, close, placeOrder }) {
             </div>
 
             <footer>
-              <div className="cart-cost-table"><div><span>Product subtotal</span><strong>{money(productSubtotal)}</strong></div><div className={deliveryTotal>0?'delivery-fee-row':'free-delivery-row'}><span>Delivery</span><strong>{deliveryTotal>0?money(deliveryTotal):'Free'}</strong></div><div className="cart-grand-total"><span>Order total</span><strong>{money(total)}</strong></div></div>
+              <div className="cart-cost-table"><div><span>Product subtotal</span><strong>{money(productSubtotal)}</strong></div>{deliveryTotal>0&&<div className="delivery-fee-row"><span>AC delivery</span><strong>{money(deliveryTotal)}</strong></div>}<div className="cart-grand-total"><span>Order total</span><strong>{money(total)}</strong></div></div>
               <Button disabled={!valid} onClick={() => placeOrder(customer, total)}>Place customer order <ArrowRight /></Button>
               <small><BadgeCheck /> CAMY confirms stock before processing.</small>
             </footer>

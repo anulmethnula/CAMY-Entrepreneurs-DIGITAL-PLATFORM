@@ -13,10 +13,19 @@ function catalogue_demo_data(): array {
         $slug=trim((string)preg_replace('/[^A-Z0-9]+/','-',strtoupper($article)),'-');
         $prefix=$airConditioner?'AC':substr((string)preg_replace('/[^A-Z0-9]/','',strtoupper((string)$row['category'])),0,5);
         $image='/products/classic-set.png';
-        if($airConditioner)$image=str_contains($article,'12000')?'/products/ac-12000.png':(str_contains($article,'18000')?'/products/ac-18000.png':'/products/ac-24000.png');
+        if($row['category']==='WALL CLOCK')$image='/products/wall-clock.png';
+        elseif($row['category']==='HELMET')$image='/products/helmet.png';
+        elseif($airConditioner)$image='/products/air-conditioner.png';
+        elseif($row['category']==='FAN')$image='/products/stand-fan.png';
+        elseif($row['category']==='GAS COOKER')$image='/products/gas-cooker.png';
         elseif($row['category']==='TV')$image='/products/smart-tv.png';
+        elseif($row['category']==='WATER FILTER')$image='/products/water-filter.png';
+        elseif($row['category']==='MINI FRIDGE')$image='/products/mini-fridge.jpeg';
+        elseif($row['category']==='DOUBLE DOOR FRIDGE')$image='/products/double-door-fridge.jpeg';
+        elseif($row['category']==='PRESSURE COOKER')$image='/products/pressure-cooker.png';
+        elseif($row['category']==='KETTLE')$image='/products/kettle.png';
         elseif($row['category']==='COOK WARE'){
-            if(str_contains($article,'HOPPER'))$image='/products/hopper-pan.png';elseif(str_contains($article,'FRY PAN 22'))$image='/products/frypan-22.png';elseif(str_contains($article,'FRY PAN 24'))$image='/products/frypan-24.png';elseif(str_contains($article,'CASSEROLE'))$image='/products/casserole.png';elseif(str_contains($article,'SET'))$image='/products/cookware-set.png';
+            if(str_contains($article,'HOPPER'))$image='/products/hopper-pan.png';elseif(str_contains($article,'FRY PAN'))$image='/products/frypan-range.png';elseif(str_contains($article,'CASSEROLE'))$image='/products/casserole.png';elseif(str_contains($article,'SET'))$image='/products/cookware-set.png';
         }
         $billing=round((float)$row['rrp'],2);$delivery=round((float)$row['delivery'],2);$packaging=round((float)$row['packaging'],2);
         $products[]=['id'=>$index+1,'name'=>$name,'category'=>$category,'price'=>$airConditioner?$billing:round($billing+$delivery+$packaging,2),'billingPrice'=>$billing,'deliveryCost'=>$delivery,'packagingCost'=>$packaging,'freeDelivery'=>!$airConditioner,'deliveryChargeVisible'=>$airConditioner,'image'=>$image,'tag'=>'','stock'=>0,'code'=>$prefix.'-'.$slug.'-'.str_pad((string)($index+1),3,'0',STR_PAD_LEFT),'rating'=>5,'warranty'=>'Ask CAMY','description'=>$airConditioner?'Air conditioner supplied without installation. Delivery is charged separately.':'CAMY quality product available for entrepreneur sales.','specs'=>[(string)($row['remarks'] ?: 'CAMY quality assured')],'published'=>true];

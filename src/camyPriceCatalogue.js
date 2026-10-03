@@ -10,15 +10,19 @@ const productCode = (row, index) => {
 }
 
 const productImage = row => {
-  if (row.category === 'AC') {
-    if (row.article.includes('12000')) return '/products/ac-12000.png'
-    if (row.article.includes('18000')) return '/products/ac-18000.png'
-    return '/products/ac-24000.png'
-  }
+  if (row.category === 'WALL CLOCK') return '/products/wall-clock.png'
+  if (row.category === 'HELMET') return '/products/helmet.png'
+  if (row.category === 'AC') return '/products/air-conditioner.png'
+  if (row.category === 'FAN') return '/products/stand-fan.png'
+  if (row.category === 'GAS COOKER') return '/products/gas-cooker.png'
+  if (row.category === 'WATER FILTER') return '/products/water-filter.png'
+  if (row.category === 'MINI FRIDGE') return '/products/mini-fridge.jpeg'
+  if (row.category === 'DOUBLE DOOR FRIDGE') return '/products/double-door-fridge.jpeg'
+  if (row.category === 'PRESSURE COOKER') return '/products/pressure-cooker.png'
+  if (row.category === 'KETTLE') return '/products/kettle.png'
   if (row.category === 'COOK WARE') {
     if (row.article.includes('HOPPER')) return '/products/hopper-pan.png'
-    if (row.article.includes('FRY PAN 22')) return '/products/frypan-22.png'
-    if (row.article.includes('FRY PAN 24')) return '/products/frypan-24.png'
+    if (row.article.includes('FRY PAN')) return '/products/frypan-range.png'
     if (row.article.includes('CASSEROLE')) return '/products/casserole.png'
     if (row.article.includes('SET')) return '/products/cookware-set.png'
   }
