@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { customerProductPrice, deliveryLabel, fullProductCost, payableDeliveryCost } from './productCosts'
-import { AlertCircle, ArrowRight, BadgeDollarSign, Banknote, CalendarDays, Check, CheckCircle2, ChevronDown, CircleDollarSign, ClipboardList, Download, Eye, FileSpreadsheet, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, UserRound, X } from 'lucide-react'
+import { AlertCircle, ArrowRight, BadgeDollarSign, Banknote, CalendarDays, Check, CheckCircle2, ChevronDown, CircleDollarSign, ClipboardList, Download, Eye, FileSpreadsheet, FileText, ListFilter, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, UserRound, X } from 'lucide-react'
 import { api } from './api'
 import { creditProgression } from './creditRules'
 import { PortalOverlay } from './Dialog'
@@ -296,6 +296,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
 function CreditRequestCentre({ requests, products, cancellingId, cancelRequest, requestExtension, onPayRequest, setPage }) {
   const [selected,setSelected]=useState(null), [status,setStatus]=useState('All'), [query,setQuery]=useState(''), [from,setFrom]=useState(''), [to,setTo]=useState('')
   const [datePreset,setDatePreset]=useState('all')
+  const [mobileFiltersOpen,setMobileFiltersOpen]=useState(false)
   const [extensionDate,setExtensionDate]=useState(''), [extensionReason,setExtensionReason]=useState(''), [extensionBusy,setExtensionBusy]=useState(false)
   const [,setCountdownTick]=useState(0)
   useEffect(()=>{const timer=setInterval(()=>setCountdownTick(value=>value+1),60000);return()=>clearInterval(timer)},[])
@@ -322,9 +323,10 @@ function CreditRequestCentre({ requests, products, cancellingId, cancelRequest, 
     </section>
   }
   return <section className="credit-request-centre">
-    <section className="credit-request-filter-panel" aria-label="Credit order filters">
+    <button type="button" className="credit-request-mobile-filter-toggle" aria-expanded={mobileFiltersOpen} aria-controls="credit-order-filter-panel" onClick={()=>setMobileFiltersOpen(open=>!open)}><span><ListFilter/><span><small>FILTER ORDERS</small><strong>{filterSummary}</strong></span></span><span>{visible.length} result{visible.length===1?'':'s'} <ChevronDown/></span></button>
+    <section id="credit-order-filter-panel" className={`credit-request-filter-panel${mobileFiltersOpen?' mobile-open':''}`} aria-label="Credit order filters">
       <div className="credit-request-filter-heading"><div><small>FILTER BY STATUS</small><strong>Choose an order stage</strong></div><span>{visible.length} matching request{visible.length===1?'':'s'}</span></div>
-      <div className="credit-request-status-filters" role="group" aria-label="Filter requests by status">{statuses.map(item=><button type="button" className={`${item.toLowerCase()}${status===item?' active':''}`} aria-pressed={status===item} key={item} onClick={()=>setStatus(item)}><span><i/>{item}</span><strong>{statusCounts[item]}</strong></button>)}</div>
+      <div className="credit-request-status-filters" role="group" aria-label="Filter requests by status">{statuses.map(item=><button type="button" className={`${item.toLowerCase()}${status===item?' active':''}`} aria-pressed={status===item} key={item} onClick={()=>{setStatus(item);setMobileFiltersOpen(false)}}><span><i/>{item}</span><strong>{statusCounts[item]}</strong></button>)}</div>
       <div className="credit-request-tools"><label className="credit-request-search"><span>Search request</span><div><Search/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Enter request number"/></div></label><label>From date<input type="date" value={from} onChange={event=>{setFrom(event.target.value);setDatePreset('custom')}}/></label><label>To date<input type="date" min={from} value={to} onChange={event=>{setTo(event.target.value);setDatePreset('custom')}}/></label><button type="button" onClick={clear}>Clear all</button></div>
       <div className="credit-request-date-shortcuts"><span>Quick date</span>{[['all','All dates'],['today','Today'],['week','Last 7 days'],['month','This month']].map(([value,label])=><button type="button" className={datePreset===value?'active':''} aria-pressed={datePreset===value} key={value} onClick={()=>setDateRange(value)}>{label}</button>)}</div>
     </section>

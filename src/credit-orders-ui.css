@@ -31,6 +31,7 @@
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-centre > header p { color: var(--co-muted); font-size: 13px; line-height: 1.6; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-centre > header > b { padding: 7px 10px; border: 1px solid var(--co-line); border-radius: 7px; color: #526d81; background: #f7f9fb; font-size: 12px; font-weight: 550; white-space: nowrap; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-panel { margin: 14px 24px 0; border-color: var(--co-line); border-radius: var(--co-radius); background: #fff; box-shadow: none; }
+.entrepreneur-shell[data-page="credit-requests"] .credit-request-mobile-filter-toggle { display: none; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-heading { padding: 11px 14px 9px; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-heading small { color: var(--co-muted); font-size: 10px; font-weight: 600; letter-spacing: .07em; }
 .entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-heading strong { margin-top: 5px; color: var(--co-ink); font-size: 14px; font-weight: 600; }
@@ -163,7 +164,18 @@
   .entrepreneur-shell[data-page="credit-requests"] .credit-requests-page-head h1 { font-size: 27px; }
   .entrepreneur-shell[data-page="credit-requests"] .credit-request-centre > header { padding: 20px 16px; flex-direction: row; align-items: flex-start; gap: 12px; }
   .entrepreneur-shell[data-page="credit-requests"] .credit-request-centre > header h2 { font-size: 21px; }
-  .entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-panel { margin: 16px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-mobile-filter-toggle { width: calc(100% - 32px); min-height: 58px; margin: 16px 16px 0; padding: 10px 12px; border: 1px solid #cbdce6; border-radius: 12px; color: var(--co-ink); background: #f8fbfd; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-mobile-filter-toggle > span { min-width: 0; display: flex; align-items: center; gap: 10px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-mobile-filter-toggle > span:first-child > svg { width: 19px; flex: 0 0 19px; color: var(--co-blue); }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-mobile-filter-toggle small,
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-mobile-filter-toggle strong { display: block; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-mobile-filter-toggle small { color: var(--co-blue); font-size: 9px; letter-spacing: .07em; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-mobile-filter-toggle strong { max-width: 44vw; margin-top: 3px; overflow: hidden; color: var(--co-ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-mobile-filter-toggle > span:last-child { flex: 0 0 auto; color: var(--co-muted); font-size: 11px; white-space: nowrap; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-mobile-filter-toggle > span:last-child svg { width: 16px; transition: transform .16s ease; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-mobile-filter-toggle[aria-expanded="true"] > span:last-child svg { transform: rotate(180deg); }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-panel { display: none; margin: 8px 16px 16px; }
+  .entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-panel.mobile-open { display: block; }
   .entrepreneur-shell[data-page="credit-requests"] .credit-request-filter-heading { padding: 16px; gap: 8px; flex-direction: column; align-items: flex-start; }
   .entrepreneur-shell[data-page="credit-requests"] .credit-request-status-filters { padding: 0 16px 16px; grid-template-columns: repeat(2,minmax(0,1fr)); }
   .entrepreneur-shell[data-page="credit-requests"] .credit-request-tools { padding: 16px; grid-template-columns: repeat(2,minmax(0,1fr)); }

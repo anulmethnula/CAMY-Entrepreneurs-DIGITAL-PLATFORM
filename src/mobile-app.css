@@ -1,6 +1,29 @@
 /* CAMY mobile application shell
    Loaded last so every workspace shares one intentional phone experience. */
+
+/* Shared filter disclosure. JavaScript adds this only to established filter
+   panels; desktop keeps the original layouts and phone pages start compact. */
+.mobile-filter-toggle-mount { display: none; }
+
 @media (max-width: 760px) {
+  .mobile-filter-toggle-mount { display: block; }
+  .mobile-filter-toggle {
+    width: 100%; min-height: 58px; padding: 10px 12px; border: 1px solid #cbdce6;
+    border-radius: 12px; color: #18374e; background: #f8fbfd; box-shadow: 0 4px 14px rgba(19,57,81,.05);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left;
+    font: inherit; cursor: pointer;
+  }
+  .mobile-filter-toggle > span { min-width: 0; display: flex; align-items: center; gap: 10px; }
+  .mobile-filter-toggle > span:first-child > svg { width: 19px; flex: 0 0 19px; color: #176b91; }
+  .mobile-filter-toggle small,.mobile-filter-toggle strong { display: block; }
+  .mobile-filter-toggle small { color: #176b91; font-size: 9px; font-weight: 750; letter-spacing: .07em; }
+  .mobile-filter-toggle strong { margin-top: 3px; color: #18374e; font-size: 12px; font-weight: 700; }
+  .mobile-filter-toggle > span:last-child { flex: 0 0 auto; color: #607487; font-size: 11px; white-space: nowrap; }
+  .mobile-filter-toggle > span:last-child svg { width: 16px; transition: transform .16s ease; }
+  .mobile-filter-toggle > span:last-child svg.rotated { transform: rotate(180deg); }
+  .mobile-collapsible-filter:not(.mobile-filter-open) { display: none !important; }
+  .mobile-collapsible-filter.mobile-filter-open { margin-top: 8px !important; }
+
   :root {
     --mobile-bg: #eef4f8;
     --mobile-surface: #fff;
