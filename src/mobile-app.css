@@ -766,6 +766,67 @@
   .admin-shell :is(.report-grid,.role-cards,.permission-grid,.snapshot-rules,.stock-snapshot) {
     grid-template-columns: repeat(2,minmax(0,1fr)) !important;
   }
+
+  /* Admin summary collections always travel sideways on phones. Individual
+     pages used different class names, which previously left Products, finance,
+     stock supply and a few report pages as tall one-card-per-row stacks. */
+  .admin-shell :is(
+    .inventory-overview,
+    .supply-kpis,
+    .overview-finance-summary > div,
+    .registration-summary,
+    .report-summary,
+    .settlement-summary,
+    .credit-health-grid,
+    .leave-checks
+  ) {
+    width: calc(100% + 28px) !important;
+    margin-inline: -14px !important;
+    padding: 2px 14px 10px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+  }
+  .admin-shell :is(
+    .inventory-overview,
+    .supply-kpis,
+    .overview-finance-summary > div,
+    .registration-summary,
+    .report-summary,
+    .settlement-summary,
+    .credit-health-grid,
+    .leave-checks
+  ) > * {
+    width: min(74vw,280px) !important;
+    min-width: min(74vw,280px) !important;
+    max-width: min(74vw,280px) !important;
+    min-height: 96px !important;
+    flex: 0 0 auto !important;
+    scroll-snap-align: start;
+  }
+
+  .admin-products-shell .inventory-overview {
+    margin-top: 0 !important;
+    margin-bottom: 12px !important;
+  }
+  .admin-products-shell .inventory-overview article {
+    padding: 14px !important;
+    display: grid !important;
+    grid-template-columns: 46px minmax(0,1fr) !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+  .admin-products-shell .inventory-overview article > i {
+    width: 46px !important;
+    height: 46px !important;
+  }
+  .admin-products-shell .inventory-overview article strong {
+    font-size: 24px !important;
+  }
 }
 
 @media (max-width: 430px) {
