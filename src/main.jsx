@@ -1,6 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import CookieConsent from './CookieConsent'
 import MobileFilterEnhancer from './MobileFilterEnhancer'
 import './styles.css'
 import './shop.css'
@@ -32,7 +33,7 @@ if (window.location.pathname === '/shops' || window.location.pathname.startsWith
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AppBoundary><App /><MobileFilterEnhancer /></AppBoundary>
+    <AppBoundary><App /><MobileFilterEnhancer /><CookieConsent /></AppBoundary>
   </React.StrictMode>,
 )
 

@@ -1964,7 +1964,7 @@ function ChangePasswordModal({ required=false, close, done }) {
 }
 
 function LoginScreen({ onLogin }) {
-  const emptyForm={email:'',password:'',confirmPassword:'',fullName:'',phone:'',nic:'',address:'',city:'',occupation:'',hasOnlineBusiness:'',onlineBusinessProducts:'',onlineBusinessDuration:'',monthlyIncome:'',socialMediaUrl:'',followersCount:'',facebookMarketing:'',joinReason:'',agreementAccepted:false,nicFrontImage:'',nicBackImage:''}
+  const emptyForm={email:'',password:'',remember:false,confirmPassword:'',fullName:'',phone:'',nic:'',address:'',city:'',occupation:'',hasOnlineBusiness:'',onlineBusinessProducts:'',onlineBusinessDuration:'',monthlyIncome:'',socialMediaUrl:'',followersCount:'',facebookMarketing:'',joinReason:'',agreementAccepted:false,nicFrontImage:'',nicBackImage:''}
   const [view,setView]=useState(()=>registrationLocationActive()?'register':'login')
   const [step,setStep]=useState(1)
   const [form,setForm]=useState(emptyForm)
@@ -2029,7 +2029,7 @@ function LoginScreen({ onLogin }) {
         window.history.replaceState({},'','/')
         return
       }
-      const result=await api('/auth/login',{method:'POST',body:JSON.stringify({email:form.email,password:form.password})})
+      const result=await api('/auth/login',{method:'POST',body:JSON.stringify({email:form.email,password:form.password,remember:form.remember})})
       onLogin(result.user,result.passwordResetRequired)
     }catch(reason){setError(reason.message.includes('fetch')?'Cannot reach the CAMY API. Confirm MySQL is running, then restart npm.cmd run dev.':reason.message)}finally{setBusy(false)}
   }
@@ -2044,6 +2044,7 @@ function LoginScreen({ onLogin }) {
       {view==='login'?<>
         <label>Email address<input type="email" required autoComplete="username" value={form.email} onChange={e=>update('email',e.target.value)} placeholder="name@example.com"/></label>
         <label>Password<div className="login-password-field"><input type={showLoginPassword?'text':'password'} required autoComplete="current-password" value={form.password} onChange={e=>update('password',e.target.value)} placeholder="Enter your password"/><button type="button" onClick={()=>setShowLoginPassword(value=>!value)} aria-label={showLoginPassword?'Hide password':'Show password'} aria-pressed={showLoginPassword} title={showLoginPassword?'Hide password':'Show password'}>{showLoginPassword?<EyeOff/>:<Eye/>}</button></div></label>
+        <label className="remember-option"><input type="checkbox" checked={form.remember} onChange={e=>update('remember',e.target.checked)}/><span>Remember me on this device for 30 days</span></label>
         <button className="login-submit" disabled={busy}>{busy?'Signing in…':'Sign in securely'}<ArrowRight/></button>
       </>:<>
         <div className="registration-steps"><button type="button" className={step>=1?'active':''} onClick={()=>step>1&&setStep(1)}><b>1</b><span>Personal</span></button><i/><button type="button" className={step>=2?'active':''} onClick={()=>step>2&&setStep(2)}><b>2</b><span>Business</span></button><i/><button type="button" className={step>=3?'active':''}><b>3</b><span>Confirm</span></button></div>

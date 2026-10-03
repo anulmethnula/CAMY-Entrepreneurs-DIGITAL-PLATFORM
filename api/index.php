@@ -10,6 +10,7 @@ require_once __DIR__ . '/catalogue.php';
 
 ini_set('session.use_strict_mode','1');
 ini_set('session.use_only_cookies','1');
+ini_set('session.gc_maxlifetime',(string)(30*24*60*60));
 session_name('camy_session');
 $sessionDirectory=private_path('sessions');
 if(!is_dir($sessionDirectory))mkdir($sessionDirectory,0700,true);
@@ -19,6 +20,18 @@ session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax', 'secure' => 
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 security_headers();
+
+function persist_session_cookie(bool $remember): void {
+    global $https;
+    $lifetime=$remember?30*24*60*60:0;
+    setcookie(session_name(),session_id(),[
+        'expires'=>$lifetime?time()+$lifetime:0,
+        'path'=>'/',
+        'secure'=>CAMY_ENV==='production'||$https,
+        'httponly'=>true,
+        'samesite'=>'Lax',
+    ]);
+}
 
 function response(array $data, int $status = 200): never {
     global $pdo,$path,$method;
@@ -41,7 +54,10 @@ function current_user(PDO $pdo): ?array {
     $user=$query->fetch() ?: null;
     if(!$user)return null;
     $now=time();
-    if((int)($_SESSION['session_version'] ?? 0)!==(int)$user['session_version'] || $now-(int)($_SESSION['last_activity'] ?? 0)>1800 || $now-(int)($_SESSION['signed_in_at'] ?? 0)>28800){$_SESSION=[];return null;}
+    $remembered=!empty($_SESSION['user_remembered']);
+    $idleLimit=$remembered?30*24*60*60:1800;
+    $absoluteLimit=$remembered?30*24*60*60:28800;
+    if((int)($_SESSION['session_version'] ?? 0)!==(int)$user['session_version'] || $now-(int)($_SESSION['last_activity'] ?? 0)>$idleLimit || $now-(int)($_SESSION['signed_in_at'] ?? 0)>$absoluteLimit){$_SESSION=[];return null;}
     $_SESSION['last_activity']=$now;
     return $user;
 }
@@ -163,7 +179,9 @@ try {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['session_version'] = (int)$user['session_version'];
         $_SESSION['signed_in_at'] = $_SESSION['last_activity'] = time();
+        $_SESSION['user_remembered'] = !empty($data['remember']);
         $_SESSION['password_reset_required'] = $resetRequired;
+        persist_session_cookie($_SESSION['user_remembered']);
         $pdo->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?')->execute([$user['id']]);
         response(['user' => current_user($pdo), 'passwordResetRequired' => $resetRequired]);
     }
@@ -183,7 +201,7 @@ try {
     }
     if ($path === '/auth/logout' && $method === 'POST') {
         $_SESSION = [];
-        if (ini_get('session.use_cookies')) { $params = session_get_cookie_params(); setcookie(session_name(), '', time() - 42000, $params['path'], '', false, true); }
+        if (ini_get('session.use_cookies')) { setcookie(session_name(),'', ['expires'=>time()-42000,'path'=>'/','secure'=>CAMY_ENV==='production'||$https,'httponly'=>true,'samesite'=>'Lax']); }
         session_destroy();
         response(['ok' => true]);
     }

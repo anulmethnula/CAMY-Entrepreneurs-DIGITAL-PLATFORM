@@ -31,6 +31,25 @@
   }
 
   .app-v2 .sidebar-v2::-webkit-scrollbar { display: none; }
+
+  /* Keep the account action visible even when the admin menu is taller than
+     a laptop viewport. Only the link list scrolls; the logo, workspace card,
+     and sign-out action remain fixed in the rail. */
+  .app-v2.admin-shell .side-links {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .app-v2.admin-shell .side-links::-webkit-scrollbar { display: none; }
+
+  .app-v2.admin-shell .sidebar-v2 > .logout {
+    flex: 0 0 auto;
+    margin-top: 10px;
+    margin-bottom: 0;
+  }
 }
 
 /* Fit the full navigation into shorter laptop viewports without introducing
