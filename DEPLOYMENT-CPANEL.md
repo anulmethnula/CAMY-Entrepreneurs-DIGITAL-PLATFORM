@@ -68,6 +68,18 @@ Expected layout:
 4. Keep `CAMY_ENV=production`.
 5. Never place `camy.env` in Git or `public_html`.
 
+### Registration decision emails
+
+Create `notifications@camymarket.com` in cPanel and add these values to the private `camy.env` file:
+
+```text
+CAMY_PUBLIC_URL=https://camymarket.com
+CAMY_MAIL_FROM=notifications@camymarket.com
+CAMY_MAIL_FROM_NAME=CAMY Entrepreneurs
+```
+
+The server sends one automatic email after CAMY Admin approves or rejects a pending entrepreneur application. Enable SPF and DKIM for `camymarket.com` in cPanel Email Deliverability so receiving providers can authenticate these messages. An email failure does not roll back the admin decision; the admin screen reports the failure and the private log is written to `private/logs/email-notifications.log`.
+
 The initial administrator created on the first API request is:
 
 - Email: `admin@camy.lk`
