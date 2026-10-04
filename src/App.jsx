@@ -23,7 +23,6 @@ import {
 } from 'lucide-react'
 import { initialEntrepreneurs, initialNotifications, initialOrders, initialProducts, initialTiers } from './data'
 import { AdminCreditStockPage, CreditInventoryPage, CreditStockPage, ShopHome, StockSupplyPage } from './Marketplace'
-import camyLogo from '../camy-logo-transparent.png'
 
 const money = (value) => `Rs. ${Number(value || 0).toLocaleString('en-LK')}`
 const SUPPORT_PHONE_DISPLAY = '+94 77 716 5336'
@@ -125,7 +124,7 @@ function useStoredState(key, fallback) {
 }
 
 function Brand({ inverse = false }) {
-  return <div className={`brand ${inverse ? 'inverse' : ''}`}><img src={camyLogo} alt="CAMY" /><span>ENTREPRENEURS</span></div>
+  return <div className={`brand ${inverse ? 'inverse' : ''}`}><img src="/camy-logo-tight.png" width="430" height="205" alt="CAMY" decoding="async" /><span>ENTREPRENEURS</span></div>
 }
 
 const entrepreneurNav = [
@@ -2055,6 +2054,16 @@ function LoginScreen({ onLogin }) {
       </>}
       <button className="login-switch" type="button" onClick={switchView}>{view==='login'?'New entrepreneur? Apply to CAMY':'Already applied or approved? Return to sign in'}</button>
     </form></section>
+    {view==='register'&&<section className="registration-seo-content" aria-labelledby="camy-entrepreneur-heading">
+      <div className="registration-seo-intro"><span>START YOUR BUSINESS JOURNEY</span><h2 id="camy-entrepreneur-heading">Become a CAMY entrepreneur in Sri Lanka</h2><p>CAMY helps aspiring and growing entrepreneurs sell useful products with a structured digital workspace. Apply online, complete CAMY's review process and, once approved, manage customer orders, delivery progress, earnings and business growth from one secure account.</p></div>
+      <div className="registration-seo-benefits">
+        <article><PackageCheck/><h3>Products and fulfilment</h3><p>Browse the CAMY catalogue, create customer orders and follow each order through preparation, dispatch and delivery.</p></article>
+        <article><WalletCards/><h3>Clear earnings</h3><p>See delivered sales and commission information in one place, with records that help you understand your progress.</p></article>
+        <article><TrendingUp/><h3>Room to grow</h3><p>Build a verified sales history and follow the CAMY growth path, including eligible business-credit features.</p></article>
+      </div>
+      <div className="registration-seo-steps"><h2>How the CAMY entrepreneur application works</h2><ol><li><b>Apply online.</b> Add your personal details, contact information and secure login.</li><li><b>Tell us about your goals.</b> Share your current selling experience so CAMY can understand the support you need.</li><li><b>Wait for review.</b> CAMY verifies each application before activating platform access.</li><li><b>Start selling.</b> Approved entrepreneurs can sign in, create customer orders and track their business activity.</li></ol></div>
+      <div className="registration-seo-faq"><h2>Frequently asked questions</h2><details><summary>Who can apply to become a CAMY entrepreneur?</summary><p>Adults in Sri Lanka who want to build a product-selling business can submit an application. CAMY reviews each application before approval.</p></details><details><summary>What do I need to apply?</summary><p>Have your contact and address details, information about your selling experience, and clear front and back images of your NIC ready.</p></details><details><summary>Will I get access immediately after applying?</summary><p>No. Application submission is the first step. CAMY reviews your information and activates your secure account only after approval.</p></details><details><summary>How can I contact CAMY about my application?</summary><p>Call CAMY support on <a href={`tel:${SUPPORT_PHONE_DIAL}`}>{SUPPORT_PHONE_DISPLAY}</a> for help with the entrepreneur application.</p></details></div>
+    </section>}
   </main>
 }
 
