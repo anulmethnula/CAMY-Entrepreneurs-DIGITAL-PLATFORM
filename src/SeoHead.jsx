@@ -26,19 +26,19 @@ export default function SeoHead() {
     const path = window.location.pathname.replace(/\/+$/, '') || '/'
     const isRegistration = path === '/register'
     const title = isRegistration
-      ? 'Become a CAMY Entrepreneur in Sri Lanka | Apply Online'
-      : 'CAMY Entrepreneur Login | Secure Business Platform'
+      ? 'CAMY Market | Become a CAMY Entrepreneur in Sri Lanka'
+      : 'CAMY Market | Entrepreneur Platform Sri Lanka'
     const description = isRegistration
       ? 'Apply online to become a CAMY entrepreneur in Sri Lanka. Build your business with CAMY products, order fulfilment, commissions, business credit and practical support.'
-      : 'Secure sign-in for approved CAMY entrepreneurs and administrators in Sri Lanka.'
+      : 'CAMY Market is the official CAMY entrepreneur platform in Sri Lanka. Apply online, manage customer orders, track deliveries and grow your business.'
     const canonical = `${SITE_URL}${isRegistration ? '/register' : '/'}`
     const image = `${SITE_URL}/camy-logo-tight.png`
 
     document.title = title
     document.documentElement.lang = 'en-LK'
     setMeta('meta[name="description"]', { name: 'description', content: description })
-    setMeta('meta[name="robots"]', { name: 'robots', content: isRegistration ? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' : 'noindex, nofollow, noarchive' })
-    setMeta('meta[name="googlebot"]', { name: 'googlebot', content: isRegistration ? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' : 'noindex, nofollow, noarchive' })
+    setMeta('meta[name="robots"]', { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' })
+    setMeta('meta[name="googlebot"]', { name: 'googlebot', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' })
     setMeta('meta[property="og:type"]', { property: 'og:type', content: 'website' })
     setMeta('meta[property="og:site_name"]', { property: 'og:site_name', content: 'CAMY Entrepreneurs' })
     setMeta('meta[property="og:locale"]', { property: 'og:locale', content: 'en_LK' })
@@ -62,6 +62,7 @@ export default function SeoHead() {
             '@type': 'Organization',
             '@id': `${SITE_URL}/#organization`,
             name: 'CAMY Entrepreneurs',
+            alternateName: ['CAMY Market', 'camymarket'],
             url: SITE_URL,
             logo: { '@type': 'ImageObject', url: image, width: 430, height: 205 },
             telephone: '+94-77-716-5336',
@@ -71,7 +72,8 @@ export default function SeoHead() {
             '@type': 'WebSite',
             '@id': `${SITE_URL}/#website`,
             url: SITE_URL,
-            name: 'CAMY Entrepreneurs',
+            name: 'CAMY Market',
+            alternateName: 'CAMY Entrepreneurs',
             publisher: { '@id': `${SITE_URL}/#organization` },
             inLanguage: 'en-LK',
           },
