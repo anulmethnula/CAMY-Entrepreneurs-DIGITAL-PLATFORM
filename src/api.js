@@ -1,12 +1,13 @@
 export async function api(path, options = {}) {
+  const { timeoutMs = 20000, ...fetchOptions } = options
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 20000)
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
   try {
     const response = await fetch(`/api${path}`, {
-      ...options,
+      ...fetchOptions,
       credentials: 'same-origin',
-      signal: options.signal || controller.signal,
-      headers: { 'Content-Type': 'application/json', 'X-CAMY-Request': '1', ...options.headers },
+      signal: fetchOptions.signal || controller.signal,
+      headers: { 'Content-Type': 'application/json', 'X-CAMY-Request': '1', ...fetchOptions.headers },
     })
     const data = await response.json().catch(() => null)
     if (!response.ok) {

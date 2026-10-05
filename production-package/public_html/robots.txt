@@ -1,6 +1,9 @@
 User-agent: *
-Allow: /register
+Allow: /register$
+Disallow: /
 Disallow: /api/
 Disallow: /customer/
 Disallow: /admin/
+
+Sitemap: https://camymarket.com/sitemap.xml
 

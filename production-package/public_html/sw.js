@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'camy-mobile-v1'
-const APP_SHELL = ['/', '/site.webmanifest', '/camy-logo-transparent.png', '/camy-logo-tight.png']
+const CACHE_VERSION = 'camy-mobile-v2'
+const APP_SHELL = ['/', '/register', '/site.webmanifest', '/camy-logo-transparent.png', '/camy-logo-tight.png']
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_VERSION).then(cache => cache.addAll(APP_SHELL)))

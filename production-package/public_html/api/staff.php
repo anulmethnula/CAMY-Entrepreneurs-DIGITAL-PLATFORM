@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 function staff_templates(): array {
-    return ['Super Admin'=>['overview','entrepreneurs','admin-orders','admin-products','payouts','stock-supply','credit-control','reports','user-access']];
+    return ['Super Admin'=>['overview','entrepreneurs','admin-orders','admin-products','payouts','stock-supply','credit-control','credit-settlements','reports','user-access']];
 }
 function staff_assignable_permissions(): array { return array_values(array_filter(staff_templates()['Super Admin'],fn($item)=>$item!=='user-access')); }
 function staff_ensure_roles(PDO $pdo): void {

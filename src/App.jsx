@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { initialEntrepreneurs, initialNotifications, initialOrders, initialProducts, initialTiers } from './data'
 import { AdminCreditStockPage, CreditInventoryPage, CreditStockPage, ShopHome, StockSupplyPage } from './Marketplace'
+import camyLogo from '../camy-logo-transparent.png'
 
 const money = (value) => `Rs. ${Number(value || 0).toLocaleString('en-LK')}`
 const SUPPORT_PHONE_DISPLAY = '+94 77 716 5336'
@@ -124,7 +125,7 @@ function useStoredState(key, fallback) {
 }
 
 function Brand({ inverse = false }) {
-  return <div className={`brand ${inverse ? 'inverse' : ''}`}><img src="/camy-logo-tight.png" width="430" height="205" alt="CAMY" decoding="async" /><span>ENTREPRENEURS</span></div>
+  return <div className={`brand ${inverse ? 'inverse' : ''}`}><img src={camyLogo} alt="CAMY" /><span>ENTREPRENEURS</span></div>
 }
 
 const entrepreneurNav = [
@@ -1970,6 +1971,7 @@ function LoginScreen({ onLogin }) {
   const [error,setError]=useState('')
   const [success,setSuccess]=useState('')
   const [busy,setBusy]=useState(false)
+  const [imageBusy,setImageBusy]=useState(false)
   const [showLoginPassword,setShowLoginPassword]=useState(false)
   useEffect(() => {
     if (view === 'register') {
@@ -1991,7 +1993,21 @@ function LoginScreen({ onLogin }) {
   }, [view])
   useEffect(()=>{const syncLocation=()=>{setView(registrationLocationActive()?'register':'login');setStep(1);setError('')};window.addEventListener('popstate',syncLocation);return()=>window.removeEventListener('popstate',syncLocation)},[])
   const update=(key,value)=>setForm(old=>({...old,[key]:value}))
-  const uploadNic=(key,event)=>{const file=event.target.files?.[0];event.target.value='';if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){setError('Use a JPG, PNG or WebP NIC photo up to 5 MB.');return}const reader=new FileReader();reader.onload=()=>update(key,String(reader.result));reader.onerror=()=>setError('Could not read the NIC photo.');reader.readAsDataURL(file)}
+  const uploadNic=async(key,event)=>{
+    const file=event.target.files?.[0];event.target.value='';if(!file)return
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){setError('Use a JPG, PNG or WebP NIC photo up to 5 MB.');return}
+    setError('');setImageBusy(true)
+    try{
+      const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'})
+      const scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height))
+      const canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale)
+      const context=canvas.getContext('2d');context.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close()
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.82))
+      if(!blob)throw new Error('Could not prepare the NIC photo.')
+      const image=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('Could not read the NIC photo.'));reader.readAsDataURL(blob)})
+      update(key,image)
+    }catch(reason){setError(reason.message||'Could not prepare the NIC photo. Please choose it again.')}finally{setImageBusy(false)}
+  }
   const validateStep=current=>{
     setError('')
     if(current===1){
@@ -2019,7 +2035,7 @@ function LoginScreen({ onLogin }) {
     setBusy(true)
     try{
       if(view==='register'){
-        const result=await api('/auth/register',{method:'POST',body:JSON.stringify(form)})
+        const result=await api('/auth/register',{method:'POST',body:JSON.stringify(form),timeoutMs:90000})
         setSuccess(result.message)
         const email=form.email
         setForm({...emptyForm,email})
@@ -2050,7 +2066,7 @@ function LoginScreen({ onLogin }) {
         {step===1&&<section className="registration-step-panel"><div className="registration-section-head"><span>STEP 1 OF 3</span><h3>Your details & login</h3><p>Only your personal details need typing. Choose your district from the list to finish faster.</p></div><div className="registration-grid"><label>Full name<input required autoComplete="name" value={form.fullName} onChange={e=>update('fullName',e.target.value)} placeholder="Your full name"/></label><label>NIC number<input required value={form.nic} onChange={e=>update('nic',e.target.value)} placeholder="NIC number"/></label><label className="wide">Home address<textarea rows="2" required autoComplete="street-address" value={form.address} onChange={e=>update('address',e.target.value)} placeholder="House number and street"/></label><label>City / district<select required value={form.city} onChange={e=>update('city',e.target.value)}><option value="">Select your district</option>{districts.map(district=><option key={district}>{district}</option>)}</select></label><label>WhatsApp number<input required inputMode="tel" autoComplete="tel" value={form.phone} onChange={e=>update('phone',e.target.value)} placeholder="07XXXXXXXX"/></label><label>Email address <small>Login username</small><input type="email" required autoComplete="username" value={form.email} onChange={e=>update('email',e.target.value)} placeholder="name@example.com"/></label><label>Password<input type="password" minLength="8" required autoComplete="new-password" value={form.password} onChange={e=>update('password',e.target.value)} placeholder="8+ characters, letters & numbers"/></label><label>Confirm password<input type="password" minLength="8" required autoComplete="new-password" value={form.confirmPassword} onChange={e=>update('confirmPassword',e.target.value)} placeholder="Enter password again"/></label></div><div className="nic-upload-grid"><label className={form.nicFrontImage?'ready':''}><strong>NIC front photo</strong><small>Clear JPG, PNG or WebP · max 5 MB</small><span>{form.nicFrontImage?'✓ Front photo ready':'Choose front photo'}</span><input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={e=>uploadNic('nicFrontImage',e)}/></label><label className={form.nicBackImage?'ready':''}><strong>NIC back photo</strong><small>Clear JPG, PNG or WebP · max 5 MB</small><span>{form.nicBackImage?'✓ Back photo ready':'Choose back photo'}</span><input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={e=>uploadNic('nicBackImage',e)}/></label></div></section>}
         {step===2&&<section className="registration-step-panel"><div className="registration-section-head"><span>STEP 2 OF 3</span><h3>Your selling experience</h3><p>Choose the closest answer. These questions help CAMY give the right support—there is no wrong answer.</p></div><RegistrationBusinessFields form={form} update={update}/></section>}
         {step===3&&<section className="registration-step-panel"><div className="registration-section-head"><span>STEP 3 OF 3</span><h3>Final confirmation</h3><p>Choose your main goal, confirm the details, and CAMY Admin will review your application and NIC.</p></div><label>What is your main reason for joining CAMY?<select required value={form.joinReason} onChange={e=>update('joinReason',e.target.value)}><option value="">Select your main goal</option>{joinReasons.map(reason=><option key={reason}>{reason}</option>)}</select></label><label className="registration-agreement"><input type="checkbox" checked={form.agreementAccepted} onChange={e=>update('agreementAccepted',e.target.checked)}/><span>My information is correct and CAMY can review my application.</span></label><div className="registration-summary"><Check/><div><strong>Your login is saved securely.</strong><p>After approval, sign in using <b>{form.email||'your email'}</b> and the password you created. CAMY Admin cannot see your password.</p></div></div></section>}
-        <div className="registration-nav">{step>1&&<button className="btn secondary" type="button" onClick={()=>{setError('');setStep(old=>old-1)}}>Back</button>}<button className="login-submit" type="submit" disabled={busy}>{busy?'Sending application…':step<3?'Continue':'Send application'}<ArrowRight/></button></div>
+        <div className="registration-nav">{step>1&&<button className="btn secondary" type="button" onClick={()=>{setError('');setStep(old=>old-1)}}>Back</button>}<button className="login-submit" type="submit" disabled={busy||imageBusy}>{imageBusy?'Preparing NIC photo…':busy?'Sending application…':step<3?'Continue':'Send application'}<ArrowRight/></button></div>
       </>}
       <button className="login-switch" type="button" onClick={switchView}>{view==='login'?'New entrepreneur? Apply to CAMY':'Already applied or approved? Return to sign in'}</button>
     </form></section>
