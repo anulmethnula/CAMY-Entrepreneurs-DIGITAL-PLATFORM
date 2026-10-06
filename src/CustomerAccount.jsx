@@ -8,7 +8,7 @@ export function CustomerAccount({ account, details, districts, onAccount, onClos
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [remember, setRemember] = useState(false)
+  const [remember, setRemember] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const submit = async event => {

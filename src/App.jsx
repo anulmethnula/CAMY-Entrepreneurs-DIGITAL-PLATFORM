@@ -1965,7 +1965,7 @@ function ChangePasswordModal({ required=false, close, done }) {
 }
 
 function LoginScreen({ onLogin }) {
-  const emptyForm={email:'',password:'',remember:false,confirmPassword:'',fullName:'',phone:'',nic:'',address:'',city:'',occupation:'',hasOnlineBusiness:'',onlineBusinessProducts:'',onlineBusinessDuration:'',monthlyIncome:'',socialMediaUrl:'',followersCount:'',facebookMarketing:'',joinReason:'',agreementAccepted:false,nicFrontImage:'',nicBackImage:''}
+  const emptyForm={email:'',password:'',remember:true,confirmPassword:'',fullName:'',phone:'',nic:'',address:'',city:'',occupation:'',hasOnlineBusiness:'',onlineBusinessProducts:'',onlineBusinessDuration:'',monthlyIncome:'',socialMediaUrl:'',followersCount:'',facebookMarketing:'',joinReason:'',agreementAccepted:false,nicFrontImage:'',nicBackImage:''}
   const [view,setView]=useState(()=>registrationLocationActive()?'register':'login')
   const [step,setStep]=useState(1)
   const [form,setForm]=useState(emptyForm)
