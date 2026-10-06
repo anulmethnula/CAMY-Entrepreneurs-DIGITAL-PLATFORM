@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /customer/
+Disallow: /admin/
+
+Sitemap: https://camymarket.com/sitemap.xml
+
