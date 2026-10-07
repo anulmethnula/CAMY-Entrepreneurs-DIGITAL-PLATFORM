@@ -207,6 +207,7 @@
   .mobile-nav-v2 button svg { width: 20px !important; height: 20px !important; }
   .mobile-nav-v2 button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mobile-nav-v2 button.active { color: #fff !important; background: rgba(57, 139, 174, .32) !important; }
+  .entrepreneur-shell .mobile-nav-v2 { grid-template-columns: repeat(6, minmax(0,1fr)) !important; }
   .entrepreneur-shell .mobile-nav-v2 .mobile-order-action {
     height: 70px !important;
     min-height: 70px !important;
