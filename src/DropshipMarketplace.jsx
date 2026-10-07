@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { customerProductPrice, deliveryLabel, fullProductCost, payableDeliveryCost } from './productCosts'
 import { AlertCircle, ArrowRight, BadgeDollarSign, Banknote, CalendarDays, Check, CheckCircle2, ChevronDown, CircleDollarSign, ClipboardList, Download, Eye, FileSpreadsheet, FileText, ListFilter, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, UserRound, X } from 'lucide-react'
 import { api } from './api'
@@ -82,11 +82,12 @@ function CreditSensor({ person, tiers = [], orders = [] }) {
   </section>
 }
 
-export function DropshipOrderPage({ products = [], person, notify, catalogueLive, orders = [], tiers = [], setPage, workspaceView = 'catalogue', setWorkspaceView }) {
+export function DropshipOrderPage({ products = [], person, notify, catalogueLive, orders = [], tiers = [], setPage, workspaceView = 'catalogue', setWorkspaceView, catalogueMode = false }) {
   const cartStorageKey = `camy-dropship-cart-${person?.id || 'current'}`
   const [cart, setCart] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem(cartStorageKey)) || [] } catch { return [] }
   })
+  const cartRef = useRef(cart)
   const [client, setClient] = useState(blankClient)
   const [busy, setBusy] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -98,9 +99,10 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   const [submitError, setSubmitError] = useState('')
   const [addedProductId, setAddedProductId] = useState(null)
   const [mobileOverviewOpen, setMobileOverviewOpen] = useState(false)
+  const [catalogueQuantities, setCatalogueQuantities] = useState({})
 
   const categories = useMemo(() => ['All products', ...Array.from(new Set(products.map(product => product.category).filter(Boolean)))], [products])
-  const visibleProducts = useMemo(() => products.filter(product => (category === 'All products' || product.category === category) && `${product.name} ${product.code||''} ${product.category||''} ${product.description||''}`.toLowerCase().includes(catalogueQuery.trim().toLowerCase())), [products, category, catalogueQuery])
+  const visibleProducts = useMemo(() => products.filter(product => (!catalogueMode || Number(product.stock) > 0) && (category === 'All products' || product.category === category) && `${product.name} ${product.code||''} ${product.category||''} ${product.description||''}`.toLowerCase().includes(catalogueQuery.trim().toLowerCase())), [products, category, catalogueQuery, catalogueMode])
 
   const selected = useMemo(() => cart.map(item => {
     const product = products.find(product => String(product.id) === String(item.productId))
@@ -108,6 +110,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   }).filter(Boolean), [cart, products])
 
   useEffect(() => {
+    cartRef.current=cart
     try { sessionStorage.setItem(cartStorageKey, JSON.stringify(cart)) } catch { /* The order remains usable if browser storage is unavailable. */ }
   }, [cart, cartStorageKey])
 
@@ -134,18 +137,32 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
     window.setTimeout(() => setRefreshing(false), 800)
   }
 
-  const add = product => {
-    setCart(old => {
-      const found = old.find(item => String(item.productId) === String(product.id))
-      return found
-        ? old.map(item => item === found ? { ...item, qty: item.qty + 1 } : item)
-        : [...old, { productId: product.id, qty: 1, sellPrice: Number(product.price) }]
-    })
+  const catalogueQuantity = product => Math.max(1, Math.min(Number(product.stock) || 1, Number(catalogueQuantities[product.id]) || 1))
+  const setCatalogueQuantity = (product, value) => setCatalogueQuantities(old => ({ ...old, [product.id]: Math.max(1, Math.min(Number(product.stock) || 1, Number(value) || 1)) }))
+  const add = (product, requestedQuantity = 1) => {
+    const quantity=Math.max(1,Math.floor(Number(requestedQuantity)||1))
+    const available=Math.max(0,Number(product.stock)||0)
+    const current=cartRef.current
+    const found=current.find(item=>String(item.productId)===String(product.id))
+    const nextQuantity=Number(found?.qty||0)+quantity
+    if(nextQuantity>available){notify?.(`Only ${available} units of ${product.name} are available.`);return}
+    const next=found
+      ? current.map(item => String(item.productId) === String(product.id) ? { ...item, qty: nextQuantity } : item)
+      : [...current, { productId: product.id, qty: quantity, sellPrice: Number(product.price) }]
+    cartRef.current=next
+    setCart(next)
+    setCatalogueQuantities(old=>({...old,[product.id]:1}))
     setAddedProductId(product.id)
+    notify?.(`${quantity} × ${product.name} added to the current order.`)
     window.setTimeout(() => setAddedProductId(current => String(current) === String(product.id) ? null : current), 1100)
   }
 
-  const update = (productId, patch) => setCart(old => old.map(item => String(item.productId) === String(productId) ? { ...item, ...patch } : item))
+  const update = (productId, patch) => setCart(old => old.map(item => {
+    if(String(item.productId)!==String(productId))return item
+    const product=products.find(entry=>String(entry.id)===String(productId))
+    const safePatch=patch.qty===undefined?patch:{...patch,qty:Math.max(1,Math.min(Number(product?.stock)||1,Number(patch.qty)||1))}
+    return {...item,...safePatch}
+  }))
 
   const updateSellPrice = (productId, value) => {
     const numericText = value.replace(/[^\d.]/g, '')
@@ -214,7 +231,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
 
   return <div className={`content-page market-page stock-buy-page dropship-order-page ${mobileCheckout ? 'mobile-checkout-page' : ''}`}>
     <section className={`order-workspace-head ${mobileOverviewOpen ? 'mobile-overview-open' : ''}`}>
-      <div className="order-title-copy"><small>CAMY ENTREPRENEURS</small><h1>New client order</h1><p>Create a customer order using CAMY products.</p></div>
+      <div className="order-title-copy"><small>CAMY ENTREPRENEURS</small><h1>{catalogueMode?'Available products':'New client order'}</h1><p>{catalogueMode?'Browse live CAMY stock and add the quantity you need to the same customer-order cart.':'Create a customer order using CAMY products.'}</p></div>
       <button className="order-overview-toggle" type="button" aria-expanded={mobileOverviewOpen} aria-controls="order-workflow" onClick={()=>setMobileOverviewOpen(open=>!open)}>Details <ChevronDown size={16}/></button>
       <button className="order-history-link" type="button" onClick={()=>setPage?.('orders')}><ClipboardList size={17}/> My orders <b>{orders.length}</b></button>
     </section>
@@ -249,8 +266,9 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
           return <article className="stock-product-card" key={product.id}>
             <button className="stock-product-image" type="button" onClick={()=>setDetailProduct(product)}><img src={product.image} alt={product.name}/><span>{product.category}</span></button>
             <div className="stock-product-copy"><small>{product.code || product.category}</small><h3>{product.name}</h3><p>{product.description || 'CAMY product available for entrepreneur sales.'}</p>{product.freeDelivery===false&&<div className="stock-product-delivery has-charge"><Truck size={13}/><span>{deliveryLabel(product)}</span></div>}
-              <div className="stock-product-meta"><span className={available ? 'available' : 'unavailable'}><i/> {available ? 'Available' : 'Unavailable'}</span><strong>{money(customerProductPrice(product))}</strong></div>
-              <div className="stock-product-actions"><button className="stock-details" type="button" onClick={()=>setDetailProduct(product)}>View details</button><button className={`market-primary ${String(addedProductId)===String(product.id)?'added':''}`} disabled={!available} onClick={() => add(product)}>{String(addedProductId)===String(product.id) ? <><Check size={15}/> Added</> : <>{inCart ? `Add another (${inCart.qty})` : 'Add to order'} <ArrowRight size={15}/></>}</button></div>
+              <div className="stock-product-meta"><span className={available ? 'available' : 'unavailable'}><i/> {available ? catalogueMode?`${product.stock} available`:'Available' : 'Unavailable'}</span><strong>{money(customerProductPrice(product))}</strong></div>
+              {catalogueMode&&<div className="catalogue-card-quantity"><span>Quantity</span><div><button type="button" aria-label={`Reduce ${product.name} quantity`} disabled={catalogueQuantity(product)<=1} onClick={()=>setCatalogueQuantity(product,catalogueQuantity(product)-1)}>−</button><input aria-label={`${product.name} quantity`} type="number" min="1" max={product.stock} value={catalogueQuantity(product)} onChange={event=>setCatalogueQuantity(product,event.target.value)}/><button type="button" aria-label={`Increase ${product.name} quantity`} disabled={catalogueQuantity(product)>=Number(product.stock)} onClick={()=>setCatalogueQuantity(product,catalogueQuantity(product)+1)}>+</button></div></div>}
+              <div className="stock-product-actions"><button className="stock-details" type="button" onClick={()=>setDetailProduct(product)}>View details</button><button className={`market-primary ${String(addedProductId)===String(product.id)?'added':''}`} disabled={!available} onClick={() => add(product,catalogueMode?catalogueQuantity(product):1)}>{String(addedProductId)===String(product.id) ? <><Check size={15}/> Added</> : <>{inCart ? `Add to cart (${inCart.qty})` : catalogueMode?'Add to cart':'Add to order'} <ArrowRight size={15}/></>}</button></div>
             </div>
           </article>
         })}</div>{!visibleProducts.length&&<div className="catalogue-no-results">No products found. Try another category or search term.</div>}

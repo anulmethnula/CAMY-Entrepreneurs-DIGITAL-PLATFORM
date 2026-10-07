@@ -305,6 +305,20 @@
   .product-body,.stock-product-body,.customer-product-body { padding: 12px !important; }
   .product-body h3,.stock-product-body h3,.customer-product-name { font-size: 14px !important; line-height: 1.3; }
 
+  /* The entrepreneur Products tab is a compact two-across catalogue. */
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 10px !important;
+  }
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-image { height: 150px !important; min-height:150px !important; }
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-copy { padding: 11px !important; }
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-copy h3 { min-height: 37px; font-size: 13px !important; }
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-copy > p { display:none; }
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-actions { grid-template-columns:1fr !important; }
+  .entrepreneur-shell[data-page="catalogue"] .catalogue-card-quantity { align-items:stretch; flex-direction:column; }
+  .entrepreneur-shell[data-page="catalogue"] .catalogue-card-quantity > div { grid-template-columns:32px minmax(36px,1fr) 32px; width:100%; }
+  .entrepreneur-shell[data-page="catalogue"] .catalogue-card-quantity input { width:100%; height:38px; font-size:13px !important; }
+
   /* Desktop tables become readable record cards. */
   .data-table,.people-table,.order-table,.admin-order-table,.application-table,
   .credit-list,.report-table { overflow: visible !important; background: transparent !important; box-shadow: none !important; }
@@ -1405,6 +1419,49 @@
 @media (display-mode: standalone) and (max-width: 760px) {
   .topbar-v2 { padding-top: env(safe-area-inset-top) !important; }
   .mobile-nav-v2 { bottom: max(7px,env(safe-area-inset-bottom)) !important; }
+}
+
+/* Products and Order share the same catalogue component. The older mobile
+   order layout makes each card a 128px + text horizontal grid; that layout
+   cannot be nested inside a two-across catalogue and collapses copy into a
+   one-character column. Keep each two-across card vertically stacked. */
+@media (max-width: 760px) {
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-grid {
+    width: 100% !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    grid-template-columns: none !important;
+    flex-direction: column !important;
+  }
+
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-image {
+    width: 100% !important;
+    height: 126px !important;
+    min-height: 126px !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid #e2edf5 !important;
+  }
+
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-copy {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    flex: 1 1 auto;
+  }
+
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-copy h3,
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-copy span,
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-copy button {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
 }
 
 /* The assisted-order footer must remain fully tappable inside short phone

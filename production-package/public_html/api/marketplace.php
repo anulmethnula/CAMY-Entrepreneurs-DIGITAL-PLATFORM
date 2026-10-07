@@ -146,12 +146,13 @@ function market_route(PDO $pdo, string $path, string $method): void {
         }
         $member=(string) $user['member_id'];
         $self=null;foreach($state['entrepreneurs'] ?? [] as $person)if((string)$person['id']===$member){$self=$person;break;}
-        // Entrepreneurs receive a single bundled CAMY price for ordinary products.
-        // The internal delivery/packaging breakdown is admin-only. Air conditioners
-        // retain their separate delivery charge because it must be shown at checkout.
+        // Entrepreneurs receive the real warehouse quantity so their quantity
+        // selector and order validation use the same stock shown to CAMY Admin.
+        // The internal delivery/packaging breakdown remains admin-only. Air
+        // conditioners retain their separate delivery charge at checkout.
         $entrepreneurProducts=array_map(static function($product){
             $airConditioner=($product['deliveryChargeVisible'] ?? false)===true||strcasecmp((string)($product['category'] ?? ''),'Air Conditioners')===0;
-            $product['stock']=(($product['stock'] ?? 0)>0?1:0);
+            $product['stock']=max(0,(int)($product['stock'] ?? 0));
             if(!$airConditioner){unset($product['billingPrice'],$product['deliveryCost'],$product['packagingCost'],$product['deliveryChargeVisible']);$product['freeDelivery']=true;}
             return $product;
         },array_values(array_filter($state['products'] ?? [],static fn($product)=>($product['published'] ?? true)===true)));
@@ -406,7 +407,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
         $shop=$state['orders'][$index]['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=catalogue_order_sales_value($entry);$credit=catalogue_credit_for_sales($state['tiers'],$sales);foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
         market_save($pdo,$state);
         $management=in_array($user['role'],['admin','manager'],true);
-        $responseProducts=$management?$state['products']:array_map(static fn($product)=>array_merge($product,['stock'=>(($product['stock'] ?? 0)>0?1:0)]),$state['products']);
+        $responseProducts=$management?$state['products']:array_map(static fn($product)=>array_merge($product,['stock'=>max(0,(int)($product['stock'] ?? 0))]),$state['products']);
         $responseOrders=array_values(array_filter($state['orders'],static fn($entry)=>$management||(string)$entry['entrepreneurId']===(string)$user['member_id']));
         if(!$management)$responseOrders=array_map('market_safe_order',$responseOrders);
         $pdo->commit();response(['orders'=>$responseOrders,'inventory'=>array_values(array_filter($state['inventory'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['entrepreneurId']===(string)$user['member_id'])),'entrepreneurs'=>array_values(array_filter($state['entrepreneurs'],static fn($entry)=>in_array($user['role'],['admin','manager'],true)||(string)$entry['id']===(string)$user['member_id'])),'products'=>$responseProducts,'revision'=>$state['revision']]);
