@@ -9,6 +9,7 @@ export function productCosts(product) {
 
 export function deliveryLabel(product) {
   if (product.freeDelivery !== false) return 'Free delivery'
+  if (!Number(product.deliveryCost || 0)) return 'Delivery charge applies'
   const charge = Number(product.deliveryCost || 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   return `Delivery charge: Rs. ${charge}`
 }

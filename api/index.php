@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/config.php';
+require __DIR__ . '/notifications.php';
 require __DIR__ . '/marketplace.php';
 require __DIR__ . '/staff.php';
 require __DIR__ . '/security.php';
@@ -10,14 +11,28 @@ require_once __DIR__ . '/catalogue.php';
 
 ini_set('session.use_strict_mode','1');
 ini_set('session.use_only_cookies','1');
+ini_set('session.gc_maxlifetime',(string)(30*24*60*60));
 session_name('camy_session');
-$sessionDirectory=__DIR__.'/../private/sessions';
+$sessionDirectory=private_path('sessions');
 if(!is_dir($sessionDirectory))mkdir($sessionDirectory,0700,true);
 session_save_path($sessionDirectory);
-session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off', 'path' => '/']);
+$https=(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')||strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO']??''))==='https';
+session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax', 'secure' => CAMY_ENV==='production'||$https, 'path' => '/']);
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 security_headers();
+
+function persist_session_cookie(bool $remember): void {
+    global $https;
+    $lifetime=$remember?30*24*60*60:0;
+    setcookie(session_name(),session_id(),[
+        'expires'=>$lifetime?time()+$lifetime:0,
+        'path'=>'/',
+        'secure'=>CAMY_ENV==='production'||$https,
+        'httponly'=>true,
+        'samesite'=>'Lax',
+    ]);
+}
 
 function response(array $data, int $status = 200): never {
     global $pdo,$path,$method;
@@ -40,7 +55,10 @@ function current_user(PDO $pdo): ?array {
     $user=$query->fetch() ?: null;
     if(!$user)return null;
     $now=time();
-    if((int)($_SESSION['session_version'] ?? 0)!==(int)$user['session_version'] || $now-(int)($_SESSION['last_activity'] ?? 0)>1800 || $now-(int)($_SESSION['signed_in_at'] ?? 0)>28800){$_SESSION=[];return null;}
+    $remembered=!empty($_SESSION['user_remembered']);
+    $idleLimit=$remembered?30*24*60*60:1800;
+    $absoluteLimit=$remembered?30*24*60*60:28800;
+    if((int)($_SESSION['session_version'] ?? 0)!==(int)$user['session_version'] || $now-(int)($_SESSION['last_activity'] ?? 0)>$idleLimit || $now-(int)($_SESSION['signed_in_at'] ?? 0)>$absoluteLimit){$_SESSION=[];return null;}
     $_SESSION['last_activity']=$now;
     return $user;
 }
@@ -98,7 +116,7 @@ function save_nic_image(string $image, string $side = 'nic'): string {
     if (!preg_match('#^data:image/(jpeg|png|webp);base64,(.+)$#s', $image, $matches)) response(['message'=>'Take or upload a JPG, PNG or WebP photo of your NIC.'],422);
     $bytes=base64_decode($matches[2],true);
     if ($bytes===false || strlen($bytes)>5*1024*1024 || !getimagesizefromstring($bytes)) response(['message'=>'The NIC image is not a valid photo.'],422);
-    $directory=__DIR__.'/../private/nic';
+    $directory=private_path('nic');
     if(!is_dir($directory) && !mkdir($directory,0700,true)) throw new RuntimeException('Could not store NIC image.');
     $safeSide=in_array($side,['front','back','nic'],true)?$side:'nic';
     $name=$safeSide.'-'.bin2hex(random_bytes(16)).'.'.$matches[1];
@@ -162,7 +180,9 @@ try {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['session_version'] = (int)$user['session_version'];
         $_SESSION['signed_in_at'] = $_SESSION['last_activity'] = time();
+        $_SESSION['user_remembered'] = !empty($data['remember']);
         $_SESSION['password_reset_required'] = $resetRequired;
+        persist_session_cookie($_SESSION['user_remembered']);
         $pdo->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?')->execute([$user['id']]);
         response(['user' => current_user($pdo), 'passwordResetRequired' => $resetRequired]);
     }
@@ -182,7 +202,7 @@ try {
     }
     if ($path === '/auth/logout' && $method === 'POST') {
         $_SESSION = [];
-        if (ini_get('session.use_cookies')) { $params = session_get_cookie_params(); setcookie(session_name(), '', time() - 42000, $params['path'], '', false, true); }
+        if (ini_get('session.use_cookies')) { setcookie(session_name(),'', ['expires'=>time()-42000,'path'=>'/','secure'=>CAMY_ENV==='production'||$https,'httponly'=>true,'samesite'=>'Lax']); }
         session_destroy();
         response(['ok' => true]);
     }
@@ -216,13 +236,13 @@ try {
         require_admin($pdo);$side=$matches[2] ?? 'front';$column=$side==='back'?'nic_back_path':'nic_front_path';
         $query=$pdo->prepare("SELECT COALESCE($column,nic_image_path) FROM registration_requests WHERE id=?");$query->execute([(int)$matches[1]]);$name=$query->fetchColumn();
         if(!$name) response(['message'=>'NIC image not found.'],404);
-        $file=__DIR__.'/../private/nic/'.basename((string)$name);if(!is_file($file)) response(['message'=>'NIC image not found.'],404);
+        $file=private_path('nic/'.basename((string)$name));if(!is_file($file)) response(['message'=>'NIC image not found.'],404);
         header('Content-Type: '.(mime_content_type($file) ?: 'image/jpeg'));header('Content-Length: '.filesize($file));readfile($file);exit;
     }
     if (preg_match('#^/admin/entrepreneurs/([^/]+)/nic$#',$path,$matches) && $method==='GET') {
         require_admin($pdo);$query=$pdo->prepare('SELECT nic_image_path FROM entrepreneurs WHERE member_id=?');$query->execute([$matches[1]]);$name=$query->fetchColumn();
         if(!$name) response(['message'=>'NIC image not found.'],404);
-        $file=__DIR__.'/../private/nic/'.basename((string)$name);if(!is_file($file)) response(['message'=>'NIC image not found.'],404);
+        $file=private_path('nic/'.basename((string)$name));if(!is_file($file)) response(['message'=>'NIC image not found.'],404);
         header('Content-Type: '.(mime_content_type($file) ?: 'image/jpeg'));header('Content-Length: '.filesize($file));readfile($file);exit;
     }
     if (preg_match('#^/admin/registrations/(\d+)/(approve|reject)$#', $path, $matches) && $method === 'POST') {
@@ -232,7 +252,10 @@ try {
         if (!$request) { $pdo->rollBack(); response(['message' => 'This registration was already reviewed or does not exist.'], 404); }
         if ($decision === 'reject') {
             if(mb_strlen($note)<3){$pdo->rollBack();response(['message'=>'Add a short rejection reason so the decision is recorded clearly.'],422);}
-            $pdo->prepare("UPDATE registration_requests SET status='rejected',admin_note=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$note,$admin['id'],$id]); $pdo->commit(); response(['message' => 'Application rejected and kept in the registration history.']);
+            $pdo->prepare("UPDATE registration_requests SET status='rejected',admin_note=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$note,$admin['id'],$id]);
+            $pdo->commit();
+            $emailSent=registration_decision_email($request,'rejected');
+            response(['message' => $emailSent?'Application rejected. The applicant was notified by email.':'Application rejected, but the notification email could not be sent. Check the server mail configuration.','emailSent'=>$emailSent]);
         }
         $check = $pdo->prepare('SELECT COUNT(*) FROM users WHERE email = ?'); $check->execute([$request['email']]);
         if ((int)$check->fetchColumn()) { $pdo->rollBack(); response(['message' => 'A user already exists with this email.'], 409); }
@@ -243,8 +266,9 @@ try {
         $entrepreneurInsert->execute([$userId,$memberId,$request['full_name'],$request['email'],$request['nic'],$request['nic_front_path'] ?: $request['nic_image_path'],$request['phone'],$request['address'],$request['city']]);
         $pdo->prepare("UPDATE registration_requests SET status='approved',admin_note=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$note ?: null,$admin['id'],$id]);
         $pdo->commit();
+        $emailSent=registration_decision_email($request,'approved',$memberId);
         $activationMessage="Hello {$request['full_name']}, your CAMY entrepreneur account has been approved. Your username is {$request['email']}. Please use the password you created during registration to sign in. Member ID: $memberId.";
-        response(['message'=>'Registration approved. The entrepreneur can now sign in.','memberId'=>$memberId,'phone'=>$request['phone'],'activationMessage'=>$activationMessage]);
+        response(['message'=>$emailSent?'Registration approved. The entrepreneur was notified by email.':'Registration approved, but the notification email could not be sent. Use the Message button or check the server mail configuration.','memberId'=>$memberId,'phone'=>$request['phone'],'activationMessage'=>$activationMessage,'emailSent'=>$emailSent]);
     }
     if ($path === '/admin/entrepreneurs' && $method === 'POST') {
         $admin=require_admin($pdo);$payload=input();

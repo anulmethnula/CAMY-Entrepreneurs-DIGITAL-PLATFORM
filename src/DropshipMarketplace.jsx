@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { customerProductPrice, deliveryLabel, fullProductCost, payableDeliveryCost } from './productCosts'
-import { AlertCircle, ArrowRight, BadgeDollarSign, Banknote, CalendarDays, Check, CheckCircle2, CircleDollarSign, ClipboardList, Download, Eye, FileText, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, UserRound, X } from 'lucide-react'
+import { AlertCircle, ArrowRight, BadgeDollarSign, Banknote, CalendarDays, Check, CheckCircle2, ChevronDown, CircleDollarSign, ClipboardList, Download, Eye, FileSpreadsheet, FileText, ListFilter, LockKeyhole, PackageCheck, PackageOpen, RefreshCw, Search, ShieldCheck, ShoppingCart, Trash2, Truck, UserRound, X } from 'lucide-react'
 import { api } from './api'
 import { creditProgression } from './creditRules'
 import { PortalOverlay } from './Dialog'
@@ -82,24 +82,27 @@ function CreditSensor({ person, tiers = [], orders = [] }) {
   </section>
 }
 
-export function DropshipOrderPage({ products = [], person, notify, catalogueLive, orders = [], tiers = [], setPage }) {
+export function DropshipOrderPage({ products = [], person, notify, catalogueLive, orders = [], tiers = [], setPage, workspaceView = 'catalogue', setWorkspaceView, catalogueMode = false }) {
   const cartStorageKey = `camy-dropship-cart-${person?.id || 'current'}`
   const [cart, setCart] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem(cartStorageKey)) || [] } catch { return [] }
   })
+  const cartRef = useRef(cart)
   const [client, setClient] = useState(blankClient)
   const [busy, setBusy] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [category, setCategory] = useState('All products')
   const [catalogueQuery, setCatalogueQuery] = useState('')
   const [detailProduct, setDetailProduct] = useState(null)
-  const [mobileCheckout, setMobileCheckout] = useState(false)
+  const mobileCheckout = workspaceView === 'cart'
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [addedProductId, setAddedProductId] = useState(null)
+  const [mobileOverviewOpen, setMobileOverviewOpen] = useState(false)
+  const [catalogueQuantities, setCatalogueQuantities] = useState({})
 
   const categories = useMemo(() => ['All products', ...Array.from(new Set(products.map(product => product.category).filter(Boolean)))], [products])
-  const visibleProducts = useMemo(() => products.filter(product => (category === 'All products' || product.category === category) && `${product.name} ${product.code||''} ${product.category||''} ${product.description||''}`.toLowerCase().includes(catalogueQuery.trim().toLowerCase())), [products, category, catalogueQuery])
+  const visibleProducts = useMemo(() => products.filter(product => (!catalogueMode || Number(product.stock) > 0) && (category === 'All products' || product.category === category) && `${product.name} ${product.code||''} ${product.category||''} ${product.description||''}`.toLowerCase().includes(catalogueQuery.trim().toLowerCase())), [products, category, catalogueQuery, catalogueMode])
 
   const selected = useMemo(() => cart.map(item => {
     const product = products.find(product => String(product.id) === String(item.productId))
@@ -107,6 +110,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   }).filter(Boolean), [cart, products])
 
   useEffect(() => {
+    cartRef.current=cart
     try { sessionStorage.setItem(cartStorageKey, JSON.stringify(cart)) } catch { /* The order remains usable if browser storage is unavailable. */ }
   }, [cart, cartStorageKey])
 
@@ -133,18 +137,32 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
     window.setTimeout(() => setRefreshing(false), 800)
   }
 
-  const add = product => {
-    setCart(old => {
-      const found = old.find(item => String(item.productId) === String(product.id))
-      return found
-        ? old.map(item => item === found ? { ...item, qty: item.qty + 1 } : item)
-        : [...old, { productId: product.id, qty: 1, sellPrice: Number(product.price) }]
-    })
+  const catalogueQuantity = product => Math.max(1, Math.min(Number(product.stock) || 1, Number(catalogueQuantities[product.id]) || 1))
+  const setCatalogueQuantity = (product, value) => setCatalogueQuantities(old => ({ ...old, [product.id]: Math.max(1, Math.min(Number(product.stock) || 1, Number(value) || 1)) }))
+  const add = (product, requestedQuantity = 1) => {
+    const quantity=Math.max(1,Math.floor(Number(requestedQuantity)||1))
+    const available=Math.max(0,Number(product.stock)||0)
+    const current=cartRef.current
+    const found=current.find(item=>String(item.productId)===String(product.id))
+    const nextQuantity=Number(found?.qty||0)+quantity
+    if(nextQuantity>available){notify?.(`Only ${available} units of ${product.name} are available.`);return}
+    const next=found
+      ? current.map(item => String(item.productId) === String(product.id) ? { ...item, qty: nextQuantity } : item)
+      : [...current, { productId: product.id, qty: quantity, sellPrice: Number(product.price) }]
+    cartRef.current=next
+    setCart(next)
+    setCatalogueQuantities(old=>({...old,[product.id]:1}))
     setAddedProductId(product.id)
+    notify?.(`${quantity} × ${product.name} added to the current order.`)
     window.setTimeout(() => setAddedProductId(current => String(current) === String(product.id) ? null : current), 1100)
   }
 
-  const update = (productId, patch) => setCart(old => old.map(item => String(item.productId) === String(productId) ? { ...item, ...patch } : item))
+  const update = (productId, patch) => setCart(old => old.map(item => {
+    if(String(item.productId)!==String(productId))return item
+    const product=products.find(entry=>String(entry.id)===String(productId))
+    const safePatch=patch.qty===undefined?patch:{...patch,qty:Math.max(1,Math.min(Number(product?.stock)||1,Number(patch.qty)||1))}
+    return {...item,...safePatch}
+  }))
 
   const updateSellPrice = (productId, value) => {
     const numericText = value.replace(/[^\d.]/g, '')
@@ -177,7 +195,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
       setClient(blankClient)
       setSubmitAttempted(false)
       setSubmitError('')
-      setMobileCheckout(false)
+      setWorkspaceView?.('catalogue')
       window.dispatchEvent(new Event('camy-business-updated'))
       window.setTimeout(() => setPage?.('orders'), 1400)
     } catch (error) {
@@ -191,11 +209,11 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   const canSubmit = catalogueLive && selected.length > 0 && !validationError && !busy
   const continueMessage = !selected.length ? 'Add a product to continue' : validationError || ''
   const showMobileCheckout = () => {
-    setMobileCheckout(true)
+    setWorkspaceView?.('cart')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
   const showMobileCatalogue = () => {
-    setMobileCheckout(false)
+    setWorkspaceView?.('catalogue')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -205,22 +223,19 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
 
   useEffect(() => {
     const openOrderCart = () => {
-      if (window.matchMedia('(max-width: 720px)').matches) {
-        showMobileCheckout()
-        return
-      }
-      document.querySelector('.dropship-checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      showMobileCheckout()
     }
     window.addEventListener('camy-open-order-cart', openOrderCart)
     return () => window.removeEventListener('camy-open-order-cart', openOrderCart)
   }, [])
 
   return <div className={`content-page market-page stock-buy-page dropship-order-page ${mobileCheckout ? 'mobile-checkout-page' : ''}`}>
-    <section className="order-workspace-head">
-      <div><small>CAMY ENTREPRENEURS</small><h1>New client order</h1><p>Create a customer order using CAMY products.</p></div>
-      <button type="button" onClick={()=>setPage?.('orders')}><ClipboardList size={17}/> My orders <b>{orders.length}</b></button>
+    <section className={`order-workspace-head ${mobileOverviewOpen ? 'mobile-overview-open' : ''}`}>
+      <div className="order-title-copy"><small>CAMY ENTREPRENEURS</small><h1>{catalogueMode?'Available products':'New client order'}</h1><p>{catalogueMode?'Browse live CAMY stock and add the quantity you need to the same customer-order cart.':'Create a customer order using CAMY products.'}</p></div>
+      <button className="order-overview-toggle" type="button" aria-expanded={mobileOverviewOpen} aria-controls="order-workflow" onClick={()=>setMobileOverviewOpen(open=>!open)}>Details <ChevronDown size={16}/></button>
+      <button className="order-history-link" type="button" onClick={()=>setPage?.('orders')}><ClipboardList size={17}/> My orders <b>{orders.length}</b></button>
     </section>
-    <nav className="order-progress" aria-label="Order workflow">
+    <nav id="order-workflow" className={`order-progress ${mobileOverviewOpen ? 'mobile-overview-open' : ''}`} aria-label="Order workflow">
       <span className={selected.length ? 'done' : 'active'}><i>{selected.length ? <Check/> : 1}</i>Select products</span>
       <span className={selected.length && !validationError ? 'done' : selected.length ? 'active' : ''}><i>{selected.length && !validationError ? <Check/> : 2}</i>Client details</span>
       <span className={selected.length && !validationError ? 'active' : ''}><i>3</i>Review order</span>
@@ -229,7 +244,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
 
     {!catalogueLive && <div className="market-warning">CAMY Admin must activate the verified catalogue before entrepreneurs can submit orders.</div>}
 
-    {selected.length > 0 && (
+    {selected.length > 0 && !mobileCheckout && (
       <button className="mobile-order-cart" type="button" onClick={showMobileCheckout}>
         <ShoppingCart size={19}/>
         <span>
@@ -241,8 +256,8 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
       </button>
     )}
 
-    <div className="stock-buy-layout">
-      <section>
+    <div className={`stock-buy-layout ${mobileCheckout ? 'cart-only-layout' : ''}`}>
+      {!mobileCheckout && <section>
         <div className="stock-catalogue-title"><div><small>PRODUCT SELECTION</small><h2>Choose products</h2><p>Browse the CAMY catalogue and add products to this client order.</p></div><span><PackageCheck size={16}/> {visibleProducts.filter(product => Number(product.stock) > 0).length} available</span></div>
         <div className="catalogue-browser"><label><Search/><input value={catalogueQuery} onChange={event=>setCatalogueQuery(event.target.value)} placeholder="Search products..." aria-label="Search products"/></label><div>{categories.map(item=><button type="button" className={category===item?'active':''} onClick={()=>setCategory(item)} key={item}>{item === 'All products' ? 'All' : item}</button>)}</div></div>
         <div className="stock-product-grid">{visibleProducts.map(product => {
@@ -250,18 +265,19 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
           const available = Number(product.stock) > 0
           return <article className="stock-product-card" key={product.id}>
             <button className="stock-product-image" type="button" onClick={()=>setDetailProduct(product)}><img src={product.image} alt={product.name}/><span>{product.category}</span></button>
-            <div className="stock-product-copy"><small>{product.code || product.category}</small><h3>{product.name}</h3><p>{product.description || 'CAMY product available for entrepreneur sales.'}</p><div className={`stock-product-delivery ${product.freeDelivery===false?'has-charge':''}`}><Truck size={13}/><span>{deliveryLabel(product)}</span></div>
-              <div className="stock-product-meta"><span className={available ? 'available' : 'unavailable'}><i/> {available ? 'Available' : 'Unavailable'}</span><strong>{money(customerProductPrice(product))}</strong></div>
-              <div className="stock-product-actions"><button className="stock-details" type="button" onClick={()=>setDetailProduct(product)}>View details</button><button className={`market-primary ${String(addedProductId)===String(product.id)?'added':''}`} disabled={!available} onClick={() => add(product)}>{String(addedProductId)===String(product.id) ? <><Check size={15}/> Added</> : <>{inCart ? `Add another (${inCart.qty})` : 'Add to order'} <ArrowRight size={15}/></>}</button></div>
+            <div className="stock-product-copy"><small>{product.code || product.category}</small><h3>{product.name}</h3><p>{product.description || 'CAMY product available for entrepreneur sales.'}</p>{product.freeDelivery===false&&<div className="stock-product-delivery has-charge"><Truck size={13}/><span>{deliveryLabel(product)}</span></div>}
+              <div className="stock-product-meta"><span className={available ? 'available' : 'unavailable'}><i/> {available ? catalogueMode?`${product.stock} available`:'Available' : 'Unavailable'}</span><strong>{money(customerProductPrice(product))}</strong></div>
+              {catalogueMode&&<div className="catalogue-card-quantity"><span>Quantity</span><div><button type="button" aria-label={`Reduce ${product.name} quantity`} disabled={catalogueQuantity(product)<=1} onClick={()=>setCatalogueQuantity(product,catalogueQuantity(product)-1)}>−</button><input aria-label={`${product.name} quantity`} type="number" min="1" max={product.stock} value={catalogueQuantity(product)} onChange={event=>setCatalogueQuantity(product,event.target.value)}/><button type="button" aria-label={`Increase ${product.name} quantity`} disabled={catalogueQuantity(product)>=Number(product.stock)} onClick={()=>setCatalogueQuantity(product,catalogueQuantity(product)+1)}>+</button></div></div>}
+              <div className="stock-product-actions"><button className="stock-details" type="button" onClick={()=>setDetailProduct(product)}>View details</button><button className={`market-primary ${String(addedProductId)===String(product.id)?'added':''}`} disabled={!available} onClick={() => add(product,catalogueMode?catalogueQuantity(product):1)}>{String(addedProductId)===String(product.id) ? <><Check size={15}/> Added</> : <>{inCart ? `Add to cart (${inCart.qty})` : catalogueMode?'Add to cart':'Add to order'} <ArrowRight size={15}/></>}</button></div>
             </div>
           </article>
         })}</div>{!visibleProducts.length&&<div className="catalogue-no-results">No products found. Try another category or search term.</div>}
-      </section>
+      </section>}
 
       <aside className={`market-checkout stock-request-card dropship-checkout ${mobileCheckout ? 'mobile-open' : ''}`}>
-        <header><span><ShoppingCart size={19}/></span><div><small>YOUR WORKSPACE</small><h2>Current order <b>{itemCount}</b></h2></div><button className="mobile-checkout-back" type="button" onClick={showMobileCatalogue} aria-label="Back to products"><X size={19}/></button></header>
+        <header><span><ShoppingCart size={19}/></span><div><small>CUSTOMER ORDER CART</small><h2>Your cart <b>{itemCount}</b></h2></div><button className="cart-back-to-products" type="button" onClick={showMobileCatalogue} aria-label="Back to products"><ArrowRight size={17}/> Continue shopping</button></header>
         {selected.length ? <div className="current-order-items">{selected.map(item => <div className="market-line dropship-order-line" key={item.productId}>
-          <div className="dropship-line-heading"><img src={item.product.image} alt=""/><div className="dropship-line-product"><strong>{item.product.name}</strong><small>{item.product.code || item.product.category}</small><small>Product: {money(customerProductPrice(item.product))} each</small>{item.product.freeDelivery===false&&<small className="cart-delivery-charge">Delivery: {money(payableDeliveryCost(item.product))} each</small>}<small className="cart-line-full">Full CAMY total: {money(fullProductCost(item.product))} each</small></div><button className="dropship-remove" type="button" onClick={() => setCart(old => old.filter(entry => String(entry.productId) !== String(item.productId)))} aria-label={`Remove ${item.product.name}`} title="Remove item"><Trash2 size={16}/></button></div>
+          <div className="dropship-line-heading"><img src={item.product.image} alt=""/><div className="dropship-line-product"><strong>{item.product.name}</strong><small>{item.product.code || item.product.category}</small><small>Product: {money(customerProductPrice(item.product))} each</small>{item.product.freeDelivery===false&&<small className="cart-delivery-charge">{deliveryLabel(item.product)}{payableDeliveryCost(item.product)>0?' each':''}</small>}<small className="cart-line-full">Full CAMY total: {money(fullProductCost(item.product))} each</small></div><button className="dropship-remove" type="button" onClick={() => setCart(old => old.filter(entry => String(entry.productId) !== String(item.productId)))} aria-label={`Remove ${item.product.name}`} title="Remove item"><Trash2 size={16}/></button></div>
           <div className="dropship-line-controls"><label className="dropship-selling-price">Your client price per item<span className="dropship-price-input"><b>Rs.</b><input type="text" inputMode="decimal" autoComplete="off" value={item.sellPrice} onChange={event => updateSellPrice(item.productId,event.target.value)} onBlur={() => { if (item.sellPrice === '') update(item.productId,{sellPrice:String(item.product.price)}) }} aria-label={`Client selling price for ${item.product.name}`}/></span><small className="dropship-price-help">My profit: <strong>{money(Math.max(0,(Number(item.sellPrice)-Number(item.product.price))*Number(item.qty)))}</strong></small></label>
           <label className="dropship-quantity">Quantity<span className="dropship-stepper"><button type="button" aria-label={`Reduce quantity for ${item.product.name}`} disabled={Number(item.qty)<=1} onClick={()=>update(item.productId,{qty:Math.max(1,Number(item.qty)-1)})}>−</button><input aria-label={`Quantity for ${item.product.name}`} type="number" min="1" value={item.qty} onChange={event => update(item.productId, { qty: Math.max(1, Number(event.target.value) || 1) })}/><button type="button" aria-label={`Increase quantity for ${item.product.name}`} onClick={()=>update(item.productId,{qty:Number(item.qty)+1})}>+</button></span></label></div>
         </div>)}</div> : <div className="stock-cart-empty"><span><ShoppingCart size={24}/></span><strong>Your order is empty</strong><p>Select a product from the catalogue to start creating this client order.</p></div>}
@@ -284,7 +300,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
       </aside>
     </div>
 
-    {detailProduct&&<PortalOverlay className="catalogue-detail-layer" onClose={()=>setDetailProduct(null)} label={`${detailProduct.name} details`}><article><button type="button" className="catalogue-detail-close" onClick={()=>setDetailProduct(null)} aria-label="Close product details"><X/></button><img src={detailProduct.image} alt={detailProduct.name}/><div><small>{detailProduct.category} · {detailProduct.code||'CAMY product'}</small><h2>{detailProduct.name}</h2><strong>{money(customerProductPrice(detailProduct))}</strong><p className={`stock-product-delivery ${detailProduct.freeDelivery===false?'has-charge':''}`}><Truck size={16}/>{deliveryLabel(detailProduct)}</p><p>{detailProduct.description||'CAMY product available for entrepreneur sales.'}</p><div className="catalogue-detail-meta"><span><b>Product code</b>{detailProduct.code||'Not set'}</span><span><b>Warranty</b>{detailProduct.warranty||'Ask CAMY'}</span><span><b>Availability</b>{Number(detailProduct.stock)>0?`${detailProduct.stock} in stock`:'Currently unavailable'}</span></div><h3>Product features</h3><ul>{(productFeatures(detailProduct).length?productFeatures(detailProduct):['CAMY quality assured','Available through CAMY']).map(spec=><li key={spec}>{spec}</li>)}</ul><button className="market-primary" disabled={Number(detailProduct.stock)<=0} onClick={()=>{add(detailProduct);setDetailProduct(null)}}>{Number(detailProduct.stock)>0?'Add to client order':'Currently unavailable'} <ArrowRight/></button></div></article></PortalOverlay>}
+    {detailProduct&&<PortalOverlay className="catalogue-detail-layer" onClose={()=>setDetailProduct(null)} label={`${detailProduct.name} details`}><article><button type="button" className="catalogue-detail-close" onClick={()=>setDetailProduct(null)} aria-label="Close product details"><X/></button><img src={detailProduct.image} alt={detailProduct.name}/><div><small>{detailProduct.category} · {detailProduct.code||'CAMY product'}</small><h2>{detailProduct.name}</h2><strong>{money(customerProductPrice(detailProduct))}</strong>{detailProduct.freeDelivery===false&&<p className="stock-product-delivery has-charge"><Truck size={16}/>{deliveryLabel(detailProduct)}</p>}<p>{detailProduct.description||'CAMY product available for entrepreneur sales.'}</p><div className="catalogue-detail-meta"><span><b>Product code</b>{detailProduct.code||'Not set'}</span><span><b>Warranty</b>{detailProduct.warranty||'Ask CAMY'}</span><span><b>Availability</b>{Number(detailProduct.stock)>0?`${detailProduct.stock} in stock`:'Currently unavailable'}</span></div><h3>Product features</h3><ul>{(productFeatures(detailProduct).length?productFeatures(detailProduct):['CAMY quality assured','Available through CAMY']).map(spec=><li key={spec}>{spec}</li>)}</ul><button className="market-primary" disabled={Number(detailProduct.stock)<=0} onClick={()=>{add(detailProduct);setDetailProduct(null)}}>{Number(detailProduct.stock)>0?'Add to client order':'Currently unavailable'} <ArrowRight/></button></div></article></PortalOverlay>}
     <section className="market-history stock-request-history">
       <div><small>DELIVERY UPDATES</small><h2>My CAMY orders</h2><button className="market-primary" onClick={refresh} disabled={refreshing}><RefreshCw size={15}/> {refreshing ? 'Refreshing…' : 'Refresh'}</button></div>
       {orders.length ? [...orders].sort((a,b)=>String(b.createdAt||b.date).localeCompare(String(a.createdAt||a.date))).map(order => <article className="stock-tracker-entry dropship-money-entry" key={order.id}>
@@ -298,6 +314,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
 function CreditRequestCentre({ requests, products, cancellingId, cancelRequest, requestExtension, onPayRequest, setPage }) {
   const [selected,setSelected]=useState(null), [status,setStatus]=useState('All'), [query,setQuery]=useState(''), [from,setFrom]=useState(''), [to,setTo]=useState('')
   const [datePreset,setDatePreset]=useState('all')
+  const [mobileFiltersOpen,setMobileFiltersOpen]=useState(false)
   const [extensionDate,setExtensionDate]=useState(''), [extensionReason,setExtensionReason]=useState(''), [extensionBusy,setExtensionBusy]=useState(false)
   const [,setCountdownTick]=useState(0)
   useEffect(()=>{const timer=setInterval(()=>setCountdownTick(value=>value+1),60000);return()=>clearInterval(timer)},[])
@@ -323,14 +340,15 @@ function CreditRequestCentre({ requests, products, cancellingId, cancelRequest, 
       </>}
     </section>
   }
-  return <section className="credit-request-centre"><header><div><small>CREDIT REQUEST HISTORY</small><h2>My credit requests</h2><p>Open a request to view products, CAMY progress and repayment details.</p></div><b>{requests.length} request{requests.length===1?'':'s'}</b></header>
-    <section className="credit-request-filter-panel" aria-label="Credit order filters">
+  return <section className="credit-request-centre">
+    <button type="button" className="credit-request-mobile-filter-toggle" aria-expanded={mobileFiltersOpen} aria-controls="credit-order-filter-panel" onClick={()=>setMobileFiltersOpen(open=>!open)}><span><ListFilter/><span><small>FILTER ORDERS</small><strong>{filterSummary}</strong></span></span><span>{visible.length} result{visible.length===1?'':'s'} <ChevronDown/></span></button>
+    <section id="credit-order-filter-panel" className={`credit-request-filter-panel${mobileFiltersOpen?' mobile-open':''}`} aria-label="Credit order filters">
       <div className="credit-request-filter-heading"><div><small>FILTER BY STATUS</small><strong>Choose an order stage</strong></div><span>{visible.length} matching request{visible.length===1?'':'s'}</span></div>
-      <div className="credit-request-status-filters" role="group" aria-label="Filter requests by status">{statuses.map(item=><button type="button" className={`${item.toLowerCase()}${status===item?' active':''}`} aria-pressed={status===item} key={item} onClick={()=>setStatus(item)}><span><i/>{item}</span><strong>{statusCounts[item]}</strong></button>)}</div>
+      <div className="credit-request-status-filters" role="group" aria-label="Filter requests by status">{statuses.map(item=><button type="button" className={`${item.toLowerCase()}${status===item?' active':''}`} aria-pressed={status===item} key={item} onClick={()=>{setStatus(item);setMobileFiltersOpen(false)}}><span><i/>{item}</span><strong>{statusCounts[item]}</strong></button>)}</div>
       <div className="credit-request-tools"><label className="credit-request-search"><span>Search request</span><div><Search/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Enter request number"/></div></label><label>From date<input type="date" value={from} onChange={event=>{setFrom(event.target.value);setDatePreset('custom')}}/></label><label>To date<input type="date" min={from} value={to} onChange={event=>{setTo(event.target.value);setDatePreset('custom')}}/></label><button type="button" onClick={clear}>Clear all</button></div>
       <div className="credit-request-date-shortcuts"><span>Quick date</span>{[['all','All dates'],['today','Today'],['week','Last 7 days'],['month','This month']].map(([value,label])=><button type="button" className={datePreset===value?'active':''} aria-pressed={datePreset===value} key={value} onClick={()=>setDateRange(value)}>{label}</button>)}</div>
     </section>
-    <div className="credit-request-export"><span><Download/></span><div><strong>Export only the filtered requests shown below</strong><small>{visible.length} of {requests.length} requests · {filterSummary}</small></div><button type="button" disabled={!visible.length} onClick={()=>exportReport(`camy-credit-requests-${from||'all'}-${to||'dates'}.xlsx`,visible.map(request=>({request:request.id,status:request.status,requestedAt:request.createdAt,lastUpdated:request.updatedAt||request.reviewedAt,total:Number(request.total||0),products:(request.items||[]).length,units:(request.items||[]).reduce((sum,item)=>sum+Number(item.qty||0),0),dispatchedAt:request.creditIssuedAt||'',paymentDue:request.creditDueAt||''})))}><Download/> Download {visible.length} row{visible.length===1?'':'s'}</button></div>
+    <div className="credit-request-export"><span><FileSpreadsheet/></span><div><strong>Export filtered credit orders</strong><small>{visible.length} of {requests.length} requests · {filterSummary}</small></div><button type="button" disabled={!visible.length} onClick={()=>exportReport(`camy-credit-requests-${from||'all'}-${to||'dates'}.xlsx`,visible.map(request=>({request:request.id,status:request.status,requestedAt:request.createdAt,lastUpdated:request.updatedAt||request.reviewedAt,total:Number(request.total||0),products:(request.items||[]).length,units:(request.items||[]).reduce((sum,item)=>sum+Number(item.qty||0),0),dispatchedAt:request.creditIssuedAt||'',paymentDue:request.creditDueAt||''})))}><FileSpreadsheet/> Download Excel</button></div>
     {visible.length?<div className="credit-request-compact-list">{visible.map(request=>{const units=(request.items||[]).reduce((sum,item)=>sum+Number(item.qty||0),0),countdown=creditRepaymentCountdown(request);return <article className={`${String(request.status).toLowerCase()} ${countdown&&countdown.days<0?'credit-overdue':countdown?.days===0?'credit-due-today':''}`.trim()} key={request.id}><span><PackageCheck/></span><div><small>REQUEST</small><strong>{request.id}</strong><p>{requestDate(request.createdAt)}</p></div><div><small>VALUE</small><strong>{money(request.total)}</strong><p>{(request.items||[]).length} products · {units} units</p></div><div><small>STATUS</small><span className={`market-status ${String(request.status).toLowerCase()}`}>{request.status}</span></div><div className="credit-request-row-note"><small>{request.status==='Dispatched'?'REPAYMENT COUNTDOWN':'NEXT STEP'}</small><strong>{creditRequestNextStep(request)}</strong></div><button type="button" onClick={()=>setSelected(request)}><Eye/> View request</button></article>})}</div>:<div className="credit-request-empty"><PackageOpen/><h3>No matching requests</h3><p>Change the status, search or date filters.</p></div>}
   </section>
 }
@@ -345,6 +363,7 @@ export function CreditStockPage({ products = [], person, tiers = [], requests = 
   const [category,setCategory]=useState('All products')
   const [sort,setSort]=useState('Recommended')
   const [selectedProduct,setSelectedProduct]=useState(null)
+  const [mobileCreditOverviewOpen,setMobileCreditOverviewOpen]=useState(false)
   const mine=requests.filter(request=>String(request.entrepreneurId)===String(person?.id) && request.creditMode===true)
   const configuredCredit=tiers.length?creditProgression(tiers,person?.sales).credit:Number(person?.credit||0)
   const creditEligible=configuredCredit>0 && person?.stage!=='Departed' && person?.active!==false
@@ -394,11 +413,13 @@ export function CreditStockPage({ products = [], person, tiers = [], requests = 
     try{await cancel?.(request.id)}finally{setCancellingId('')}
   }
 
-  return <div className={`content-page market-page stock-buy-page ${requestsOnly?'credit-requests-only':'credit-catalogue-page'}`}>
+  return <div className={`content-page market-page stock-buy-page ${requestsOnly?'credit-requests-only':'credit-catalogue-page'} ${mobileCreditOverviewOpen?'credit-overview-open':''}`}>
     {requestsOnly&&<section className="credit-requests-page-head"><button type="button" onClick={()=>setPage?.('credit-stock')}>← Back to credit stock</button><div><small>CREDIT STOCK</small><h1>Credit orders</h1><p>Review every credit order, approval, dispatch, due date and payment update in one place.</p></div></section>}
-    <section className="credit-stock-page-actions"><div><small>MY INVENTORY</small><strong>See all CAMY products currently issued to you</strong></div><button type="button" onClick={()=>setPage?.('credit-inventory')}><PackageOpen/> View my stock <ArrowRight/></button></section>
-    <section className="stock-buy-hero credit-stock-hero"><div><small>PHASE 2 · OPTIONAL CREDIT STOCK</small><h1>Use credit when it<br/><em>fits your business.</em></h1><p>Credit-eligible entrepreneurs can choose either method at any time: keep placing normal CAMY drop-ship COD orders, or request physical CAMY stock on credit. Using credit stock does not disable drop-shipping.</p></div><div className="stock-buy-steps"><span><i>1</i>Choose stock</span><span><i>2</i>CAMY approves</span><span><i>3</i>Credit balance starts on dispatch</span></div></section>
+    {!requestsOnly&&<button className="credit-mobile-details-toggle" type="button" aria-expanded={mobileCreditOverviewOpen} aria-controls="credit-mobile-overview" onClick={()=>setMobileCreditOverviewOpen(open=>!open)}><span><small>CREDIT ITEMS</small><strong>{mobileCreditOverviewOpen?'Hide credit details':'View credit details'}</strong></span><ChevronDown size={18}/></button>}
+    <div id="credit-mobile-overview" className="credit-mobile-overview">
+    <section className="stock-buy-hero credit-stock-hero"><div><small>PHASE 2 · OPTIONAL CREDIT STOCK</small><h1>Use credit when it<br/><em>fits your business.</em></h1><p>Credit-eligible entrepreneurs can choose either method at any time: keep placing normal CAMY drop-ship COD orders, or request physical CAMY stock on credit. Using credit stock does not disable drop-shipping.</p><button className="credit-stock-hero-action" type="button" onClick={()=>setPage?.('credit-inventory')}><PackageOpen/> View my stock <ArrowRight/></button></div><div className="stock-buy-steps"><span><i>1</i>Choose stock</span><span><i>2</i>CAMY approves</span><span><i>3</i>Credit balance starts on dispatch</span></div></section>
     <section className="shop-home-stats"><article><small>CREDIT LIMIT</small><strong>{money(person?.credit)}</strong><p>Your current CAMY limit</p></article><article><small>OUTSTANDING</small><strong>{money(used)}</strong><p>Credit already issued to you</p></article><article><small>AVAILABLE FOR NEW REQUESTS</small><strong>{money(available)}</strong><p>{money(activeCommitment)} temporarily reserved by pending/approved requests</p></article></section>
+    </div>
 
     {!creditEligible&&<section className="credit-stock-lock"><LockKeyhole/><div><h2>Credit stock is not unlocked yet</h2><p>You can continue using drop-shipping normally. Once your verified CAMY product selling value reaches the first credit tier, this page unlocks automatically.</p></div></section>}
     {!catalogueLive&&<div className="market-warning">CAMY Admin must activate the real catalogue before credit stock requests can be submitted.</div>}
@@ -553,6 +574,7 @@ function LegacyDropshipHome({ person, orders = [], tiers = [], setPage }) {
 }
 
 export function DropshipHome({ person, orders = [], setPage, openOrders }) {
+  const [mobileToolsOpen,setMobileToolsOpen]=useState(false)
   const myOrders=orders.filter(order=>String(order.entrepreneurId)===String(person?.id))
   const inProgress=myOrders.filter(order=>!['Delivered','Returned','Rejected','Cancelled'].includes(order.status))
   const delivered=myOrders.filter(order=>order.status==='Delivered')
@@ -562,16 +584,34 @@ export function DropshipHome({ person, orders = [], setPage, openOrders }) {
   const creditEligible=Number(person?.credit||0)>0
   const availableCredit=Math.max(0,Number(person?.credit||0)-Number(person?.used||0))
   const firstName=person?.name?.split(' ')[0]||'Partner'
+  const closedOrders=myOrders.filter(order=>['Delivered','Returned'].includes(order.status))
+  const deliveryRate=closedOrders.length?Math.round((delivered.length/closedOrders.length)*100):100
+  const nextAction=inProgress.length
+    ? { icon: Truck, label: 'Follow active deliveries', detail: `${inProgress.length} order${inProgress.length===1?' is':'s are'} moving through fulfilment`, action: ()=>openOrders?.('Active') }
+    : { icon: ShoppingCart, label: 'Create your next sale', detail: 'The live catalogue is ready for your next client', action: ()=>setPage('products') }
+  const NextActionIcon=nextAction.icon
   return <div className="content-page entrepreneur-overview">
-    <section className="home-welcome"><div><small>YOUR CAMY BUSINESS</small><h1>Good to see you, {firstName}.</h1><p>Here is the important picture today. Open a section below when you need its full details.</p></div><button type="button" onClick={()=>setPage('products')}><ShoppingCart/> Create client order <ArrowRight/></button></section>
+    <section className="home-welcome"><div><small>YOUR CAMY BUSINESS</small><h1>Good to see you, <em>{firstName}.</em></h1><p>Everything you need to sell, track orders and grow your CAMY business — all in one place.</p><span className="home-live-pill"><i/> Business overview is up to date</span></div><button type="button" onClick={()=>setPage('products')}><ShoppingCart/> Create client order <ArrowRight/></button></section>
+    <nav className="home-quick-actions" aria-label="Quick actions">
+      <button type="button" onClick={()=>setPage('products')}><ShoppingCart/><span>New order</span></button>
+      <button type="button" onClick={()=>openOrders?.('Active')}><Truck/><span>Track</span>{inProgress.length>0&&<b>{inProgress.length}</b>}</button>
+      <button type="button" onClick={()=>setPage('earnings')}><BadgeDollarSign/><span>Earnings</span></button>
+      <button type="button" onClick={()=>setPage('credit')}><PackageCheck/><span>Credit</span></button>
+    </nav>
     <section className="home-essential-stats">
       <button type="button" onClick={()=>openOrders?.('Active')}><span><Truck/></span><div><small>ACTIVE ORDERS</small><strong>{inProgress.length}</strong><p>{delivered.length} successfully delivered</p></div><ArrowRight/></button>
       <button type="button" onClick={()=>setPage('earnings')}><span><BadgeDollarSign/></span><div><small>YOUR VERIFIED EARNINGS</small><strong>{money(lifetimeMargin)}</strong><p>{money(paidMargin)} transferred by CAMY</p></div><ArrowRight/></button>
       <button type="button" onClick={()=>setPage('credit')}><span><PackageCheck/></span><div><small>AVAILABLE CREDIT</small><strong>{money(availableCredit)}</strong><p>{creditEligible?'View your credit balance and repayments':'Unlocks through verified earnings'}</p></div><ArrowRight/></button>
       <button type="button" onClick={()=>setPage('earnings')}><span><CircleDollarSign/></span><div><small>RECEIVABLE COMMISSION</small><strong>{money(pendingMargin)}</strong><p>Commission ready for transfer</p></div><ArrowRight/></button>
     </section>
+    <section className="home-business-pulse">
+      <header><div><small>BUSINESS PULSE</small><h2>Your progress at a glance</h2></div><span>{deliveryRate}% delivery success</span></header>
+      <div className="home-pulse-progress"><i style={{width:`${deliveryRate}%`}}/></div>
+      <button type="button" onClick={nextAction.action}><span><NextActionIcon/></span><div><small>NEXT BEST ACTION</small><strong>{nextAction.label}</strong><p>{nextAction.detail}</p></div><ArrowRight/></button>
+    </section>
     {pendingMargin>0&&<section className="home-attention"><span><BadgeDollarSign/></span><div><small>PAYMENT UPDATE</small><strong>{money(pendingMargin)} is waiting for CAMY transfer</strong><p>Open Your Earnings to see each order and payment status.</p></div><button type="button" onClick={()=>setPage('earnings')}>View your earnings <ArrowRight/></button></section>}
-    <section className="home-destinations"><header><small>GO TO</small><h2>What would you like to do?</h2></header><div>
+    <button type="button" className="home-tools-toggle" aria-expanded={mobileToolsOpen} aria-controls="home-business-tools" onClick={()=>setMobileToolsOpen(open=>!open)}><span><PackageOpen/></span><div><strong>More business tools</strong><small>Credit stock, growth and order shortcuts</small></div><ArrowRight/></button>
+    <section id="home-business-tools" className={`home-destinations ${mobileToolsOpen?'mobile-open':''}`}><header><small>GO TO</small><h2>What would you like to do?</h2></header><div>
       <button type="button" onClick={()=>setPage('products')}><span><ShoppingCart/></span><div><strong>Place a client order</strong><small>Choose products and send a COD order to CAMY</small></div><ArrowRight/></button>
       <button type="button" onClick={()=>setPage('orders')}><span><Truck/></span><div><strong>Track your orders</strong><small>View delivery status, invoices and commission receipts</small></div><ArrowRight/></button>
       <button type="button" onClick={()=>setPage('credit-stock')}><span><PackageCheck/></span><div><strong>Manage credit stock</strong><small>Choose products and create a credit-stock request</small></div><ArrowRight/></button>

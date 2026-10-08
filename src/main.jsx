@@ -1,6 +1,9 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import CookieConsent from './CookieConsent'
+import MobileFilterEnhancer from './MobileFilterEnhancer'
+import SeoHead from './SeoHead'
 import './styles.css'
 import './shop.css'
 import './polish.css'
@@ -31,6 +34,16 @@ if (window.location.pathname === '/shops' || window.location.pathname.startsWith
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AppBoundary><App /></AppBoundary>
+    <AppBoundary><SeoHead /><App /><MobileFilterEnhancer /><CookieConsent /></AppBoundary>
   </React.StrictMode>,
 )
+
+// Keep the application shell available when the installed mobile app is
+// reopened with an unreliable connection. API traffic remains network-only.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // The web experience remains fully usable if registration is unavailable.
+    })
+  })
+}

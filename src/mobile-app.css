@@ -1,6 +1,75 @@
 /* CAMY mobile application shell
    Loaded last so every workspace shares one intentional phone experience. */
+
+@media (display-mode: standalone) {
+  html, body { overscroll-behavior-y: none; }
+  body { user-select: none; -webkit-user-select: none; }
+  input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-select: text; }
+}
+
+/* Mobile profile: the app bar already identifies this screen, so avoid a
+   second hero title and keep editing controls with the details they affect. */
 @media (max-width: 760px) {
+  .entrepreneur-shell[data-page="profile"] > main > .content-page > .page-title {
+    display: none !important;
+  }
+
+  .entrepreneur-shell[data-page="profile"] .content-page {
+    padding-top: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="profile"] .profile-form .card-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-direction: row !important;
+    gap: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="profile"] .profile-card-actions {
+    width: auto !important;
+    display: flex !important;
+    grid-template-columns: none !important;
+    flex: 0 0 auto;
+  }
+
+  .entrepreneur-shell[data-page="profile"] .profile-card-actions > svg {
+    display: none !important;
+  }
+
+  .entrepreneur-shell[data-page="profile"] .profile-card-actions button {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 38px !important;
+    padding: 0 11px !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap;
+  }
+}
+
+/* Shared filter disclosure. JavaScript adds this only to established filter
+   panels; desktop keeps the original layouts and phone pages start compact. */
+.mobile-filter-toggle-mount { display: none !important; }
+
+@media (max-width: 760px) {
+  .mobile-filter-toggle-mount { display: block !important; }
+  .mobile-filter-toggle {
+    width: 100%; min-height: 58px; padding: 10px 12px; border: 1px solid #cbdce6;
+    border-radius: 12px; color: #18374e; background: #f8fbfd; box-shadow: 0 4px 14px rgba(19,57,81,.05);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left;
+    font: inherit; cursor: pointer;
+  }
+  .mobile-filter-toggle > span { min-width: 0; display: flex; align-items: center; gap: 10px; }
+  .mobile-filter-toggle > span:first-child > svg { width: 19px; flex: 0 0 19px; color: #176b91; }
+  .mobile-filter-toggle small,.mobile-filter-toggle strong { display: block; }
+  .mobile-filter-toggle small { color: #176b91; font-size: 9px; font-weight: 750; letter-spacing: .07em; }
+  .mobile-filter-toggle strong { margin-top: 3px; color: #18374e; font-size: 12px; font-weight: 700; }
+  .mobile-filter-toggle > span:last-child { flex: 0 0 auto; color: #607487; font-size: 11px; white-space: nowrap; }
+  .mobile-filter-toggle > span:last-child svg { width: 16px; transition: transform .16s ease; }
+  .mobile-filter-toggle > span:last-child svg.rotated { transform: rotate(180deg); }
+  .mobile-collapsible-filter:not(.mobile-filter-open) { display: none !important; }
+  .mobile-collapsible-filter.mobile-filter-open { margin-top: 8px !important; }
+
   :root {
     --mobile-bg: #eef4f8;
     --mobile-surface: #fff;
@@ -138,6 +207,7 @@
   .mobile-nav-v2 button svg { width: 20px !important; height: 20px !important; }
   .mobile-nav-v2 button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mobile-nav-v2 button.active { color: #fff !important; background: rgba(57, 139, 174, .32) !important; }
+  .entrepreneur-shell .mobile-nav-v2 { grid-template-columns: repeat(6, minmax(0,1fr)) !important; }
   .entrepreneur-shell .mobile-nav-v2 .mobile-order-action {
     height: 70px !important;
     min-height: 70px !important;
@@ -235,6 +305,20 @@
   .product-body,.stock-product-body,.customer-product-body { padding: 12px !important; }
   .product-body h3,.stock-product-body h3,.customer-product-name { font-size: 14px !important; line-height: 1.3; }
 
+  /* The entrepreneur Products tab is a compact two-across catalogue. */
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 10px !important;
+  }
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-image { height: 150px !important; min-height:150px !important; }
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-copy { padding: 11px !important; }
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-copy h3 { min-height: 37px; font-size: 13px !important; }
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-copy > p { display:none; }
+  .entrepreneur-shell[data-page="catalogue"] .stock-product-actions { grid-template-columns:1fr !important; }
+  .entrepreneur-shell[data-page="catalogue"] .catalogue-card-quantity { align-items:stretch; flex-direction:column; }
+  .entrepreneur-shell[data-page="catalogue"] .catalogue-card-quantity > div { grid-template-columns:32px minmax(36px,1fr) 32px; width:100%; }
+  .entrepreneur-shell[data-page="catalogue"] .catalogue-card-quantity input { width:100%; height:38px; font-size:13px !important; }
+
   /* Desktop tables become readable record cards. */
   .data-table,.people-table,.order-table,.admin-order-table,.application-table,
   .credit-list,.report-table { overflow: visible !important; background: transparent !important; box-shadow: none !important; }
@@ -290,9 +374,207 @@
   .money-flow-v3 > svg { transform: rotate(90deg); }
 
   /* Mobile feedback and touch behavior */
-  .toast-v2 { z-index: 260 !important; left: 14px !important; right: 14px !important; bottom: calc(var(--mobile-nav-height) + 18px + env(safe-area-inset-bottom)) !important; max-width: none !important; border-radius: 15px !important; white-space: normal !important; }
+  .toast-v2 {
+    z-index: 260 !important;
+    top: auto !important;
+    right: 14px !important;
+    bottom: calc(var(--mobile-nav-height) + 14px + env(safe-area-inset-bottom)) !important;
+    left: 14px !important;
+    width: auto !important;
+    min-height: 56px;
+    max-width: none !important;
+    padding: 10px 14px 10px 10px !important;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 16px !important;
+    align-items: center;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    white-space: normal !important;
+    transform: none !important;
+    animation: mobile-toast-in .2s ease both !important;
+  }
+
+  .toast-v2 > span {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: 11px;
+  }
   button,a { touch-action: manipulation; }
   button:active,.btn:active,.data-row:active,.product-v2:active { transform: scale(.985); }
+}
+
+/* Compact entrepreneur home: show the important picture in the first viewport,
+   while secondary destinations stay one tap away. */
+@media (max-width: 760px) {
+  .entrepreneur-shell[data-page="home"] .entrepreneur-overview {
+    gap: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-welcome {
+    min-height: 0 !important;
+    padding: 22px 19px 19px !important;
+    gap: 18px !important;
+    border-radius: 22px !important;
+    background: radial-gradient(circle at 92% 8%,rgba(64,214,205,.28),transparent 9rem),linear-gradient(145deg,#082b46 0%,#105c78 72%,#138c8d 135%) !important;
+    box-shadow: 0 16px 34px rgba(9,55,79,.2) !important;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-welcome h1 {
+    margin: 7px 0 5px !important;
+    font-size: clamp(24px, 7vw, 30px) !important;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-welcome h1 em { color: #7de4dc; font-style: normal; }
+
+  .entrepreneur-shell[data-page="home"] .home-welcome p {
+    display: block;
+    margin-top: 8px !important;
+    color: #d3eaf0 !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+
+  .home-live-pill { margin-top: 13px; color: #c6f4ec; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 750; }
+  .home-live-pill i { width: 7px; height: 7px; border-radius: 50%; background: #5af0bf; box-shadow: 0 0 0 4px rgba(90,240,191,.13); }
+
+  .entrepreneur-shell[data-page="home"] .home-welcome > button {
+    min-height: 46px !important;
+    border-radius: 14px !important;
+  }
+
+  .home-quick-actions { margin-top: -3px; padding: 5px; border: 1px solid #d7e5ed; border-radius: 18px; background: rgba(255,255,255,.9); box-shadow: var(--mobile-shadow); display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 3px; }
+  .home-quick-actions button { position: relative; min-width: 0; min-height: 68px; padding: 8px 2px; border: 0; border-radius: 14px; color: #567184; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font: inherit; font-size: 9px; font-weight: 800; }
+  .home-quick-actions button:first-child { color: #fff; background: linear-gradient(145deg,#167aa2,#12a18d); box-shadow: 0 7px 16px rgba(18,132,144,.2); }
+  .home-quick-actions svg { width: 19px; height: 19px; }
+  .home-quick-actions b { position: absolute; top: 7px; right: 13px; min-width: 17px; height: 17px; padding: 0 4px; border: 2px solid #fff; border-radius: 99px; color: #fff; background: #e55f5f; display: grid; place-items: center; font-size: 8px; }
+
+  .entrepreneur-shell[data-page="home"] .home-essential-stats {
+    width: calc(100% + 28px);
+    margin-inline: -14px;
+    padding: 2px 14px 9px;
+    display: flex !important;
+    gap: 10px !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-essential-stats > button {
+    width: min(78vw, 300px);
+    min-width: min(78vw, 300px);
+    min-height: 94px !important;
+    padding: 14px !important;
+    grid-template-columns: 42px minmax(0,1fr) 16px !important;
+    gap: 10px !important;
+    scroll-snap-align: start;
+    border: 0 !important;
+    box-shadow: 0 9px 22px rgba(16,56,81,.08) !important;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-essential-stats > button > span {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-essential-stats small {
+    min-height: 0 !important;
+    font-size: 9px !important;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-essential-stats strong {
+    margin-top: 4px !important;
+    font-size: 19px !important;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-essential-stats p {
+    margin-top: 3px !important;
+    font-size: 10px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .home-tools-toggle {
+    width: 100%;
+    min-height: 72px;
+    padding: 13px 15px;
+    border: 1px solid var(--mobile-line);
+    border-radius: 17px;
+    color: var(--mobile-ink);
+    background: #fff;
+    box-shadow: var(--mobile-shadow);
+    display: grid;
+    grid-template-columns: 42px minmax(0,1fr) 18px;
+    align-items: center;
+    gap: 11px;
+    text-align: left;
+    font: inherit;
+  }
+
+  .home-tools-toggle > span {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    color: #16739e;
+    background: #e8f5fb;
+    display: grid;
+    place-items: center;
+  }
+
+  .home-tools-toggle svg { width: 18px; }
+  .home-tools-toggle > svg { color: #7892a3; transition: transform .18s ease; }
+  .home-tools-toggle[aria-expanded="true"] > svg { transform: rotate(90deg); }
+  .home-tools-toggle strong,.home-tools-toggle small { display: block; }
+  .home-tools-toggle strong { font-size: 13px; }
+  .home-tools-toggle small { margin-top: 3px; color: var(--mobile-muted); font-size: 10px; }
+
+  .entrepreneur-shell[data-page="home"] .home-destinations {
+    display: none;
+    padding: 15px !important;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-destinations.mobile-open {
+    display: block;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-destinations > header h2 {
+    margin: 4px 0 12px !important;
+    font-size: 18px !important;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-destinations > div {
+    gap: 8px !important;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-destinations button {
+    min-height: 76px !important;
+    padding: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="home"] .home-attention {
+    padding: 14px !important;
+  }
+
+  .home-business-pulse { padding: 17px; border: 1px solid var(--mobile-line); border-radius: 19px; background: #fff; box-shadow: var(--mobile-shadow); }
+  .home-business-pulse > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .home-business-pulse > header small { color: #1683a0; font-size: 8px; font-weight: 900; letter-spacing: .1em; }
+  .home-business-pulse > header h2 { margin: 4px 0 0; color: var(--mobile-ink); font-size: 17px; letter-spacing: -.02em; }
+  .home-business-pulse > header > span { padding: 6px 8px; border-radius: 99px; color: #08775d; background: #e7f7f0; font-size: 8px; font-weight: 850; white-space: nowrap; }
+  .home-pulse-progress { height: 7px; margin: 14px 0; overflow: hidden; border-radius: 99px; background: #e7eff3; }
+  .home-pulse-progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#167aa2,#18ae8d); }
+  .home-business-pulse > button { width: 100%; padding: 12px; border: 0; border-radius: 14px; color: inherit; background: #f3f8fb; display: grid; grid-template-columns: 38px minmax(0,1fr) 16px; align-items: center; gap: 10px; text-align: left; font: inherit; }
+  .home-business-pulse > button > span { width: 38px; height: 38px; border-radius: 11px; color: #16769b; background: #dff0f7; display: grid; place-items: center; }
+  .home-business-pulse > button svg { width: 17px; }
+  .home-business-pulse > button > svg { color: #8aa1af; }
+  .home-business-pulse > button small,.home-business-pulse > button strong,.home-business-pulse > button p { display: block; }
+  .home-business-pulse > button small { color: #648091; font-size: 7px; font-weight: 900; letter-spacing: .08em; }
+  .home-business-pulse > button strong { margin-top: 3px; color: #143c57; font-size: 12px; }
+  .home-business-pulse > button p { margin: 3px 0 0; color: #718796; font-size: 9px; line-height: 1.35; }
+}
+
+@media (min-width: 761px) {
+  .home-tools-toggle,.home-quick-actions,.home-business-pulse,.home-live-pill { display: none; }
 }
 
 @media (max-width: 430px) {
@@ -306,9 +588,880 @@
   .topbar-left strong { max-width: 38vw !important; }
 }
 
+/* Admin mobile parity
+   Keep the admin workspace as dense and easy to scan as the entrepreneur app:
+   headings no longer consume a full blue card, summaries swipe sideways, and
+   operational records use compact card grids instead of one field per row. */
+@media (max-width: 760px) {
+  .admin-shell .content-page {
+    padding-top: 10px !important;
+  }
+
+  /* The top app bar already names the current page. Use a compact content
+     heading here and remove the repeated decorative hero treatment. */
+  .admin-shell .content-page > .page-title {
+    min-height: 0 !important;
+    margin: 0 0 12px !important;
+    padding: 8px 2px 12px !important;
+    border-bottom: 1px solid var(--mobile-line) !important;
+    border-radius: 0 !important;
+    color: var(--mobile-ink) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) auto !important;
+    align-items: end !important;
+    gap: 10px !important;
+  }
+  .admin-shell .content-page > .page-title::after { display: none !important; }
+  .admin-shell .content-page > .page-title .page-title-copy { min-width: 0; }
+  .admin-shell .content-page > .page-title .page-title-copy > span {
+    color: #16769b !important;
+  }
+  .admin-shell .content-page > .page-title h1 {
+    margin: 3px 0 0 !important;
+    color: var(--mobile-ink) !important;
+    font-size: clamp(22px,6.5vw,27px) !important;
+    text-shadow: none !important;
+  }
+  .admin-shell .content-page > .page-title p { display: none !important; }
+  .admin-shell .content-page > .page-title > .btn,
+  .admin-shell .content-page > .page-title > .page-title-actions {
+    width: auto !important;
+    margin: 0 !important;
+  }
+  .admin-shell .content-page > .page-title > .btn {
+    min-height: 42px !important;
+    padding-inline: 12px !important;
+    border-color: #cbdde7 !important;
+    color: #175f80 !important;
+    background: #fff !important;
+    box-shadow: 0 4px 12px rgba(18,63,88,.06) !important;
+  }
+  .admin-shell .page-title-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 7px !important;
+    overflow-x: auto;
+  }
+  .admin-shell .page-title-actions .btn {
+    width: auto !important;
+    min-width: max-content !important;
+    min-height: 42px !important;
+    padding-inline: 12px !important;
+  }
+
+  /* Overview has its own legacy hero. Keep only the useful greeting and make
+     it the same compact size as the entrepreneur home welcome panel. */
+  .admin-shell[data-page="overview"] .admin-hero {
+    min-height: 0 !important;
+    margin: 0 0 12px !important;
+    padding: 20px 18px !important;
+    border-radius: 20px !important;
+    background: radial-gradient(circle at 96% 0,rgba(68,205,198,.25),transparent 10rem),linear-gradient(140deg,#0a3049,#126176) !important;
+    box-shadow: 0 13px 29px rgba(8,50,73,.16) !important;
+  }
+  .admin-shell[data-page="overview"] .admin-hero h1 {
+    margin: 6px 0 0 !important;
+    font-size: clamp(24px,7vw,30px) !important;
+    line-height: 1.12 !important;
+  }
+  .admin-shell[data-page="overview"] .admin-hero p { display: none !important; }
+
+  /* Filter disclosure is a single calm control; the expanded panel follows
+     the same horizontal, swipeable pattern used by entrepreneur pages. */
+  .admin-shell .mobile-filter-toggle {
+    min-height: 52px;
+    border: 0;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: var(--mobile-shadow);
+  }
+  .admin-shell .mobile-collapsible-filter.mobile-filter-open {
+    width: calc(100% + 28px) !important;
+    margin: 8px -14px 12px !important;
+    padding: 4px 14px 8px !important;
+    display: flex !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .admin-shell .mobile-collapsible-filter.mobile-filter-open > * {
+    width: min(78vw,310px) !important;
+    min-width: min(78vw,310px) !important;
+    flex: 0 0 auto !important;
+  }
+
+  /* Commission payout alignment. Each record keeps related money values next
+     to one another and gives the identity/action rows the full card width. */
+  .admin-shell[data-page="payouts"] .commission-simple-guide { display: none !important; }
+  .admin-shell[data-page="payouts"] .commission-workspace {
+    padding: 14px !important;
+    overflow: hidden;
+  }
+  .admin-shell[data-page="payouts"] .commission-workspace-heading {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) auto !important;
+    gap: 10px !important;
+    align-items: start !important;
+  }
+  .admin-shell[data-page="payouts"] .commission-workspace-heading > div {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: block !important;
+    grid-template-columns: none !important;
+    overflow: visible !important;
+  }
+  .admin-shell[data-page="payouts"] .commission-workspace-heading h2 {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 4px 0 0 !important;
+    font-size: 18px !important;
+    line-height: 1.3 !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+  }
+  .admin-shell[data-page="payouts"] .commission-workspace-heading small {
+    white-space: normal !important;
+    word-break: normal !important;
+  }
+  .admin-shell[data-page="payouts"] .commission-workspace-heading p { display: none !important; }
+  .admin-shell[data-page="payouts"] .commission-workspace-heading > b {
+    min-width: 70px;
+    text-align: right;
+  }
+  .admin-shell[data-page="payouts"] .commission-list {
+    display: grid !important;
+    gap: 10px !important;
+  }
+  .admin-shell[data-page="payouts"] .commission-row {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 14px !important;
+    border: 1px solid var(--mobile-line) !important;
+    border-radius: 17px !important;
+    background: #fff !important;
+    box-shadow: 0 6px 18px rgba(13,51,75,.055) !important;
+    display: grid !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 13px 10px !important;
+    align-items: start !important;
+  }
+  .admin-shell[data-page="payouts"] .commission-row > * { min-width: 0 !important; }
+  .admin-shell[data-page="payouts"] .commission-order {
+    grid-column: 1 / -1 !important;
+    padding-bottom: 11px;
+    border-bottom: 1px solid #e3ebf0;
+  }
+  .admin-shell[data-page="payouts"] .commission-row :is(strong,p,small) {
+    max-width: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+  .admin-shell[data-page="payouts"] .commission-amount {
+    grid-column: 1 / -1 !important;
+    padding: 12px !important;
+    border-radius: 12px;
+    background: #edf8f4;
+  }
+  .admin-shell[data-page="payouts"] .commission-open {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-height: 44px !important;
+    justify-content: center !important;
+  }
+
+  /* Common admin grids that previously collapsed into long one-by-one lists. */
+  .admin-shell :is(.report-grid,.role-cards,.permission-grid,.snapshot-rules,.stock-snapshot) {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+
+  /* Admin summary collections always travel sideways on phones. Individual
+     pages used different class names, which previously left Products, finance,
+     stock supply and a few report pages as tall one-card-per-row stacks. */
+  .admin-shell :is(
+    .inventory-overview,
+    .supply-kpis,
+    .overview-finance-summary > div,
+    .registration-summary,
+    .report-summary,
+    .settlement-summary,
+    .credit-health-grid,
+    .leave-checks
+  ) {
+    width: calc(100% + 28px) !important;
+    margin-inline: -14px !important;
+    padding: 2px 14px 10px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+  }
+  .admin-shell :is(
+    .inventory-overview,
+    .supply-kpis,
+    .overview-finance-summary > div,
+    .registration-summary,
+    .report-summary,
+    .settlement-summary,
+    .credit-health-grid,
+    .leave-checks
+  ) > * {
+    width: min(74vw,280px) !important;
+    min-width: min(74vw,280px) !important;
+    max-width: min(74vw,280px) !important;
+    min-height: 96px !important;
+    flex: 0 0 auto !important;
+    scroll-snap-align: start;
+  }
+
+  .admin-products-shell .inventory-overview {
+    margin-top: 0 !important;
+    margin-bottom: 12px !important;
+  }
+  .admin-products-shell .inventory-overview article {
+    padding: 14px !important;
+    display: grid !important;
+    grid-template-columns: 46px minmax(0,1fr) !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+  .admin-products-shell .inventory-overview article > i {
+    width: 46px !important;
+    height: 46px !important;
+  }
+  .admin-products-shell .inventory-overview article strong {
+    font-size: 24px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .admin-shell .content-page > .page-title {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-shell .content-page > .page-title > .btn,
+  .admin-shell .content-page > .page-title > .page-title-actions { width: 100% !important; }
+  .admin-shell .page-title-actions { justify-content: flex-start !important; }
+}
+
+/* Mobile notifications: readable app sheet with fixed controls and scrollable updates. */
+@media (max-width: 760px) {
+  .drawer-layer > .notifications {
+    height: min(92dvh, 760px) !important;
+    max-height: 92dvh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column;
+    background: #f4f8fb !important;
+  }
+
+  .notifications::before {
+    position: absolute !important;
+    top: 8px !important;
+    left: 50%;
+    margin: 0 !important;
+    transform: translateX(-50%);
+  }
+
+  .notifications > header {
+    position: relative;
+    z-index: 4;
+    flex: 0 0 auto;
+    min-height: 88px;
+    padding: 27px 16px 15px !important;
+    border-bottom: 1px solid #d9e5ec;
+    background: #fff;
+  }
+
+  .notifications > header small {
+    color: #28789e;
+    font-size: 9px;
+    letter-spacing: .12em;
+  }
+
+  .notifications > header h2 {
+    margin-top: 4px;
+    color: #123b55;
+    font-size: 22px;
+  }
+
+  .notifications > header h2 span {
+    color: #fff;
+    background: #e14e45;
+  }
+
+  .notifications > header .icon-btn {
+    width: 42px;
+    height: 42px;
+    border: 1px solid #d5e2e9;
+    border-radius: 12px;
+    color: #315a70;
+    background: #f7fafc;
+  }
+
+  .notifications > div {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 12px !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .notifications > div article {
+    min-height: 0;
+    margin-bottom: 10px;
+    padding: 14px 46px 14px 13px;
+    border: 1px solid #dbe6ec;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 5px 16px rgba(13,52,75,.055);
+    display: grid;
+    grid-template-columns: 42px minmax(0,1fr);
+    gap: 11px;
+  }
+
+  .notifications > div article.unread {
+    border-color: #9ecbde;
+    background: #eff9fd;
+    box-shadow: inset 4px 0 #2285ad, 0 6px 18px rgba(20,92,126,.08);
+  }
+
+  .notifications > div article.unread::after {
+    top: 15px;
+    right: 14px;
+    width: 9px;
+    height: 9px;
+    background: #2384ad;
+  }
+
+  .notifications > div article > span {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    color: #176f98;
+    background: #e7f4fa;
+  }
+
+  .notifications article strong {
+    display: block;
+    padding-right: 4px;
+    color: #153b53;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .notifications article p {
+    margin: 5px 0 7px;
+    color: #526d7e;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .notifications article small {
+    display: block;
+    color: #22789f;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .notifications article .notification-delete {
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    color: #9a5550;
+    background: #fff5f3;
+  }
+
+  .notifications .notification-empty {
+    min-height: 100%;
+    padding: 30px 20px;
+    border: 1px dashed #cadce6;
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  .notifications > .notification-actions {
+    position: relative;
+    z-index: 4;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid #d7e3ea;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    gap: 9px;
+    background: rgba(255,255,255,.97);
+    backdrop-filter: blur(14px);
+  }
+
+  .notifications .notification-actions :is(.btn,.notification-clear) {
+    min-height: 46px;
+    padding: 0 10px;
+    justify-content: center;
+    font-size: 11px;
+  }
+}
+
+/* Compact Credit Payments on phones: overview tiles and orders stay scan-friendly. */
+@media (max-width: 700px) {
+  .entrepreneur-shell[data-page="credit"] .credit-payments-page {
+    gap: 11px !important;
+  }
+
+  .credit-payments-page .money-welcome {
+    min-height: 0 !important;
+    padding: 18px !important;
+    border-radius: 16px !important;
+  }
+
+  .credit-payments-page .money-welcome h1 {
+    margin: 5px 0 !important;
+    font-size: 24px !important;
+  }
+
+  .credit-payments-page .money-welcome p {
+    margin: 0 !important;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+  }
+
+  .credit-payments-page .money-welcome > :is(.btn,span) {
+    min-height: 40px !important;
+    margin-top: 12px;
+  }
+
+  .credit-payments-page .money-summary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .credit-payments-page .money-summary-grid article {
+    min-height: 94px !important;
+    padding: 12px !important;
+    gap: 8px !important;
+    border-radius: 14px !important;
+    align-items: flex-start;
+  }
+
+  .credit-payments-page .money-summary-grid article > span {
+    width: 35px !important;
+    height: 35px !important;
+    flex: 0 0 35px;
+    border-radius: 10px !important;
+  }
+
+  .credit-payments-page .money-summary-grid article > span svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  .credit-payments-page .money-summary-grid small {
+    font-size: 8px !important;
+  }
+
+  .credit-payments-page .money-summary-grid strong {
+    margin-top: 4px !important;
+    font-size: 15px !important;
+  }
+
+  .credit-payments-page .money-summary-grid p {
+    margin-top: 4px !important;
+    font-size: 9px !important;
+  }
+
+  .credit-payments-page .money-credit-grid {
+    display: flex !important;
+    gap: 9px !important;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .credit-payments-page .money-credit-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .credit-payments-page .money-credit-grid > article {
+    width: 84%;
+    min-width: 84%;
+    min-height: 0 !important;
+    padding: 16px !important;
+    border-radius: 15px !important;
+    scroll-snap-align: start;
+  }
+
+  .credit-payments-page .credit-balance-card h2,
+  .credit-payments-page .money-next-tier h2 {
+    font-size: 20px !important;
+  }
+
+  .credit-payments-page .credit-balance-bar {
+    margin: 16px 0 9px !important;
+  }
+
+  .credit-payments-page .credit-balance-labels {
+    grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+  }
+
+  .credit-payments-page .credit-order-register {
+    padding: 15px 10px !important;
+  }
+
+  .credit-payments-page .credit-order-register > header {
+    padding-inline: 3px;
+  }
+
+  .credit-payments-page .credit-order-register > header h2 {
+    margin: 5px 0 3px;
+    font-size: 21px;
+  }
+
+  .credit-payments-page .credit-order-register > header p {
+    font-size: 10px;
+  }
+
+  .credit-payments-page .credit-order-register > nav {
+    margin: 12px -10px 10px 0 !important;
+  }
+
+  .credit-payments-page .credit-order-register > nav button {
+    min-height: 37px !important;
+    padding-inline: 10px !important;
+    font-size: 10px !important;
+  }
+
+  .credit-payments-page .credit-payment-order {
+    min-height: 0 !important;
+    padding: 14px !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows: auto auto auto !important;
+    gap: 12px 10px !important;
+    align-items: start !important;
+    border-left-width: 3px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 7px 20px rgba(15,55,81,.06) !important;
+  }
+
+  .credit-payments-page .credit-payment-order > span {
+    display: none !important;
+  }
+
+  .credit-payments-page .credit-payment-order > span svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .credit-payments-page .credit-payment-order > div {
+    grid-column: auto !important;
+    min-width: 0;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  .credit-payments-page .credit-payment-order > div:nth-of-type(1) {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    padding: 1px 0 !important;
+    background: transparent;
+  }
+
+  .credit-payments-page .credit-payment-order > div:nth-of-type(2) {
+    grid-column: 1;
+    grid-row: 2;
+    min-height: 66px;
+    padding: 10px 11px !important;
+    border: 1px solid #e4edf2 !important;
+    border-radius: 12px !important;
+    background: #f7fafc;
+  }
+
+  .credit-payments-page .credit-payment-order > div:nth-of-type(3) {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-self: end;
+    height: auto;
+    padding: 0 !important;
+    background: transparent;
+    text-align: right;
+  }
+
+  .credit-payments-page .credit-payment-order > div:nth-of-type(3) > small {
+    display: none;
+  }
+
+  .credit-payments-page .credit-payment-method {
+    grid-column: 2 !important;
+    grid-row: 2;
+    min-height: 66px;
+    height: auto;
+    padding: 10px 11px !important;
+    border: 1px solid #e0eaef !important;
+    border-radius: 12px !important;
+    background: #f1f6f8;
+    text-align: left;
+  }
+
+  .credit-payments-page .credit-payment-order > div:nth-of-type(1) > p,
+  .credit-payments-page .credit-payment-order > div:nth-of-type(2) > p:not(.credit-due-countdown),
+  .credit-payments-page .credit-payment-order > div:nth-of-type(3) > p:not(.credit-rejection-reason) {
+    display: none;
+  }
+
+  .credit-payments-page .credit-payment-order small {
+    font-size: 8px !important;
+  }
+
+  .credit-payments-page .credit-payment-order strong {
+    margin-top: 3px !important;
+    font-size: 13px !important;
+    line-height: 1.3;
+  }
+
+  .credit-payments-page .credit-payment-order > div:nth-of-type(1) > strong {
+    font-size: 14px !important;
+  }
+
+  .credit-payments-page .credit-payment-order .status-pill {
+    margin-top: 0 !important;
+    padding: 5px 8px !important;
+    font-size: 9px !important;
+    white-space: nowrap;
+  }
+
+  .credit-payments-page .credit-due-countdown {
+    margin-top: 5px !important;
+    padding: 4px 6px !important;
+    font-size: 8px !important;
+  }
+
+  .credit-payments-page .credit-order-actions {
+    grid-column: 1 / -1 !important;
+    grid-row: 3;
+    display: grid !important;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 8px !important;
+    margin-top: 0;
+    padding-top: 11px !important;
+    border-top: 1px solid #e3ebf0 !important;
+  }
+
+  .credit-payments-page .credit-order-actions > button {
+    width: 100%;
+    min-height: 42px !important;
+    padding: 0 10px !important;
+    border-width: 1px !important;
+    border-radius: 11px !important;
+    font-size: 11px !important;
+    line-height: 1.25;
+    white-space: normal;
+    box-shadow: none !important;
+  }
+
+  .credit-payments-page .credit-order-actions > button svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex: 0 0 16px;
+    stroke-width: 2;
+  }
+
+  .credit-payments-page .credit-order-actions > .view-credit-order {
+    border-color: #217da5 !important;
+    color: #fff !important;
+    background: #217da5 !important;
+  }
+
+  .credit-payments-page .credit-order-actions > button:not(.view-credit-order) {
+    border-color: #c98a21 !important;
+    color: #704400 !important;
+    background: #fff1cf !important;
+  }
+
+  .credit-payments-page .credit-order-actions > b {
+    width: 100% !important;
+    min-height: 42px !important;
+    grid-column: 2;
+    padding: 7px 9px !important;
+    border-radius: 11px !important;
+    font-size: 10px !important;
+    line-height: 1.35;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+
+/* New client order: retain a two-column catalogue on phones. Cards switch to
+   a compact vertical composition so content does not squeeze or overflow. */
+@media (max-width: 760px) {
+  .entrepreneur-shell[data-page="products"] .stock-product-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-card {
+    min-width: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-image {
+    width: 100% !important;
+    height: 126px !important;
+    min-height: 126px !important;
+    max-height: 126px !important;
+    padding: 27px 8px 8px !important;
+    border-radius: 0 !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-image img {
+    width: 100% !important;
+    height: 88px !important;
+    max-height: 88px !important;
+    object-fit: contain !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-image > span {
+    top: 7px !important;
+    left: 7px !important;
+    max-width: calc(100% - 14px) !important;
+    padding: 4px 5px !important;
+    overflow: hidden;
+    font-size: 7px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-copy {
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-copy > small {
+    font-size: 8px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-copy h3 {
+    min-height: 34px !important;
+    margin: 4px 0 !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-copy > p {
+    display: none !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-delivery {
+    min-height: 24px;
+    margin-top: 3px !important;
+    font-size: 8px !important;
+    line-height: 1.3;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-meta {
+    margin: 7px 0 !important;
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-meta > span {
+    font-size: 8px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-meta strong {
+    font-size: 13px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-actions {
+    width: 100%;
+    margin-top: auto;
+    grid-template-columns: 1fr !important;
+    gap: 5px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-product-actions button {
+    width: 100% !important;
+    min-height: 36px !important;
+    padding: 0 5px !important;
+    font-size: 9px !important;
+  }
+}
+
 @media (display-mode: standalone) and (max-width: 760px) {
   .topbar-v2 { padding-top: env(safe-area-inset-top) !important; }
   .mobile-nav-v2 { bottom: max(7px,env(safe-area-inset-bottom)) !important; }
+}
+
+/* Products and Order share the same catalogue component. The older mobile
+   order layout makes each card a 128px + text horizontal grid; that layout
+   cannot be nested inside a two-across catalogue and collapses copy into a
+   one-character column. Keep each two-across card vertically stacked. */
+@media (max-width: 760px) {
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-grid {
+    width: 100% !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    grid-template-columns: none !important;
+    flex-direction: column !important;
+  }
+
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-image {
+    width: 100% !important;
+    height: 126px !important;
+    min-height: 126px !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid #e2edf5 !important;
+  }
+
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-copy {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    flex: 1 1 auto;
+  }
+
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-copy h3,
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-copy span,
+  .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-copy button {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
 }
 
 /* The assisted-order footer must remain fully tappable inside short phone
@@ -595,5 +1748,802 @@
   .camy-entrepreneurs-workspace .people-table .data-row:not(.head) > .person {
     grid-column: 1 !important;
     grid-template-columns: max-content 44px minmax(0, 1fr) !important;
+  }
+}
+
+/* Phone-only page repairs. Keep these after the shared mobile rules so the
+   record-card layouts cannot inherit desktop grid tracks or generic table
+   columns. Desktop and tablet compositions are intentionally untouched. */
+@media (max-width: 760px) {
+  html { scroll-padding-bottom: calc(var(--mobile-nav-height) + 32px); }
+
+  .entrepreneur-shell .content-page {
+    padding-bottom: calc(var(--mobile-nav-height) + 54px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Drop-shipping order directory */
+  .entrepreneur-shell[data-page="orders"] .orders-page-v2 {
+    padding-top: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .page-title {
+    padding: 20px 18px !important;
+    border-radius: 18px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .page-title h1 {
+    font-size: clamp(24px, 7.4vw, 31px) !important;
+    overflow-wrap: normal;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-filter-workspace {
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-workspace-head {
+    padding: 18px 16px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-workspace-head .clear-order-filters {
+    width: 100%;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar,
+  .entrepreneur-shell[data-page="orders"] .orders-date-export {
+    padding: 14px 16px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search,
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar .order-select-field,
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar .order-select-field select {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-toolbar .order-search input {
+    min-width: 0 !important;
+    text-overflow: ellipsis;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .orders-summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-results-workspace {
+    padding: 0 !important;
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table {
+    padding: 0 12px 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 16px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    gap: 14px 16px !important;
+    align-items: start !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head) > * {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    grid-row: auto !important;
+    justify-self: stretch !important;
+    text-align: left !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .order-id-cell,
+  .entrepreneur-shell[data-page="orders"] .order-table .order-customer-cell,
+  .entrepreneur-shell[data-page="orders"] .order-table .view-order-btn {
+    grid-column: 1 / -1 !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .order-id-cell {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .order-id-cell > span,
+  .entrepreneur-shell[data-page="orders"] .order-table .order-id-cell strong,
+  .entrepreneur-shell[data-page="orders"] .order-table .order-customer-cell strong {
+    min-width: 0 !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+    white-space: normal !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table :is(.order-date-cell,.order-profit-cell) {
+    grid-column: 1 !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table :is(.order-value-cell,.order-progress-cell) {
+    grid-column: 2 !important;
+  }
+
+  .entrepreneur-shell[data-page="orders"] .order-table .profit-status,
+  .entrepreneur-shell[data-page="orders"] .order-table .status-pill {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  /* New client order checkout */
+  .entrepreneur-shell[data-page="products"] .mobile-checkout-page {
+    padding: 10px 10px calc(var(--mobile-nav-height) + 42px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .mobile-checkout-page .dropship-checkout.mobile-open {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open > header {
+    padding: 16px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line {
+    margin-inline: 14px !important;
+    padding: 16px 0 !important;
+    display: block !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-heading {
+    display: grid !important;
+    grid-template-columns: 72px minmax(0, 1fr) 42px !important;
+    gap: 10px !important;
+    align-items: start !important;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-heading > img {
+    width: 72px !important;
+    height: 72px !important;
+    object-fit: contain;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-product,
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-controls,
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-controls > label {
+    min-width: 0 !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .market-line :is(strong,small,p) {
+    overflow-wrap: break-word;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .dropship-line-heading > button {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-checkout.mobile-open .customer-fields {
+    margin-inline: 14px !important;
+    padding: 16px !important;
+  }
+
+  /* Commission list */
+  .entrepreneur-shell[data-page="earnings"] .commission-ledger-panel {
+    padding: 14px !important;
+  }
+
+  .entrepreneur-shell[data-page="earnings"] .commission-ledger-row {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 15px 14px !important;
+    grid-template-columns: 42px minmax(0, 1fr) 34px !important;
+  }
+
+  .entrepreneur-shell[data-page="earnings"] .commission-ledger-row > span {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .entrepreneur-shell[data-page="earnings"] .commission-row-main :is(strong,small,em),
+  .entrepreneur-shell[data-page="earnings"] .commission-row-reference strong {
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  /* Commission details: replace the desktop seven-column product table with
+     a compact two-column metric card. */
+  .entrepreneur-shell[data-page="commission-detail"] .standalone-money-page {
+    padding-inline: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-card {
+    padding: 16px !important;
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-product-head {
+    display: none !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 18px 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > img {
+    width: 64px !important;
+    height: 64px !important;
+    grid-column: 1 !important;
+    object-fit: contain;
+    align-self: center;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > div {
+    min-width: 0 !important;
+    grid-column: 2 !important;
+    align-self: center;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > div :is(strong,small) {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > span {
+    min-width: 0 !important;
+    grid-column: auto !important;
+    padding: 12px !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > span :is(small,strong) {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article > b {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Credit catalogue and request summary */
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero {
+    padding: 20px 18px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero h1 {
+    font-size: clamp(25px, 7vw, 30px) !important;
+    line-height: 1.12 !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero p {
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero .stock-buy-steps {
+    padding: 13px !important;
+    gap: 8px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-stock-hero .stock-buy-steps span {
+    min-height: 38px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout > .stock-request-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 16px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .credit-catalogue-layout > .stock-request-card header {
+    margin: -16px -16px 16px !important;
+    padding: 16px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .stock-request-card .market-total,
+  .entrepreneur-shell[data-page="credit-stock"] .stock-request-card :is(.market-warning,.credit-safe-note) {
+    min-width: 0;
+  }
+
+  .entrepreneur-shell[data-page="credit-stock"] .stock-request-card .market-warning {
+    overflow-wrap: anywhere;
+  }
+
+  /* Issued credit inventory */
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-page {
+    gap: 12px;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-products > article {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 16px !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-image {
+    width: 100% !important;
+    height: 190px !important;
+    min-height: 0 !important;
+    padding: 12px !important;
+    overflow: hidden;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-image img {
+    display: block;
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    object-position: center !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-products > article > div:nth-child(2) {
+    min-width: 0;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-products h2 {
+    margin-top: 6px;
+    font-size: 20px !important;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-products dl {
+    width: 100%;
+    min-width: 0;
+    grid-column: 1 !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-products dl span {
+    min-width: 0;
+    padding: 13px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .entrepreneur-shell[data-page="orders"] .order-table .data-row:not(.head) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .entrepreneur-shell[data-page="commission-detail"] .money-detail-products article {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-page > header {
+    padding: 18px !important;
+  }
+
+  .entrepreneur-shell[data-page="credit-inventory"] .credit-inventory-page > header h1 {
+    font-size: 25px !important;
+    line-height: 1.15;
+  }
+}
+
+/* Mobile density pass shared by the remaining workspaces. Summary information
+   moves sideways, while primary records continue vertically in reading order. */
+@media (max-width: 760px) {
+  .content-page:not(.entrepreneur-overview) {
+    padding-top: 10px !important;
+  }
+
+  .content-page > .page-title,
+  .content-page > :is(.market-heading,.orders-workspace-head,.order-workspace-head) {
+    margin-bottom: 10px !important;
+  }
+
+  .content-page .page-title {
+    padding: 16px !important;
+    gap: 10px !important;
+    border-radius: 17px !important;
+  }
+
+  .content-page .page-title h1 {
+    margin: 3px 0 !important;
+    font-size: clamp(22px,6.5vw,27px) !important;
+  }
+
+  .content-page .page-title p {
+    display: none !important;
+  }
+
+  .content-page .page-title .page-actions {
+    gap: 6px !important;
+  }
+
+  /* KPI collections are previews, not long vertical lists. A visible partial
+     next card makes the swipe direction self-evident. */
+  .content-page :is(
+    .metric-row,
+    .overview-kpis,
+    .admin-order-summary,
+    .orders-summary-strip,
+    .credit-overview,
+    .credit-inventory-summary,
+    .credit-stock-admin-metrics,
+    .access-overview,
+    .commission-kpis,
+    .growth-kpis,
+    .application-kpis,
+    .credit-health-grid,
+    .achievement-row
+  ) {
+    width: calc(100% + 28px) !important;
+    margin-inline: -14px !important;
+    padding: 2px 14px 9px !important;
+    display: flex !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+  }
+
+  .content-page :is(
+    .metric-row,
+    .overview-kpis,
+    .admin-order-summary,
+    .orders-summary-strip,
+    .credit-overview,
+    .credit-inventory-summary,
+    .credit-stock-admin-metrics,
+    .access-overview,
+    .commission-kpis,
+    .growth-kpis,
+    .application-kpis,
+    .credit-health-grid,
+    .achievement-row
+  ) > * {
+    width: min(74vw,280px) !important;
+    min-width: min(74vw,280px) !important;
+    max-width: min(74vw,280px) !important;
+    min-height: 92px !important;
+    scroll-snap-align: start;
+    flex: 0 0 auto !important;
+  }
+
+  .content-page .metric-v2 {
+    min-height: 92px !important;
+    padding: 13px !important;
+    grid-template-columns: 40px minmax(0,1fr) !important;
+    align-items: center !important;
+  }
+
+  .content-page .metric-v2 > .metric-icon {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  /* Search and filters stay near the top but use one compact swipe row instead
+     of several full-width rows. */
+  .content-page :is(.management-filters,.catalog-controls,.orders-toolbar,.customer-shop-filters) {
+    width: calc(100% + 28px) !important;
+    margin-inline: -14px !important;
+    padding: 8px 14px 11px !important;
+    display: flex !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x proximity;
+    border-inline: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .content-page :is(.management-filters,.catalog-controls,.orders-toolbar,.customer-shop-filters) > * {
+    width: min(78vw,310px) !important;
+    min-width: min(78vw,310px) !important;
+    flex: 0 0 auto !important;
+    scroll-snap-align: start;
+  }
+
+  .content-page :is(.filter-tabs,.status-filters,.orders-tabs,.stock-category-nav) {
+    margin-block: 4px 10px !important;
+    padding-bottom: 4px !important;
+  }
+
+  .content-page :is(.card,.commission-workspace,.credit-request-centre,.profile-summary,.profile-form) {
+    margin-block: 0 10px;
+  }
+
+  .content-page :is(.market-heading,.stock-buy-hero,.credit-stock-hero,.overview-welcome) p {
+    display: none !important;
+  }
+}
+/* Keep products above the fold on the mobile New client order screen while
+   preserving the page explanation and workflow behind an explicit toggle. */
+.entrepreneur-shell[data-page="products"] .order-overview-toggle {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .entrepreneur-shell[data-page="products"] .dropship-order-page:not(.mobile-checkout-page) {
+    padding-top: 10px !important;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-order-page:not(.mobile-checkout-page) > .order-workspace-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 10px;
+    padding: 0;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-workspace-head .order-title-copy {
+    min-width: 0;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-workspace-head .order-title-copy small,
+  .entrepreneur-shell[data-page="products"] .order-workspace-head .order-title-copy p {
+    display: none;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-workspace-head .order-title-copy h1 {
+    margin: 0;
+    overflow: hidden;
+    font-size: 20px;
+    line-height: 42px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-overview-toggle,
+  .entrepreneur-shell[data-page="products"] .order-workspace-head > .order-history-link {
+    min-height: 40px;
+    width: auto;
+    margin: 0;
+    padding: 0 10px;
+    border: 1px solid #d4e1e8;
+    border-radius: 10px;
+    background: #fff;
+    color: #245775;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-overview-toggle svg {
+    transition: transform .18s ease;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-workspace-head.mobile-overview-open .order-overview-toggle svg {
+    transform: rotate(180deg);
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-workspace-head > .order-history-link svg {
+    display: none;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-workspace-head.mobile-overview-open .order-title-copy {
+    grid-column: 1 / -1;
+    padding: 12px 2px 4px;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-workspace-head.mobile-overview-open .order-title-copy small,
+  .entrepreneur-shell[data-page="products"] .order-workspace-head.mobile-overview-open .order-title-copy p {
+    display: block;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-workspace-head.mobile-overview-open .order-title-copy h1 {
+    margin: 5px 0 3px;
+    font-size: 25px;
+    line-height: 1.15;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-order-page:not(.mobile-checkout-page) > .order-progress {
+    display: none;
+    margin: 0 0 12px;
+  }
+
+  .entrepreneur-shell[data-page="products"] .dropship-order-page:not(.mobile-checkout-page) > .order-progress.mobile-overview-open {
+    display: flex;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-catalogue-title {
+    margin-bottom: 10px;
+    gap: 7px;
+  }
+
+  .entrepreneur-shell[data-page="products"] .stock-catalogue-title h2 {
+    font-size: 23px;
+  }
+
+  .entrepreneur-shell[data-page="products"] .catalogue-browser {
+    margin-bottom: 12px;
+  }
+}
+
+/* The compact order header cannot fit its title and both actions on one line
+   on narrow phones. Give the title its own row so it remains readable and
+   make the two actions share the row below it. */
+@media (max-width: 430px) {
+  .entrepreneur-shell[data-page="products"] .dropship-order-page:not(.mobile-checkout-page) > .order-workspace-head {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-workspace-head .order-title-copy {
+    grid-column: 1 / -1;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-workspace-head .order-title-copy h1 {
+    overflow: visible;
+    line-height: 1.2;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-overview-toggle,
+  .entrepreneur-shell[data-page="products"] .order-workspace-head > .order-history-link {
+    height: 44px;
+    min-height: 44px;
+    width: 100%;
+  }
+
+  .entrepreneur-shell[data-page="products"] .order-workspace-head.mobile-overview-open .order-title-copy {
+    padding-top: 0;
+  }
+}
+
+/* Admin phone cards: use a true two-column dashboard grid. Do not turn these
+   summaries into either a vertical one-by-one list or a horizontal carousel. */
+@media (max-width: 760px) {
+  .admin-shell .content-page :is(
+    .metric-row,
+    .overview-kpis,
+    .admin-order-summary,
+    .orders-summary-strip,
+    .credit-overview,
+    .credit-inventory-summary,
+    .credit-stock-admin-metrics,
+    .access-overview,
+    .commission-kpis,
+    .application-kpis,
+    .credit-health-grid,
+    .achievement-row
+  ),
+  .admin-shell :is(
+    .inventory-overview,
+    .supply-kpis,
+    .overview-finance-summary > div,
+    .registration-summary,
+    .report-summary,
+    .settlement-summary,
+    .leave-checks
+  ) {
+    width: 100% !important;
+    margin-inline: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 10px !important;
+    overflow: visible !important;
+    scroll-snap-type: none !important;
+  }
+
+  .admin-shell .content-page :is(
+    .metric-row,
+    .overview-kpis,
+    .admin-order-summary,
+    .orders-summary-strip,
+    .credit-overview,
+    .credit-inventory-summary,
+    .credit-stock-admin-metrics,
+    .access-overview,
+    .commission-kpis,
+    .application-kpis,
+    .credit-health-grid,
+    .achievement-row
+  ) > *,
+  .admin-shell :is(
+    .inventory-overview,
+    .supply-kpis,
+    .overview-finance-summary > div,
+    .registration-summary,
+    .report-summary,
+    .settlement-summary,
+    .leave-checks
+  ) > * {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 108px !important;
+    margin: 0 !important;
+    flex: initial !important;
+    scroll-snap-align: none !important;
+  }
+
+  .admin-shell .metric-v2,
+  .admin-products-shell .inventory-overview article,
+  .admin-shell[data-page="payouts"] .commission-kpis article,
+  .admin-shell .admin-order-summary article {
+    padding: 12px !important;
+    grid-template-columns: 38px minmax(0,1fr) !important;
+    gap: 9px !important;
+    align-items: center !important;
+  }
+
+  .admin-shell :is(.metric-v2,.inventory-overview article,.commission-kpis article,.admin-order-summary article) :is(strong,h3) {
+    max-width: 100%;
+    font-size: clamp(18px,5.3vw,23px) !important;
+    line-height: 1.12 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-shell :is(.metric-v2,.inventory-overview article,.commission-kpis article,.admin-order-summary article) :is(p,span) {
+    line-height: 1.3 !important;
+  }
+
+  /* The admin overview keeps two cards per row on phones. Its desktop card
+     template reserves separate icon and arrow columns, which leaves the copy
+     column too narrow and makes labels wrap one or two letters at a time.
+     Put the controls on a compact first row and give the copy the full card
+     width below it. */
+  .admin-shell[data-page="overview"] .admin-overview-clean .overview-shortcuts .metric-link {
+    min-height: 154px !important;
+    padding: 13px !important;
+    display: grid !important;
+    grid-template-columns: 40px minmax(0,1fr) !important;
+    grid-template-rows: 40px auto !important;
+    gap: 10px 8px !important;
+    align-content: start !important;
+    align-items: center !important;
+  }
+
+  .admin-shell[data-page="overview"] .admin-overview-clean .overview-shortcuts .metric-link > .metric-icon {
+    width: 40px !important;
+    height: 40px !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  .admin-shell[data-page="overview"] .admin-overview-clean .overview-shortcuts .metric-link > div:nth-child(2) {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: block !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+
+  .admin-shell[data-page="overview"] .admin-overview-clean .overview-shortcuts .metric-link > .metric-arrow {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+  }
+
+  .admin-shell[data-page="overview"] .admin-overview-clean .overview-shortcuts .metric-link > div:nth-child(2) > :is(span,strong,small) {
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+  }
+
+  .admin-shell[data-page="overview"] .admin-overview-clean .overview-shortcuts .metric-link > div:nth-child(2) > strong {
+    margin: 5px 0 6px !important;
+    font-size: clamp(18px, 5.2vw, 22px) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 }
