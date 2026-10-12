@@ -67,9 +67,19 @@ function workflow_invoice_document(string $raw,string $id): string {
 function workflow_route(PDO $pdo,string $path,string $method): void {
     if($path==='/admin/manual-order'&&$method==='POST'){
         $admin=require_admin($pdo);$data=input();
-        $member=trim((string)($data['entrepreneurId']??''));$requested=workflow_items($data['items']??[]);
-        $name=trim((string)($data['customer']??''));$phone=preg_replace('/[\s-]/','',(string)($data['phone']??''));$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
-        if(!$member||!$requested||!$name||strlen($name)>150||!preg_match('/^(?:\+94|0)7\d{8}$/',$phone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Choose an entrepreneur and at least one product, then enter valid client delivery details.'],422);
+        $member=trim((string)($data['entrepreneurId']??''));
+        $rawItems=$data['items']??[];
+        // Accept the retired single-product form during staggered frontend/API deployments.
+        if(!$rawItems&&!empty($data['productId']))$rawItems=[['productId'=>$data['productId'],'qty'=>$data['qty']??1,'sellPrice'=>$data['sellPrice']??($data['unitPrice']??null)]];
+        $requested=workflow_items($rawItems);
+        $name=trim((string)($data['customer']??($data['name']??'')));$phone=preg_replace('/[\s()-]/','',trim((string)($data['phone']??'')));$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
+        if(!$member)response(['message'=>'Choose the entrepreneur who made this sale.'],422);
+        if(!$requested)response(['message'=>'Add at least one product to this order.'],422);
+        if(!$name||strlen($name)>150)response(['message'=>'Enter a valid customer name.'],422);
+        if(!preg_match('/^(?:\+94|0)7\d{8}$/',$phone))response(['message'=>'Enter a valid Sri Lankan mobile number, such as 071 234 5678.'],422);
+        if(!$district||strlen($district)>80)response(['message'=>'Enter a valid delivery district.'],422);
+        if(!$address||strlen($address)>500)response(['message'=>'Enter a complete delivery address (up to 500 characters).'],422);
+        if(strlen($notes)>1000)response(['message'=>'Keep internal notes within 1,000 characters.'],422);
         $pdo->beginTransaction();$state=market_state($pdo,true);$entrepreneur=null;
         foreach($state['entrepreneurs'] as $candidate)if((string)$candidate['id']===$member&&($candidate['active']??true)&&($candidate['stage']??'')!=='Departed'){$entrepreneur=$candidate;break;}
         if(!$entrepreneur){$pdo->rollBack();response(['message'=>'Choose an active CAMY entrepreneur.'],422);}
