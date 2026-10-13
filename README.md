@@ -1,67 +1,162 @@
-# CAMY Entrepreneurs Digital Platform
+<div align="center">
+  <img src="public/camy-logo-transparent.png" alt="CAMY Logo" width="210" />
 
-CAMY is an **Entrepreneur + CAMY Admin** operations platform.
+  # CAMY Entrepreneurs Digital Platform
 
-There is no active customer portal. Entrepreneurs sell to their own clients and use CAMY in two ways:
+  **A modern operations platform connecting CAMY Admin and Entrepreneurs — from product selling to COD fulfilment, profit payouts and credit-stock management.**
 
-- **Drop-shipping:** always available; client pays Cash on Delivery.
-- **Credit stock:** unlocks after the entrepreneur reaches a CAMY-configured credit tier and remains optional.
+  <p>
+    <img src="https://img.shields.io/badge/React-Frontend-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
+    <img src="https://img.shields.io/badge/Vite-Build-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+    <img src="https://img.shields.io/badge/PHP-API-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP" />
+    <img src="https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" />
+  </p>
 
-## Current business flow
+  <p>
+    <img src="https://img.shields.io/badge/Status-Active-success?style=flat-square" alt="Status" />
+    <img src="https://img.shields.io/badge/Platform-Entrepreneur%20%2B%20Admin-orange?style=flat-square" alt="Platform" />
+    <img src="https://img.shields.io/badge/Payments-COD-blue?style=flat-square" alt="COD" />
+    <img src="https://img.shields.io/badge/Credit-Phase%202-purple?style=flat-square" alt="Credit" />
+  </p>
+</div>
 
-### Drop-shipping
+---
 
-1. Entrepreneur chooses CAMY products and sets their own client selling price.
-2. Entrepreneur enters client delivery details.
-3. The order is **Cash on Delivery only**. There is no client bank-transfer or client-receipt upload.
-4. CAMY reserves warehouse stock, prepares and dispatches the parcel.
-5. CAMY records courier/tracking information.
-6. After successful delivery CAMY collects the full COD amount.
-7. CAMY keeps the CAMY catalogue value.
-8. The remaining margin is transferred to the entrepreneur's saved bank account.
-9. Admin records the CAMY-to-entrepreneur transfer reference and receipt.
-10. Successfully delivered product selling value (selling price × quantity, excluding delivery charges) feeds credit eligibility; profit does not.
+## ✨ What is CAMY?
 
-### Phase 2 credit stock
+CAMY is an **Entrepreneur + CAMY Admin digital operations platform** designed to make selling and fulfilment easier.
 
-Once credit eligible, the entrepreneur can **still use drop-shipping** and can also choose **Credit stock**.
+Entrepreneurs sell CAMY products to their own clients, while the platform handles the operational flow behind the scenes — including **warehouse stock, COD orders, courier tracking, entrepreneur profit payouts and credit-stock management**.
 
-Credit-stock flow:
+> **There is no active customer portal.** Entrepreneurs manage their own clients through CAMY.
 
-```text
-Entrepreneur sends credit-stock request
-        ↓
-CAMY Admin checks credit + warehouse stock
-        ↓
-Approved → stock reserved
-        ↓
-Dispatched → stock issued to entrepreneur
-        ↓
-Outstanding CAMY credit increases
-        ↓
-Entrepreneur submits settlement
-        ↓
-CAMY verifies settlement
-        ↓
-Outstanding credit decreases
+---
+
+## 🚀 Core Features
+
+| 👤 Entrepreneur | 🛡️ CAMY Admin | 📦 Operations |
+|---|---|---|
+| Browse CAMY products | Manage entrepreneurs | Warehouse stock control |
+| Set own client selling price | Review & manage orders | Stock reservation |
+| Place COD client orders | Add courier/tracking details | COD fulfilment workflow |
+| Track order progress | Record entrepreneur payouts | Profit calculation |
+| View earnings & payouts | Manage credit eligibility | Credit-stock fulfilment |
+| Request credit stock | Approve/reject credit requests | Settlement tracking |
+
+---
+
+## 🛍️ Product Showcase
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="25%"><img src="public/products/ac-12000.png" alt="CAMY Air Conditioner" width="170" /><br/><b>Air Conditioners</b></td>
+      <td align="center" width="25%"><img src="public/products/smart-tv.png" alt="CAMY Smart TV" width="170" /><br/><b>Smart TVs</b></td>
+      <td align="center" width="25%"><img src="public/products/cookware-set.png" alt="CAMY Cookware Set" width="170" /><br/><b>Cookware</b></td>
+      <td align="center" width="25%"><img src="public/products/double-door-fridge.jpeg" alt="CAMY Refrigerator" width="170" /><br/><b>Refrigerators</b></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## 💸 Drop-shipping Flow
+
+```mermaid
+flowchart LR
+    A[Entrepreneur selects products] --> B[Sets client selling price]
+    B --> C[Creates COD order]
+    C --> D[CAMY reserves stock]
+    D --> E[Parcel dispatched]
+    E --> F[Courier delivers order]
+    F --> G[CAMY receives COD amount]
+    G --> H[CAMY keeps catalogue value]
+    H --> I[Profit paid to entrepreneur]
 ```
 
-No upfront payment or stock-purchase receipt is required for the Phase 2 credit request.
+### How it works
 
-Multiple credit-stock orders may remain unpaid as long as their combined outstanding value stays within the entrepreneur's credit limit. Tier 1 has 21 days to settle each order and higher tiers have 10 days. Entrepreneurs may request extra time; CAMY Admin approves or rejects the requested deadline. An unpaid order does not hide the catalogue or prevent a new request from reaching CAMY Admin.
+1. Entrepreneur chooses CAMY products and sets their own client selling price.
+2. Entrepreneur enters the client's delivery details.
+3. Orders are **Cash on Delivery only**.
+4. CAMY reserves warehouse stock and prepares the parcel.
+5. CAMY records courier and tracking information.
+6. After successful delivery, CAMY receives the full COD payment.
+7. CAMY keeps the catalogue value.
+8. The remaining margin becomes the entrepreneur's profit.
+9. CAMY records the payout reference and receipt.
+10. Successfully delivered product value contributes toward future credit eligibility.
 
-## Local XAMPP setup
+---
 
-Requirements:
+## 💳 Phase 2 — Credit Stock
+
+Once an entrepreneur reaches a CAMY-configured credit tier, they can continue using normal drop-shipping **and** optionally request credit stock.
+
+```mermaid
+flowchart TD
+    A[Entrepreneur requests credit stock] --> B[CAMY checks credit limit + stock]
+    B --> C{Approved?}
+    C -- Yes --> D[Stock reserved]
+    D --> E[Stock dispatched]
+    E --> F[Outstanding credit increases]
+    F --> G[Entrepreneur submits settlement]
+    G --> H[CAMY verifies settlement]
+    H --> I[Outstanding credit decreases]
+    C -- No --> J[Request rejected]
+```
+
+### Credit rules
+
+- No upfront payment is required for a credit-stock request.
+- Multiple unpaid credit orders are allowed while total outstanding credit stays within the entrepreneur's limit.
+- **Tier 1:** 21 days to settle each order.
+- **Higher tiers:** 10 days to settle each order.
+- Entrepreneurs can request extra time.
+- CAMY Admin can approve or reject deadline-extension requests.
+- An unpaid order does not hide the catalogue or automatically block a new request.
+
+---
+
+## 🧠 Platform Highlights
+
+- ⚡ Shared state refresh instead of duplicate page polling
+- 👁️ Visible-tab-only polling
+- 🔐 Server-side stock and credit validation
+- 🔒 Database transactions and write-only row locking
+- 📊 Bulk payout-ledger hydration
+- 🧹 Automatic inactive-account maintenance
+- 🚀 Operational indexes for common order and credit queries
+- 📱 Public entrepreneur registration with QR support
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React + Vite |
+| Backend API | PHP |
+| Database | MySQL |
+| Local Environment | XAMPP |
+| Icons | Lucide React |
+| QR Codes | QRCode React |
+| Spreadsheet Support | ExcelJS |
+
+---
+
+## 💻 Local Development Setup
+
+### Requirements
 
 - Windows
 - XAMPP
 - XAMPP MySQL running
-- Node.js / npm
+- Node.js + npm
 
-CAMY auto-detects PHP from PATH and common XAMPP folders on available Windows drives. Your local XAMPP does **not** need to be installed under `C:\xampp`.
+CAMY automatically detects PHP from your `PATH` and common XAMPP locations on available Windows drives. XAMPP does **not** need to be installed in `C:\xampp`.
 
-Default local database:
+### Default local database
 
 ```text
 Host: 127.0.0.1
@@ -71,7 +166,7 @@ User: root
 Password: empty
 ```
 
-For a custom XAMPP folder, set PHP explicitly for the current PowerShell session, for example:
+For a custom XAMPP folder, set PHP manually for the current PowerShell session:
 
 ```powershell
 $env:CAMY_PHP_PATH="D:\xammp\php\php.exe"
@@ -83,70 +178,94 @@ Verify PHP:
 npm.cmd run php:version
 ```
 
-## Run the project
+---
 
-Start **MySQL** in XAMPP, then:
+## ▶️ Run the Project
+
+Start **MySQL** in XAMPP, then run:
 
 ```powershell
 npm.cmd install
 npm.cmd run dev
 ```
 
-Development addresses:
+### Development URLs
 
-- Web app: `http://127.0.0.1:8080`
-- Public entrepreneur registration: `http://127.0.0.1:8080/register`
-- PHP API: `http://127.0.0.1:8000`
-- API health through Vite: `http://127.0.0.1:8080/api/health`
+| Service | URL |
+|---|---|
+| 🌐 Web App | `http://127.0.0.1:8080` |
+| 📝 Entrepreneur Registration | `http://127.0.0.1:8080/register` |
+| ⚙️ PHP API | `http://127.0.0.1:8000` |
+| ❤️ API Health | `http://127.0.0.1:8080/api/health` |
 
-For a deployed site, set `VITE_PUBLIC_URL` to the public CAMY origin before building. The admin registration QR code and copied registration link use this value, for example:
+`npm run dev` checks MySQL, creates `camy_new` when missing, applies the current schema/migrations and starts both PHP + Vite.
+
+---
+
+## 🌍 Public Deployment URL
+
+For a deployed site, set `VITE_PUBLIC_URL` before building:
 
 ```powershell
 $env:VITE_PUBLIC_URL="https://camy.example.com"
 npm.cmd run build
 ```
 
-Do not share a QR containing `localhost` or `127.0.0.1`; those addresses only work on the computer running CAMY.
+The admin registration QR code and copied registration link use this value.
 
-`npm run dev` checks MySQL, creates `camy_new` when missing, applies the current schema/migrations and then starts PHP + Vite.
+> ⚠️ Do not share a QR code containing `localhost` or `127.0.0.1`. Those addresses only work on the computer running CAMY.
 
-## Database setup
+---
 
-Create/apply the local database schema without deleting existing records:
+## 🗄️ Database Commands
+
+### Setup / update database
 
 ```powershell
 npm.cmd run db:setup
 ```
 
-To deliberately destroy and rebuild the configured local database:
+This applies the current local database schema without deleting existing records.
+
+### Reset database
 
 ```powershell
 npm.cmd run db:reset
 ```
 
-**Warning:** `db:reset` deletes all data. Do not use it for normal updates.
+> ⚠️ **Warning:** `db:reset` deletes all data. Do not use it for normal updates.
 
-### Production legacy-table cleanup
+### Database health check
 
-After backing up the full hosted database, run the versioned cleanup once:
+```powershell
+npm.cmd run db:check
+```
+
+This validates required tables, indexes, active credit commitments, payout-ledger consistency and other important database rules without deleting records.
+
+---
+
+## 🧹 Production Legacy Cleanup
+
+After backing up the hosted database, run:
 
 ```powershell
 npm.cmd run db:cleanup
 ```
 
-The cleanup targets only retired order tables and the retired customer-account
-tables. It writes a restorable SQL backup to
-`private/database-backups/` before dropping anything. If any target contains
-records, the command creates the backup and stops without deleting tables. Review
-that backup before deliberately rerunning with:
+The cleanup command:
+
+- targets only retired order/customer-account tables
+- creates a restorable SQL backup in `private/database-backups/`
+- stops before deleting tables when records are found
+
+After reviewing the backup, deliberate cleanup with existing data can be run using:
 
 ```powershell
 npm.cmd run db:cleanup -- --allow-data
 ```
 
-The current `customer_order_groups`, `shop_orders`, `shop_order_items`,
-`entrepreneur_payouts`, stock, security, and marketplace tables are active and
-are not cleanup targets.
+Active tables such as `customer_order_groups`, `shop_orders`, `shop_order_items`, `entrepreneur_payouts`, stock, security and marketplace tables are **not** cleanup targets.
 
 A fresh database may generate temporary admin credentials in:
 
@@ -154,51 +273,48 @@ A fresh database may generate temporary admin credentials in:
 private/bootstrap-credentials.txt
 ```
 
-## Performance / stability
+---
 
-The active system uses:
-
-- visible-tab-only state polling
-- one shared state refresh rather than duplicate page polling
-- write-only database row locking
-- bulk payout-ledger hydration
-- once-daily inactive-account maintenance
-- operational indexes for common entrepreneur/order/credit queries
-- database transactions and server-side stock/credit validation
-
-## Checks
-
-Non-destructive local database health check:
-
-```powershell
-npm.cmd run db:check
-```
-
-This checks required tables, operational indexes, active credit commitments, dropship payout-ledger consistency and other critical database invariants without deleting records.
-
-Frontend build:
+## ✅ Quality Checks
 
 ```powershell
 npm.cmd run build
-```
-
-PHP detection:
-
-```powershell
 npm.cmd run php:version
+npm.cmd run db:check
 ```
 
-The GitHub quality workflow also checks React build, PHP syntax, a clean MySQL schema/bootstrap and the end-to-end COD + entrepreneur payout + Phase 2 credit-stock flow.
+The GitHub quality workflow also checks:
 
-## Important files
+- React production build
+- PHP syntax
+- clean MySQL schema/bootstrap
+- end-to-end COD workflow
+- entrepreneur payout flow
+- Phase 2 credit-stock flow
 
-- `src/DropshipMarketplace.jsx` — COD client orders and Phase 2 credit stock
-- `src/App.jsx` — entrepreneur/admin application shell
-- `api/workflow.php` — COD order + payout workflow
-- `api/marketplace.php` — state, fulfilment and Phase 2 credit stock
-- `api/config.php` — database connection and automatic migrations
-- `database/schema.sql` — MySQL schema
-- `scripts/test-dropship-payout.php` — end-to-end business-flow integration test
-- `CURRENT-DROPSHIP-FLOW.md` — current process reference
+---
 
-The old public customer marketplace and `src/MarketplaceLegacy.jsx` are retained only for migration/history compatibility and are not part of the active ordering flow.
+## 📁 Important Files
+
+```text
+src/DropshipMarketplace.jsx     COD client orders + Phase 2 credit stock
+src/App.jsx                     Entrepreneur/Admin application shell
+api/workflow.php                COD order + payout workflow
+api/marketplace.php             Marketplace state + fulfilment + credit stock
+api/config.php                  Database connection + automatic migrations
+database/schema.sql             MySQL database schema
+scripts/test-dropship-payout.php End-to-end workflow integration test
+CURRENT-DROPSHIP-FLOW.md        Current business-process reference
+```
+
+> The old public customer marketplace and `src/MarketplaceLegacy.jsx` remain only for migration/history compatibility and are **not part of the active ordering flow**.
+
+---
+
+<div align="center">
+  <img src="public/camy-logo-tight.png" alt="CAMY" width="140" />
+
+  ### Built to simplify CAMY entrepreneur operations 🚀
+
+  **Sell • Fulfil • Track • Earn • Grow**
+</div>
