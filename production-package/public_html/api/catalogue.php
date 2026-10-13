@@ -49,7 +49,7 @@ function catalogue_products(array $products): array {
         if(array_key_exists('billingPrice',$product)||array_key_exists('deliveryCost',$product)||array_key_exists('packagingCost',$product)){
             $billing=filter_var($product['billingPrice'] ?? null,FILTER_VALIDATE_FLOAT);$delivery=filter_var($product['deliveryCost'] ?? 0,FILTER_VALIDATE_FLOAT);$packaging=filter_var($product['packagingCost'] ?? 0,FILTER_VALIDATE_FLOAT);
             if($billing===false||$delivery===false||$packaging===false||!is_finite($billing)||!is_finite($delivery)||!is_finite($packaging)||$billing<0||$delivery<0||$packaging<0)response(['message'=>'Product billing, delivery and packaging costs must be valid nonnegative amounts.'],422);
-            $product['billingPrice']=round((float)$billing,2);$product['deliveryCost']=round((float)$delivery,2);$product['packagingCost']=round((float)$packaging,2);$product['freeDelivery']=($product['freeDelivery'] ?? true)===true;$price=round($billing+$packaging+($product['freeDelivery']?$delivery:0),2);
+            $product['billingPrice']=round((float)$billing,2);$product['deliveryCost']=round((float)$delivery,2);$product['packagingCost']=round((float)$packaging,2);$product['freeDelivery']=($product['freeDelivery'] ?? true)===true;$product['deliveryChargeVisible']=!$product['freeDelivery'];$price=round($billing+$packaging+($product['freeDelivery']?$delivery:0),2);
         }
         $product['code']=$code;$product['name']=$name;$product['category']=$category;$product['price']=round($price,2);$product['stock']=$stock;$product['published']=($product['published'] ?? true)===true;
         if(isset($product['media'])){

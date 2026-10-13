@@ -1821,6 +1821,8 @@ input:focus, select:focus, textarea:focus {
 .application-admin-note { border-color: #eed9bb!important; background: #fff9ee!important; }
 .application-admin-note p { margin: 0; color: #765631; line-height: 1.55; }
 .application-detail-actions { margin-top: 20px; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 9px; }
+.application-detail-actions .application-whatsapp { border-color:#159f63; color:#fff; background:#159f63; }
+.application-detail-actions .application-whatsapp:hover { border-color:#10824f; background:#10824f; }
 
 @media (max-width: 1100px) {
   .application-kpis { grid-template-columns: repeat(2,1fr); }

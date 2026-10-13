@@ -153,7 +153,11 @@ function market_route(PDO $pdo, string $path, string $method): void {
         $entrepreneurProducts=array_map(static function($product){
             $airConditioner=($product['deliveryChargeVisible'] ?? false)===true||strcasecmp((string)($product['category'] ?? ''),'Air Conditioners')===0;
             $product['stock']=max(0,(int)($product['stock'] ?? 0));
-            if(!$airConditioner){unset($product['billingPrice'],$product['deliveryCost'],$product['packagingCost'],$product['deliveryChargeVisible']);$product['freeDelivery']=true;}
+            $freeDelivery=($product['freeDelivery'] ?? true)===true;
+            $product['price']=round((float)($product['billingPrice']??$product['price']??0)+(float)($product['packagingCost']??0)+($freeDelivery?(float)($product['deliveryCost']??0):0),2);
+            $product['freeDelivery']=$freeDelivery;$product['deliveryChargeVisible']=!$freeDelivery;
+            unset($product['billingPrice'],$product['packagingCost']);
+            if($freeDelivery)unset($product['deliveryCost']);
             return $product;
         },array_values(array_filter($state['products'] ?? [],static fn($product)=>($product['published'] ?? true)===true)));
         response(['products'=>$entrepreneurProducts,'catalogue_live'=>$state['catalogue_live'] ?? false,'entrepreneurs'=>market_public($state)['entrepreneurs'],'self'=>$self,'tiers'=>$state['tiers'] ?? [],'inventory'=>array_values(array_filter($state['inventory'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'requests'=>array_values(array_filter($state['requests'] ?? [],static fn($item)=>$item['entrepreneurId']===$member)),'orders'=>array_map('market_safe_order',array_values(array_filter($state['orders'] ?? [],static fn($item)=>$item['entrepreneurId']===$member))),'settlements'=>array_map('market_safe_settlement',array_values(array_filter($state['settlements'] ?? [],static fn($item)=>(string)$item['entrepreneurId']===$member)))]);

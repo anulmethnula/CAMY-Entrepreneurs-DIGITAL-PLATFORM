@@ -47,7 +47,12 @@ const applicationWhatsAppUrl = request => {
   let number = String(request?.phone || '').replace(/\D/g, '')
   if (number.startsWith('0')) number = '94' + number.slice(1)
   const member = request?.member_id ? ` Member ID: ${request.member_id}.` : ''
-  const message = `Hello ${request?.full_name || 'CAMY Entrepreneur'}, your CAMY entrepreneur account has been approved. Your login username is ${request?.email || ''}. Please use the password you created during registration to sign in.${member}`
+  const status=String(request?.status||'pending').toLowerCase()
+  const message=status==='approved'
+    ? `Hello ${request?.full_name || 'CAMY Entrepreneur'}, your CAMY entrepreneur account has been approved. Your login username is ${request?.email || ''}. Please use the password you created during registration to sign in.${member}`
+    : status==='rejected'
+      ? `Hello ${request?.full_name || 'CAMY Applicant'}, we are contacting you regarding your CAMY entrepreneur application #${request?.id || ''}. Please reply if you need more information about the review decision.`
+      : `Hello ${request?.full_name || 'CAMY Applicant'}, CAMY is reviewing your entrepreneur application #${request?.id || ''}. We would like to contact you regarding your application.`
   return number ? `https://wa.me/${number}?text=${encodeURIComponent(message)}` : ''
 }
 const publicRegistrationUrl = () => new URL('/register', String(import.meta.env.VITE_PUBLIC_URL || window.location.origin).replace(/\/+$/, '') + '/').toString()
@@ -729,7 +734,7 @@ function RegistrationApplicationModal({ request, close, review, reviewing }) {
     {request.admin_note&&<section className="application-admin-note"><h3>Admin decision note</h3><p>{request.admin_note}</p></section>}
     <footer className="application-detail-actions">
       {request.status==='pending'&&<><Button variant="secondary" disabled={reviewing===request.id} onClick={()=>review(request,'reject')}>Reject application</Button><Button icon={Check} disabled={reviewing===request.id} onClick={()=>review(request,'approve')}>{reviewing===request.id?'Saving…':'Approve account'}</Button></>}
-      {request.status==='approved'&&<a className="btn primary" href={applicationWhatsAppUrl(request)} target="_blank" rel="noreferrer"><Phone/> Message activation on WhatsApp</a>}
+      {applicationWhatsAppUrl(request)&&<a className="btn application-whatsapp" href={applicationWhatsAppUrl(request)} target="_blank" rel="noreferrer"><Phone/> Message on WhatsApp</a>}
       <Button variant="soft" onClick={close}>Close</Button>
     </footer>
   </div></Modal>
@@ -945,7 +950,9 @@ function AdminOrders({ orders, openOrder, products, entrepreneurs, onManualOrder
     || (filter==='In progress'&&!['Delivered','Returned','Rejected','Cancelled'].includes(order.status))
     || (filter==='Payouts pending'&&['pending_delivery','pending_transfer'].includes(order.payoutStatus))
     || order.status===filter
-  const visible=orders.filter(order=>matchesOrderFilter(order)&&(!fromDate||order.date>=fromDate)&&(!toDate||order.date<=toDate)&&`${order.id} ${order.invoiceNumber||''} ${order.customer} ${order.phone||''} ${order.entrepreneur} ${order.product}`.toLowerCase().includes(search.trim().toLowerCase()))
+  const orderCreatedAt=order=>Date.parse(order.createdAt||order.date||'')||0
+  const orderSequence=order=>Number(String(order.id||'').match(/(\d+)$/)?.[1]||0)
+  const visible=orders.filter(order=>matchesOrderFilter(order)&&(!fromDate||order.date>=fromDate)&&(!toDate||order.date<=toDate)&&`${order.id} ${order.invoiceNumber||''} ${order.customer} ${order.phone||''} ${order.entrepreneur} ${order.product}`.toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>orderCreatedAt(b)-orderCreatedAt(a)||orderSequence(b)-orderSequence(a))
   const filtersActive=Boolean(search||filter!=='All'||fromDate||toDate||quickDate!=='all')
   const clearFilters=()=>{setSearch('');setFilter('All');setFromDate('');setToDate('');setQuickDate('all')}
   const createOrder=async form=>{
@@ -1082,7 +1089,7 @@ function ManualOrderModal({ products, entrepreneurs, close, submit, saving=false
   const margin=clientTotal-camyCost
   const validItems=items.length&&items.every(item=>Number(item.qty)>0&&Number(item.qty)<=item.stock&&Number(item.sellPrice)>=item.camyPrice)
   const valid=entrepreneur&&validItems&&customer.name.trim()&&/^(?:\+94|0)7\d{8}$/.test(customer.phone.replace(/[\s-]/g,''))&&customer.district.trim()&&customer.address.trim()
-  const save=event=>{event.preventDefault();if(!valid||saving)return;submit({entrepreneurId,items:items.map(({productId,qty,sellPrice})=>({productId,qty:Number(qty),sellPrice:Number(sellPrice)})),...customer})}
+  const save=event=>{event.preventDefault();if(!valid||saving)return;submit({entrepreneurId,items:items.map(({productId,qty,sellPrice})=>({productId,qty:Number(qty),sellPrice:Number(sellPrice)})),customer:customer.name,phone:customer.phone,district:customer.district,address:customer.address,notes:customer.notes,source:customer.source})}
   return <Modal onClose={close} wide className="multi-order-modal admin-assisted-order"><form className="manual-order-v2 multi-order-form" onSubmit={save}>
     <header className="manual-order-heading"><span><ShoppingCart/></span><div><small>CAMY MULTI-PRODUCT COD ORDER</small><h2>Create an assisted client order</h2><p>Add multiple products, set the entrepreneur's selling price for each item, and confirm the combined commission before saving.</p></div></header>
     <section className="manual-step"><div className="manual-step-title"><i>1</i><div><h3>Select the entrepreneur</h3><p>All commission from this order will be transferred to the selected entrepreneur after delivery.</p></div></div><div className="smart-picker"><label><Search/><input value={entrepreneurSearch} onChange={event=>{setEntrepreneurSearch(event.target.value);setEntrepreneurId('')}} placeholder="Search member name, ID, phone, or city"/></label>{entrepreneurSearch&&!entrepreneur&&<div className="smart-results">{people.map(person=><button type="button" key={person.id} onClick={()=>{setEntrepreneurId(person.id);setEntrepreneurSearch(`${person.name} · ${person.id}`)}}><i>{person.initials||'CE'}</i><span><strong>{person.name}</strong><small>{person.id} · {person.phone||person.city}</small></span></button>)}</div>}</div>{entrepreneur&&<div className="selected-entrepreneur"><span>{entrepreneur.initials||'CE'}</span><div><small>COMMISSION RECIPIENT</small><strong>{entrepreneur.name}</strong><p>{entrepreneur.id} · {entrepreneur.phone||entrepreneur.city}</p></div><BadgeCheck/></div>}</section>

@@ -4,7 +4,7 @@ export function productCosts(product) {
   const packagingCost = Number(product.packagingCost ?? 0)
   const freeDelivery = product.freeDelivery !== false
   const price = Math.round((billingPrice + packagingCost + (freeDelivery ? deliveryCost : 0)) * 100) / 100
-  return { billingPrice, deliveryCost, packagingCost, price, freeDelivery }
+  return { billingPrice, deliveryCost, packagingCost, price, freeDelivery, deliveryChargeVisible: !freeDelivery }
 }
 
 export function deliveryLabel(product) {

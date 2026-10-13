@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+function workflow_product_price(array $product): float { if(!array_key_exists('billingPrice',$product))return round((float)($product['price'] ?? 0),2);return round((float)$product['billingPrice']+(float)($product['packagingCost'] ?? 0)+(($product['freeDelivery'] ?? true)?(float)($product['deliveryCost'] ?? 0):0),2); }
+function workflow_delivery_cost(array $product): float { return ($product['freeDelivery'] ?? true)===false?round((float)($product['deliveryCost'] ?? 0),2):0; }
+
 function workflow_owner(array $user, string $member): void {
     if(!in_array($user['role'],['admin','manager'],true)&&($user['role']!=='entrepreneur'||(string)$user['member_id']!==$member))response(['message'=>'You cannot review another shop order.'],403);
 }
@@ -64,14 +67,24 @@ function workflow_invoice_document(string $raw,string $id): string {
 function workflow_route(PDO $pdo,string $path,string $method): void {
     if($path==='/admin/manual-order'&&$method==='POST'){
         $admin=require_admin($pdo);$data=input();
-        $member=trim((string)($data['entrepreneurId']??''));$requested=workflow_items($data['items']??[]);
-        $name=trim((string)($data['customer']??''));$phone=preg_replace('/[\s-]/','',(string)($data['phone']??''));$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
-        if(!$member||!$requested||!$name||strlen($name)>150||!preg_match('/^(?:\+94|0)7\d{8}$/',$phone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Choose an entrepreneur and at least one product, then enter valid client delivery details.'],422);
+        $member=trim((string)($data['entrepreneurId']??''));
+        $rawItems=$data['items']??[];
+        // Accept the retired single-product form during staggered frontend/API deployments.
+        if(!$rawItems&&!empty($data['productId']))$rawItems=[['productId'=>$data['productId'],'qty'=>$data['qty']??1,'sellPrice'=>$data['sellPrice']??($data['unitPrice']??null)]];
+        $requested=workflow_items($rawItems);
+        $name=trim((string)($data['customer']??($data['name']??'')));$phone=preg_replace('/[\s()-]/','',trim((string)($data['phone']??'')));$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
+        if(!$member)response(['message'=>'Choose the entrepreneur who made this sale.'],422);
+        if(!$requested)response(['message'=>'Add at least one product to this order.'],422);
+        if(!$name||strlen($name)>150)response(['message'=>'Enter a valid customer name.'],422);
+        if(!preg_match('/^(?:\+94|0)7\d{8}$/',$phone))response(['message'=>'Enter a valid Sri Lankan mobile number, such as 071 234 5678.'],422);
+        if(!$district||strlen($district)>80)response(['message'=>'Enter a valid delivery district.'],422);
+        if(!$address||strlen($address)>500)response(['message'=>'Enter a complete delivery address (up to 500 characters).'],422);
+        if(strlen($notes)>1000)response(['message'=>'Keep internal notes within 1,000 characters.'],422);
         $pdo->beginTransaction();$state=market_state($pdo,true);$entrepreneur=null;
         foreach($state['entrepreneurs'] as $candidate)if((string)$candidate['id']===$member&&($candidate['active']??true)&&($candidate['stage']??'')!=='Departed'){$entrepreneur=$candidate;break;}
         if(!$entrepreneur){$pdo->rollBack();response(['message'=>'Choose an active CAMY entrepreneur.'],422);}
         $selected=[];$clientTotal=0;$camyCost=0;$count=0;
-        foreach($requested as $entry){$product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($entry['productId']??'')){$product=$candidate;break;}$qty=(int)$entry['qty'];$sell=filter_var($entry['sellPrice']??null,FILTER_VALIDATE_FLOAT);if(!$product||($product['published']??true)!==true||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A selected product is hidden or does not have enough warehouse stock.'],409);}$base=round((float)$product['price'],2);$delivery=($product['freeDelivery']??true)===false?round((float)($product['deliveryCost']??0),2):0;if($sell===false||!is_finite($sell)||$sell<$base||$sell>100000000){$pdo->rollBack();response(['message'=>'Every client selling price must be at least its CAMY product price.'],422);}$sell=round((float)$sell,2);$selected[]=['id'=>$product['id'],'productId'=>$product['id'],'name'=>$product['name'],'qty'=>$qty,'price'=>$sell,'camyPrice'=>$base,'deliveryCost'=>$delivery,'image'=>$product['image']??'','category'=>$product['category']??'Other'];$clientTotal+=($sell+$delivery)*$qty;$camyCost+=($base+$delivery)*$qty;$count+=$qty;}
+        foreach($requested as $entry){$product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($entry['productId']??'')){$product=$candidate;break;}$qty=(int)$entry['qty'];$sell=filter_var($entry['sellPrice']??null,FILTER_VALIDATE_FLOAT);if(!$product||($product['published']??true)!==true||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A selected product is hidden or does not have enough warehouse stock.'],409);}$base=workflow_product_price($product);$delivery=workflow_delivery_cost($product);if($sell===false||!is_finite($sell)||$sell<$base||$sell>100000000){$pdo->rollBack();response(['message'=>'Every client selling price must be at least its CAMY product price.'],422);}$sell=round((float)$sell,2);$selected[]=['id'=>$product['id'],'productId'=>$product['id'],'name'=>$product['name'],'qty'=>$qty,'price'=>$sell,'camyPrice'=>$base,'deliveryCost'=>$delivery,'image'=>$product['image']??'','category'=>$product['category']??'Other'];$clientTotal+=($sell+$delivery)*$qty;$camyCost+=($base+$delivery)*$qty;$count+=$qty;}
         $clientTotal=round($clientTotal,2);$camyCost=round($camyCost,2);$margin=round($clientTotal-$camyCost,2);
         workflow_reserve($state,$selected,null);$groupId='DROP-'.bin2hex(random_bytes(5));$id=workflow_next_order_id($state);$token=bin2hex(random_bytes(24));
         $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
@@ -102,7 +115,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
             $qty=(int)($item['qty']??0);$sell=filter_var($item['sellPrice']??null,FILTER_VALIDATE_FLOAT);
             if(!$product||($product['published'] ?? true)!==true||$qty<1||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A selected CAMY product is hidden or unavailable in the requested quantity.'],409);}
             if($sell===false||!is_finite($sell)||$sell<(float)$product['price']||$sell>100000000){$pdo->rollBack();response(['message'=>'Your client price can be any amount at or above the CAMY product price.'],422);}
-            $sell=round((float)$sell,2);$base=round((float)$product['price'],2);$delivery=($product['freeDelivery']??true)===false?round((float)($product['deliveryCost']??0),2):0;
+            $sell=round((float)$sell,2);$base=workflow_product_price($product);$delivery=workflow_delivery_cost($product);
             $selected[]=['id'=>$product['id'],'productId'=>$product['id'],'name'=>$product['name'],'qty'=>$qty,'price'=>$sell,'camyPrice'=>$base,'deliveryCost'=>$delivery,'image'=>$product['image']??'','category'=>$product['category']??'Other'];
             $clientTotal+=($sell+$delivery)*$qty;$camyCost+=($base+$delivery)*$qty;$count+=$qty;
         }
