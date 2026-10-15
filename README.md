@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <b>Entrepreneur selling, COD fulfilment, payouts and credit-stock operations in one platform.</b>
+  <b>Entrepreneur selling, COD fulfilment, payouts and credit-stock operations in one connected business platform.</b>
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 
 | | |
 |---|---|
-| **Problem** | CAMY needs one clear workflow for entrepreneur orders, stock, COD collections, payouts and credit stock. |
+| **Business problem** | CAMY needs one clear workflow for entrepreneur orders, stock, COD collections, payouts and credit stock. |
 | **Solution** | A role-based operations platform for CAMY Admin and Entrepreneurs. |
 | **Main users** | Entrepreneurs + CAMY Admin. |
 | **Key flow** | Sell → Fulfil → Collect COD → Pay entrepreneur → Build credit eligibility. |
@@ -34,15 +34,21 @@
 - Credit eligibility, credit-stock requests and settlements
 - Server-side stock and credit validation
 
-## Product Experience
+## Business Workflow
+
+<p align="center">
+  <img src="readme-workflow.svg" width="96%" alt="CAMY business workflow from entrepreneur selling to COD payout and credit stock" />
+</p>
+
+## Product Context
 
 <div align="center">
 <table>
 <tr>
-<td align="center"><img src="public/products/ac-12000.png" width="150" alt="Air Conditioner" /><br/><b>Air Conditioners</b></td>
-<td align="center"><img src="public/products/smart-tv.png" width="150" alt="Smart TV" /><br/><b>Smart TVs</b></td>
-<td align="center"><img src="public/products/cookware-set.png" width="150" alt="Cookware" /><br/><b>Cookware</b></td>
-<td align="center"><img src="public/products/double-door-fridge.jpeg" width="150" alt="Refrigerator" /><br/><b>Refrigerators</b></td>
+<td align="center"><img src="public/products/ac-12000.png" width="145" alt="Air Conditioner" /><br/><b>Air Conditioners</b></td>
+<td align="center"><img src="public/products/smart-tv.png" width="145" alt="Smart TV" /><br/><b>Smart TVs</b></td>
+<td align="center"><img src="public/products/cookware-set.png" width="145" alt="Cookware" /><br/><b>Cookware</b></td>
+<td align="center"><img src="public/products/double-door-fridge.jpeg" width="145" alt="Refrigerator" /><br/><b>Refrigerators</b></td>
 </tr>
 </table>
 </div>
@@ -55,7 +61,7 @@
 **Credit stock**  
 `Request stock` → `Credit + stock check` → `Approve` → `Issue stock` → `Settlement` → `Credit updated`
 
-## Engineering Focus
+## Engineering & Business Focus
 
 - Database transactions for important write operations
 - Server-side stock and credit checks
@@ -63,6 +69,15 @@
 - Operational indexes for common order and credit queries
 - Payout-ledger consistency checks
 - Public entrepreneur registration with QR support
+- Clear separation between entrepreneur actions and admin operations
+
+## What This Project Demonstrates
+
+- Translating a real business model into a structured digital workflow
+- Designing around multiple roles, stock movement and payment states
+- Connecting operational rules with database-level validation
+- Handling COD, profit calculation and credit-stock logic in one platform
+- Thinking beyond UI screens to complete process delivery
 
 ## Tech Stack
 
