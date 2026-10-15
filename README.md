@@ -1,153 +1,100 @@
-<div align="center">
+<p align="center">
+  <img src="readme-banner.svg" width="100%" alt="CAMY Entrepreneurs Digital Platform" />
+</p>
 
-# CAMY Entrepreneurs Digital Platform
+<p align="center">
+  <b>Entrepreneur selling, COD fulfilment, payouts and credit-stock operations in one platform.</b>
+</p>
 
-**A simple digital platform for CAMY Admin and Entrepreneurs to manage selling, COD orders, fulfilment, payouts, and credit stock.**
-
-![React](https://img.shields.io/badge/React-Frontend-61DAFB?style=flat-square&logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite-Build-646CFF?style=flat-square&logo=vite&logoColor=white)
-![PHP](https://img.shields.io/badge/PHP-API-777BB4?style=flat-square&logo=php&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-Database-4479A1?style=flat-square&logo=mysql&logoColor=white)
-
-</div>
-
----
-
-## 📌 About the Platform
-
-CAMY is an **Entrepreneur + Admin operations platform**.
-
-Entrepreneurs sell CAMY products to their own clients, while CAMY manages the operational side such as stock, COD orders, courier tracking, payouts, and credit-stock requests.
-
-> There is no active public customer portal. Entrepreneurs manage their own clients through the system.
+<p align="center">
+  <img src="https://img.shields.io/badge/React-Frontend-61DAFB?style=flat-square&logo=react&logoColor=111827" alt="React" />
+  <img src="https://img.shields.io/badge/PHP-API-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP" />
+  <img src="https://img.shields.io/badge/MySQL-Database-4479A1?style=flat-square&logo=mysql&logoColor=white" alt="MySQL" />
+  <img src="https://img.shields.io/badge/XAMPP-Local-FB7A24?style=flat-square&logo=xampp&logoColor=white" alt="XAMPP" />
+</p>
 
 ---
 
-## ✨ Main Features
+## Project Snapshot
 
-### 👤 Entrepreneur
-- Browse CAMY products
-- Set own client selling price
-- Place COD orders
-- Track order progress
-- View earnings and payouts
-- Request credit stock
+| | |
+|---|---|
+| **Problem** | CAMY needs one clear workflow for entrepreneur orders, stock, COD collections, payouts and credit stock. |
+| **Solution** | A role-based operations platform for CAMY Admin and Entrepreneurs. |
+| **Main users** | Entrepreneurs + CAMY Admin. |
+| **Key flow** | Sell → Fulfil → Collect COD → Pay entrepreneur → Build credit eligibility. |
 
-### 🛡️ CAMY Admin
-- Manage entrepreneurs
-- Manage products and stock
-- Review and update orders
-- Add courier and tracking details
-- Record entrepreneur payouts
-- Manage credit eligibility and settlements
+## What the Platform Handles
 
----
+- Entrepreneur product browsing and selling-price control
+- Cash-on-Delivery client orders
+- Warehouse stock reservation and fulfilment
+- Courier and tracking updates
+- Entrepreneur profit and payout records
+- Credit eligibility, credit-stock requests and settlements
+- Server-side stock and credit validation
 
-## 🔄 Business Flow
-
-### Drop-shipping
-
-`Select Product` → `Set Selling Price` → `Place COD Order` → `CAMY Dispatches` → `Customer Pays` → `Entrepreneur Gets Profit`
-
-### Credit Stock
-
-`Request Credit Stock` → `CAMY Reviews` → `Approved` → `Stock Issued` → `Entrepreneur Settles Later`
-
----
-
-## 🛍️ Products
+## Product Experience
 
 <div align="center">
 <table>
 <tr>
-<td align="center"><img src="public/products/ac-12000.png" width="145" alt="Air Conditioner"><br><b>Air Conditioners</b></td>
-<td align="center"><img src="public/products/smart-tv.png" width="145" alt="Smart TV"><br><b>Smart TVs</b></td>
-<td align="center"><img src="public/products/cookware-set.png" width="145" alt="Cookware"><br><b>Cookware</b></td>
-<td align="center"><img src="public/products/double-door-fridge.jpeg" width="145" alt="Refrigerator"><br><b>Refrigerators</b></td>
+<td align="center"><img src="public/products/ac-12000.png" width="150" alt="Air Conditioner" /><br/><b>Air Conditioners</b></td>
+<td align="center"><img src="public/products/smart-tv.png" width="150" alt="Smart TV" /><br/><b>Smart TVs</b></td>
+<td align="center"><img src="public/products/cookware-set.png" width="150" alt="Cookware" /><br/><b>Cookware</b></td>
+<td align="center"><img src="public/products/double-door-fridge.jpeg" width="150" alt="Refrigerator" /><br/><b>Refrigerators</b></td>
 </tr>
 </table>
 </div>
 
----
+## Core Business Flows
 
-## 🛠️ Tech Stack
+**Drop-shipping**  
+`Choose product` → `Set selling price` → `Place COD order` → `CAMY dispatches` → `COD collected` → `Profit paid`
 
-| Area | Technology |
+**Credit stock**  
+`Request stock` → `Credit + stock check` → `Approve` → `Issue stock` → `Settlement` → `Credit updated`
+
+## Engineering Focus
+
+- Database transactions for important write operations
+- Server-side stock and credit checks
+- Shared state refresh to reduce duplicate polling
+- Operational indexes for common order and credit queries
+- Payout-ledger consistency checks
+- Public entrepreneur registration with QR support
+
+## Tech Stack
+
+| Layer | Technology |
 |---|---|
 | Frontend | React + Vite |
 | Backend | PHP |
 | Database | MySQL |
-| Local Environment | XAMPP |
+| Local environment | XAMPP |
 
----
-
-## 💻 Run Locally
-
-### Requirements
-- Windows
-- XAMPP
-- MySQL running
-- Node.js + npm
-
-### Install and start
+## Run Locally
 
 ```powershell
 npm.cmd install
 npm.cmd run dev
 ```
 
-### Local URLs
-
-- Web App: `http://127.0.0.1:8080`
+**Local services**
+- App: `http://127.0.0.1:8080`
 - Registration: `http://127.0.0.1:8080/register`
-- PHP API: `http://127.0.0.1:8000`
+- API: `http://127.0.0.1:8000`
 
----
-
-## 🗄️ Database
-
-Default local database:
-
-```text
-Host: 127.0.0.1
-Port: 3306
-Database: camy_new
-User: root
-Password: empty
-```
-
-Useful commands:
+Useful checks:
 
 ```powershell
 npm.cmd run db:setup
 npm.cmd run db:check
+npm.cmd run build
 ```
 
-To completely reset the local database:
-
-```powershell
-npm.cmd run db:reset
-```
-
-> ⚠️ `db:reset` deletes existing local data.
+> `npm.cmd run db:reset` completely resets the local database and deletes local data.
 
 ---
 
-## 📁 Main Files
-
-- `src/DropshipMarketplace.jsx` — drop-shipping and credit stock
-- `src/App.jsx` — main application
-- `api/workflow.php` — COD and payout workflow
-- `api/marketplace.php` — marketplace and fulfilment logic
-- `api/config.php` — database connection and migrations
-- `database/schema.sql` — MySQL schema
-
----
-
-<div align="center">
-
-### CAMY Entrepreneurs Digital Platform 🚀
-
-**Sell • Manage • Track • Earn**
-
-</div>
+<p align="center"><b>Built around a real operational flow — not only a product catalogue.</b></p>
