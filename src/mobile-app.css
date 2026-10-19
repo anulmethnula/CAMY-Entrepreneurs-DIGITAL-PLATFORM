@@ -10,6 +10,16 @@
 /* Mobile profile: the app bar already identifies this screen, so avoid a
    second hero title and keep editing controls with the details they affect. */
 @media (max-width: 760px) {
+  /* Keep hero media compact enough that the next section is visible on phones. */
+  :is(.hero, [class~="hero"], [class$="-hero"], [class*="-hero "]) :is(video, .hero-video),
+  video.hero-video {
+    width: 100% !important;
+    height: min(50svh, 420px) !important;
+    min-height: 0 !important;
+    max-height: 50svh !important;
+    object-fit: cover;
+  }
+
   .entrepreneur-shell[data-page="profile"] > main > .content-page > .page-title {
     display: none !important;
   }
