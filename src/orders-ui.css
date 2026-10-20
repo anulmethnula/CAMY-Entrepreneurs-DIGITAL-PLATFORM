@@ -357,3 +357,17 @@
     grid-template-columns: 1fr !important;
   }
 }
+.workflow-panel .tracking-number,
+.workflow-panel .tracking-number-input {
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 850;
+  letter-spacing: .045em;
+}
+
+.workflow-panel .tracking-number-input {
+  min-height: 52px;
+}
+
+.dispatch-fields .save-tracking {
+  margin-top: 12px;
+}

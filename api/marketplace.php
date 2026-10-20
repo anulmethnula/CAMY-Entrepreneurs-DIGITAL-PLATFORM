@@ -375,7 +375,8 @@ function market_route(PDO $pdo, string $path, string $method): void {
         $management=in_array($user['role'],['admin','manager'],true);$ownsDropship=($order['orderMode'] ?? '')==='dropship'&&$user['role']==='entrepreneur'&&(string)($user['member_id'] ?? '')===(string)($order['entrepreneurId'] ?? '');$ownerCancel=$ownsDropship&&$status==='Cancelled'&&in_array(($order['status'] ?? ''),['Pending','Processing'],true);$ownerRestore=$ownsDropship&&$status==='Processing'&&($order['status'] ?? '')==='Cancelled';
         if(($order['orderMode'] ?? '')==='dropship'&&!$management&&!$ownerCancel&&!$ownerRestore)response(['message'=>'You can cancel or restore your COD order only before CAMY dispatches it.'],403);
         workflow_owner($user,(string)$order['entrepreneurId']);
-        if(!($status==='Delivered'&&$order['status']==='Delivered'))workflow_transition($order['status'],$status,false);
+        $trackingOnlyUpdate=$management&&$status==='Dispatched'&&($order['status']??'')==='Dispatched';
+        if(!$trackingOnlyUpdate&&!($status==='Delivered'&&$order['status']==='Delivered'))workflow_transition($order['status'],$status,false);
         if($status==='Delivered'&&empty($order['deliveryConfirmations']['seller']))$state['orders'][$index]['deliveryConfirmations']['seller']=['id'=>(int)$user['id'],'name'=>$user['full_name'],'at'=>date(DATE_ATOM)];
         if($status==='Dispatched'){
             $trackingNumber=trim((string)($data['trackingNumber'] ?? ''));

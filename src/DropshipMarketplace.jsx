@@ -8,7 +8,7 @@ import { exportReport } from './reports'
 
 const money = value => `Rs. ${Number(value || 0).toLocaleString('en-LK', { maximumFractionDigits: 2 })}`
 const districts = ['Ampara','Anuradhapura','Badulla','Batticaloa','Colombo','Galle','Gampaha','Hambantota','Jaffna','Kalutara','Kandy','Kegalle','Kilinochchi','Kurunegala','Mannar','Matale','Matara','Monaragala','Mullaitivu','Nuwara Eliya','Polonnaruwa','Puttalam','Ratnapura','Trincomalee','Vavuniya']
-const blankClient = { name: '', phone: '', district: 'Colombo', address: '', notes: '' }
+const blankClient = { name: '', phone: '', phone2: '', district: 'Colombo', address: '', notes: '' }
 
 const productFeatures = product => {
   if (Array.isArray(product?.specs)) return product.specs.filter(Boolean)
@@ -121,10 +121,13 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
   const estimatedMargin = clientTotal - camyCost
   const lowPriceItem = selected.find(item => Number(item.sellPrice) < Number(item.product.price))
   const cleanPhone = client.phone.replace(/[\s()-]/g, '')
+  const cleanPhone2 = client.phone2.replace(/[\s()-]/g, '')
   const validPhone = /^(?:0\d{9}|\+94\d{9})$/.test(cleanPhone)
+  const validPhone2 = /^(?:0\d{9}|\+94\d{9})$/.test(cleanPhone2)
   const validationError = (
     !client.name.trim() ? 'Enter the client name before placing the order.'
       : !validPhone ? 'Enter a Sri Lankan phone number as 10 digits starting with 0, or use +94 followed by 9 digits.'
+      : !validPhone2 ? 'Enter the customer’s second Sri Lankan phone number.'
       : !client.address.trim() ? 'Enter the client delivery address before placing the order.'
         : lowPriceItem ? `The client price for ${lowPriceItem.product.name} cannot be lower than the CAMY price.`
           : ''
@@ -179,7 +182,7 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
     setSubmitError('')
     if (!catalogueLive) return notify?.('CAMY catalogue is not active yet.')
     if (!selected.length) return notify?.('Add at least one product.')
-    if (!client.name.trim() || !validPhone || !client.address.trim() || lowPriceItem) return
+    if (!client.name.trim() || !validPhone || !validPhone2 || !client.address.trim() || lowPriceItem) return
     setBusy(true)
     try {
       const result = await api('/marketplace/dropship-orders', {
@@ -284,8 +287,9 @@ export function DropshipOrderPage({ products = [], person, notify, catalogueLive
 
         {selected.length > 0 && <><div className="checkout-section-heading"><span><UserRound/></span><div><h3>Client details</h3><p>Who should CAMY deliver this order to?</p></div></div><div className="customer-fields">
           <label>Client name<input className={submitAttempted&&!client.name.trim()?'field-invalid':''} aria-invalid={submitAttempted&&!client.name.trim()} required value={client.name} onChange={event => setClient(old => ({...old, name:event.target.value}))} placeholder="Full name"/>{submitAttempted&&!client.name.trim()&&<small className="field-validation-message">Enter the client name.</small>}</label>
-          <div><label>Phone number<input className={submitAttempted&&!validPhone?'field-invalid':''} aria-invalid={submitAttempted&&!validPhone} inputMode="tel" value={client.phone} onChange={event => setClient(old => ({...old, phone:event.target.value}))} placeholder="0771234567 or +94771234567"/>{submitAttempted&&!validPhone&&<small className="field-validation-message">Use 10 digits starting with 0, or +94 followed by 9 digits.</small>}</label>
+          <div><label>Primary phone number<input className={submitAttempted&&!validPhone?'field-invalid':''} aria-invalid={submitAttempted&&!validPhone} inputMode="tel" value={client.phone} onChange={event => setClient(old => ({...old, phone:event.target.value}))} placeholder="0771234567 or +94771234567"/>{submitAttempted&&!validPhone&&<small className="field-validation-message">Use 10 digits starting with 0, or +94 followed by 9 digits.</small>}</label>
           <label>District<select value={client.district} onChange={event => setClient(old => ({...old, district:event.target.value}))}>{districts.map(district => <option key={district}>{district}</option>)}</select></label></div>
+          <label>Alternative phone number<input className={submitAttempted&&!validPhone2?'field-invalid':''} aria-invalid={submitAttempted&&!validPhone2} inputMode="tel" value={client.phone2} onChange={event => setClient(old => ({...old, phone2:event.target.value}))} placeholder="0712345678 or +94712345678"/>{submitAttempted&&!validPhone2&&<small className="field-validation-message">Enter a second valid Sri Lankan phone number.</small>}</label>
           <label>Delivery address<textarea className={submitAttempted&&!client.address.trim()?'field-invalid':''} aria-invalid={submitAttempted&&!client.address.trim()} required rows="3" value={client.address} onChange={event => setClient(old => ({...old, address:event.target.value}))} placeholder="House number, street, town"/>{submitAttempted&&!client.address.trim()&&<small className="field-validation-message">Enter the client's delivery address.</small>}</label>
           <label>Order note (optional)<textarea rows="2" value={client.notes} onChange={event => setClient(old => ({...old, notes:event.target.value}))} placeholder="Colour, preferred call time, delivery note..."/></label>
         </div>
