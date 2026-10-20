@@ -7,6 +7,6 @@ DirectoryIndex index.php
   RewriteRule ^ index.php [L,QSA]
 </IfModule>
 
-<FilesMatch "^(?:config|security|storage|workflow|marketplace|catalogue|customers|customer_features|profiles|returns|staff)\.php$">
+<FilesMatch "^(?:config|security|storage|workflow|marketplace|catalogue|customers|customer_features|notifications|profiles|returns|staff)\.php$">
   Require all denied
 </FilesMatch>

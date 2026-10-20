@@ -35,15 +35,15 @@ The first administrator is intentionally not stored in this SQL file.
 
 ## 5. Upload files
 
-1. Upload the *contents* of `production-package/public_html/` into `/home/camymarket/public_html/`.
-2. Upload the *contents* of `production-package/private/` into `/home/camymarket/private/`.
+1. Upload the *contents* of `public_html/` into `/home/CPANEL_USERNAME/public_html/`.
+2. Upload the *contents* of `private/` into `/home/CPANEL_USERNAME/private/`.
 3. Do not put `camy.env`, `schema.sql`, sessions, NIC files, receipts, backups, or uploaded product media inside `public_html`.
 4. Do not upload the project source, `node_modules`, `.git`, tests, logs, screenshots, or local SQL backups.
 
 Expected layout:
 
 ```text
-/home/camymarket/
+/home/CPANEL_USERNAME/
   public_html/
     .htaccess
     index.html
@@ -62,11 +62,12 @@ Expected layout:
 
 ## 6. Configure the application
 
-1. In `/home/camymarket/private`, copy `camy.env.example` to `camy.env`.
-2. Enter the exact cPanel-prefixed `DB_NAME` and `DB_USER` and the database password.
-3. Set `CAMY_BOOTSTRAP_PASSWORD` to a unique temporary password of at least 12 characters. Use letters, numbers, and symbols.
-4. Keep `CAMY_ENV=production`.
-5. Never place `camy.env` in Git or `public_html`.
+1. In `/home/CPANEL_USERNAME/private`, copy `camy.env.example` to `camy.env`.
+2. Replace every `CPANEL_USERNAME` placeholder with the username displayed in cPanel.
+3. Enter the exact cPanel-prefixed `DB_NAME` and `DB_USER` and the database password.
+4. Set `CAMY_BOOTSTRAP_PASSWORD` to a unique temporary password of at least 12 characters. Use letters, numbers, and symbols.
+5. Keep `CAMY_ENV=production`.
+6. Never place `camy.env` in Git or `public_html`.
 
 ### Registration decision emails
 
@@ -93,7 +94,7 @@ After successfully changing the administrator password, remove `CAMY_BOOTSTRAP_P
 
 - Directories: normally `0755`; use `0700` for `/home/camymarket/private` when supported by the hosting account.
 - Public files: `0644`.
-- `/home/camymarket/private/camy.env`: `0600` where supported.
+- `/home/CPANEL_USERNAME/private/camy.env`: `0600` where supported.
 - PHP must be able to create/write files under private `sessions`, `nic`, `receipts`, and `product-media`.
 - Never use `0777` unless the host explicitly requires it and no safer permission works.
 
