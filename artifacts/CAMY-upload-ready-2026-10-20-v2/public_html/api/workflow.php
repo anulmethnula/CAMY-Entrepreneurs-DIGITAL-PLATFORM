@@ -1,0 +1,316 @@
+<?php
+declare(strict_types=1);
+
+function workflow_product_price(array $product): float { if(!array_key_exists('billingPrice',$product))return round((float)($product['price'] ?? 0),2);return round((float)$product['billingPrice']+(float)($product['packagingCost'] ?? 0)+(($product['freeDelivery'] ?? true)?(float)($product['deliveryCost'] ?? 0):0),2); }
+function workflow_delivery_cost(array $product): float { return ($product['freeDelivery'] ?? true)===false?round((float)($product['deliveryCost'] ?? 0),2):0; }
+
+function workflow_owner(array $user, string $member): void {
+    if(!in_array($user['role'],['admin','manager'],true)&&($user['role']!=='entrepreneur'||(string)$user['member_id']!==$member))response(['message'=>'You cannot review another shop order.'],403);
+}
+function workflow_transition(string $old,string $next,bool $supply): void {
+    if($supply){
+        $allowed=['Pending'=>['Approved','Rejected'],'Approved'=>['Dispatched','Rejected'],'Dispatched'=>[],'Rejected'=>[]];
+    }else{
+        $allowed=['Pending'=>['Processing','Awaiting payment','Rejected','Cancelled'],'Awaiting payment'=>['Rejected','Cancelled'],'Payment review'=>['Processing','Awaiting payment','Cancelled'],'Processing'=>['Dispatched','Rejected','Cancelled'],'Dispatched'=>['Delivered','Returned','Cancelled'],'Delivered'=>['Returned'],'Cancelled'=>['Processing']];
+    }
+    if(!in_array($next,$allowed[$old] ?? [],true))response(['message'=>'This action is not available at the current stage.'],409);
+}
+function workflow_bank_required(array $bank): void {
+    foreach(['bank','branch','holder','account'] as $key)if(empty($bank[$key]))response(['message'=>'Save complete bank details before approving requests.'],422);
+}
+function workflow_items($items,bool $shops=false): array {
+    if(!is_array($items))return [];if(count($items)>100)response(['message'=>'Use up to 100 products per request.'],422);$clean=[];
+    foreach($items as $item){if(!is_array($item))response(['message'=>'Invalid item.'],422);$qty=filter_var($item['qty'] ?? null,FILTER_VALIDATE_INT);if(!$qty||$qty<1||$qty>1000000)response(['message'=>'Quantities must be positive whole numbers.'],422);$key=($shops?(string)($item['shopId'] ?? '').':':'').(string)($item['productId'] ?? '');if(isset($clean[$key]))$clean[$key]['qty']+=$qty;else{$item['qty']=$qty;$clean[$key]=$item;}}
+    return array_values($clean);
+}
+function workflow_customer_details(array $data): array {
+    $clean=[];
+    foreach(['name','phone','district','address'] as $key)$clean[$key]=trim((string)($data[$key] ?? ''));
+    $clean['phone']=preg_replace('/[\s()-]/','',$clean['phone']);
+    if(!$clean['name']||strlen($clean['name'])>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$clean['phone'])||!$clean['district']||strlen($clean['district'])>80||strlen($clean['address'])<8||strlen($clean['address'])>2000)response(['message'=>'Enter a valid client name, Sri Lankan phone number, district and complete delivery address.'],422);
+    return $clean;
+}
+function workflow_next_order_id(array $state): string {
+    $highest=999;
+    foreach(($state['orders'] ?? []) as $order){
+        if(preg_match('/^CMY-(\d+)$/',(string)($order['id'] ?? ''),$match))$highest=max($highest,(int)$match[1]);
+    }
+    return 'CMY-'.str_pad((string)($highest+1),4,'0',STR_PAD_LEFT);
+}
+function workflow_reserve(array &$state,array $items,?string $shop): void {
+    foreach($items as $item){$id=(string)($item['productId'] ?? $item['id']);$found=false;
+        if($shop===null){foreach($state['products'] as &$slot)if((string)$slot['id']===$id){if($slot['stock']<$item['qty'])response(['message'=>'Insufficient CAMY stock to approve this request.'],409);$slot['stock']-=$item['qty'];$found=true;break;}unset($slot);}
+        else{foreach($state['inventory'] as &$slot)if((string)$slot['entrepreneurId']===$shop&&(string)$slot['productId']===$id){if($slot['qty']<$item['qty'])response(['message'=>'Insufficient shop stock to approve this order.'],409);$slot['qty']-=$item['qty'];$found=true;break;}unset($slot);}
+        if(!$found)response(['message'=>'Requested product is unavailable.'],409);
+    }
+}
+function workflow_release(array &$state,array $items,?string $shop): void {
+    foreach($items as $item){$id=(string)($item['productId'] ?? $item['id']);if($shop===null){foreach($state['products'] as &$slot)if((string)$slot['id']===$id){$slot['stock']+=$item['qty'];break;}unset($slot);}else{foreach($state['inventory'] as &$slot)if((string)$slot['entrepreneurId']===$shop&&(string)$slot['productId']===$id){$slot['qty']+=$item['qty'];break;}unset($slot);}}
+}
+function workflow_receipt(array $data,string $id): string {
+    $raw=(string)($data['receipt'] ?? '');$ref=trim((string)($data['reference'] ?? ''));
+    if(!$ref||strlen($ref)>120||strlen($raw)>7500000||!preg_match('#^data:(image/(?:png|jpeg|webp)|application/pdf);base64,(.+)$#s',$raw,$parts))response(['message'=>'Enter a reference and upload a JPG, PNG, WebP or PDF receipt up to 5 MB.'],422);
+    $bytes=base64_decode($parts[2],true);if(!$bytes||strlen($bytes)>5*1024*1024)response(['message'=>'Invalid receipt or file exceeds 5 MB.'],422);
+    if((str_starts_with($parts[1],'image/')&&((getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Receipt content does not match the file type.'],422);
+    $dir=private_path('receipts');if(!is_dir($dir)&&!mkdir($dir,0700,true))throw new RuntimeException('Could not create receipt storage.');
+    $file=$id.'-'.bin2hex(random_bytes(8)).'.'.['image/png'=>'png','image/jpeg'=>'jpg','image/webp'=>'webp','application/pdf'=>'pdf'][$parts[1]];
+    if(file_put_contents($dir.'/'.$file,$bytes)===false)throw new RuntimeException('Could not save receipt.');return $file;
+}
+function workflow_invoice_document(string $raw,string $id): string {
+    if(!preg_match('#^data:(image/(?:png|jpeg|webp)|application/pdf);base64,(.+)$#s',$raw,$parts))response(['message'=>'Upload a JPG, PNG, WebP or PDF invoice.'],422);
+    $bytes=base64_decode($parts[2],true);if($bytes===false||$bytes==='')response(['message'=>'The invoice file could not be read.'],422);
+    if((str_starts_with($parts[1],'image/')&&((getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Invoice content does not match the selected file type.'],422);
+    $dir=private_path('receipts');if(!is_dir($dir)&&!mkdir($dir,0700,true))throw new RuntimeException('Could not create invoice storage.');
+    $file=$id.'-'.bin2hex(random_bytes(8)).'.'.['image/png'=>'png','image/jpeg'=>'jpg','image/webp'=>'webp','application/pdf'=>'pdf'][$parts[1]];
+    if(file_put_contents($dir.'/'.$file,$bytes)===false)throw new RuntimeException('Could not save the invoice file.');return $file;
+}
+function workflow_route(PDO $pdo,string $path,string $method): void {
+    if($path==='/admin/manual-order'&&$method==='POST'){
+        $admin=require_admin($pdo);$data=input();
+        $member=trim((string)($data['entrepreneurId']??''));
+        $rawItems=$data['items']??[];
+        // Accept the retired single-product form during staggered frontend/API deployments.
+        if(!$rawItems&&!empty($data['productId']))$rawItems=[['productId'=>$data['productId'],'qty'=>$data['qty']??1,'sellPrice'=>$data['sellPrice']??($data['unitPrice']??null)]];
+        $requested=workflow_items($rawItems);
+        $name=trim((string)($data['customer']??($data['name']??'')));$phone=preg_replace('/[\s()-]/','',trim((string)($data['phone']??'')));$phone2=preg_replace('/[\s()-]/','',trim((string)($data['phone2']??'')));$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
+        if(!$member)response(['message'=>'Choose the entrepreneur who made this sale.'],422);
+        if(!$requested)response(['message'=>'Add at least one product to this order.'],422);
+        if(!$name||strlen($name)>150)response(['message'=>'Enter a valid customer name.'],422);
+        if(!preg_match('/^(?:\+94|0)7\d{8}$/',$phone))response(['message'=>'Enter a valid Sri Lankan mobile number, such as 071 234 5678.'],422);
+        if(!preg_match('/^(?:\+94|0)7\d{8}$/',$phone2))response(['message'=>'Enter a valid alternative Sri Lankan mobile number.'],422);
+        if(!$district||strlen($district)>80)response(['message'=>'Enter a valid delivery district.'],422);
+        if(!$address||strlen($address)>500)response(['message'=>'Enter a complete delivery address (up to 500 characters).'],422);
+        if(strlen($notes)>1000)response(['message'=>'Keep internal notes within 1,000 characters.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$entrepreneur=null;
+        foreach($state['entrepreneurs'] as $candidate)if((string)$candidate['id']===$member&&($candidate['active']??true)&&($candidate['stage']??'')!=='Departed'){$entrepreneur=$candidate;break;}
+        if(!$entrepreneur){$pdo->rollBack();response(['message'=>'Choose an active CAMY entrepreneur.'],422);}
+        $selected=[];$clientTotal=0;$camyCost=0;$count=0;
+        foreach($requested as $entry){$product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($entry['productId']??'')){$product=$candidate;break;}$qty=(int)$entry['qty'];$sell=filter_var($entry['sellPrice']??null,FILTER_VALIDATE_FLOAT);if(!$product||($product['published']??true)!==true||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A selected product is hidden or does not have enough warehouse stock.'],409);}$base=workflow_product_price($product);$delivery=workflow_delivery_cost($product);if($sell===false||!is_finite($sell)||$sell<$base||$sell>100000000){$pdo->rollBack();response(['message'=>'Every client selling price must be at least its CAMY product price.'],422);}$sell=round((float)$sell,2);$selected[]=['id'=>$product['id'],'productId'=>$product['id'],'name'=>$product['name'],'qty'=>$qty,'price'=>$sell,'camyPrice'=>$base,'deliveryCost'=>$delivery,'image'=>$product['image']??'','category'=>$product['category']??'Other'];$clientTotal+=($sell+$delivery)*$qty;$camyCost+=($base+$delivery)*$qty;$count+=$qty;}
+        $clientTotal=round($clientTotal,2);$camyCost=round($camyCost,2);$margin=round($clientTotal-$camyCost,2);
+        workflow_reserve($state,$selected,null);$groupId='DROP-'.bin2hex(random_bytes(5));$id=workflow_next_order_id($state);$token=bin2hex(random_bytes(24));
+        $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
+        $order=['id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'phone2'=>$phone2,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,'amount'=>$clientTotal,'camyCost'=>$camyCost,'entrepreneurMargin'=>$margin,'clientPaymentMethod'=>'cod','clientPaymentStatus'=>'Collect on delivery','payoutAmount'=>$margin,'payoutStatus'=>$margin>0?'pending_delivery':'not_required','date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>true,'entrepreneur'=>$entrepreneur['name'],'entrepreneurId'=>$member,'source'=>'shop','orderMode'=>'dropship','createdBy'=>'CAMY Admin','createdByUserId'=>$admin['id']];
+        $state['orders'][]=$order;
+        $pdo->prepare("INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status) VALUES(?,?,?,?, 'Processing')")->execute([$id,$groupId,$member,$clientTotal]);
+        $pdo->prepare("INSERT INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount) VALUES(?,?,?,?,?,?)")->execute([$id,$member,'cod',$clientTotal,$camyCost,$margin]);
+        $itemInsert=$pdo->prepare('INSERT INTO shop_order_items(order_id,product_code,quantity,sell_price) VALUES(?,?,?,?)');foreach($selected as $item){$code=(string)$item['id'];foreach($state['products'] as $product)if((string)$product['id']===(string)$item['id']){$code=(string)($product['code']??$product['id']);break;}$itemInsert->execute([$id,$code,$item['qty'],$item['price']]);}
+        market_save($pdo,$state);$pdo->commit();unset($order['trackingToken']);response(['order'=>$order,'state'=>$state],201);
+    }
+    if($path==='/marketplace/dropship-orders'&&$method==='POST'){
+        $user=current_user($pdo);
+        if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
+        $data=input();
+        if(!is_array($data['customer']??null))response(['message'=>'Enter the client delivery details.'],422);
+        $customer=$data['customer'];
+        $name=trim((string)($customer['name']??''));$phone=trim((string)($customer['phone']??''));$phone2=trim((string)($customer['phone2']??''));$cleanPhone=preg_replace('/[\s()-]/','',$phone);$cleanPhone2=preg_replace('/[\s()-]/','',$phone2);$district=trim((string)($customer['district']??''));$address=trim((string)($customer['address']??''));$notes=trim((string)($customer['notes']??''));
+        if(!$name||strlen($name)>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone)||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone2)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter the client name, two valid Sri Lankan phone numbers, district and delivery address.'],422);
+        $paymentMethod=strtolower(trim((string)($data['paymentMethod'] ?? 'cod')));
+        if($paymentMethod!=='cod')response(['message'=>'CAMY client orders are Cash on Delivery only. No client bank receipt is accepted.'],422);
+        $items=workflow_items($data['items']??[]);
+        if(!$items)response(['message'=>'Add at least one CAMY product to the order.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);
+        if(empty($state['catalogue_live'])){$pdo->rollBack();response(['message'=>'CAMY Admin must activate the verified catalogue before orders can be placed.'],409);}
+        $selected=[];$clientTotal=0;$camyCost=0;$count=0;
+        foreach($items as $item){
+            $product=null;foreach($state['products'] as $candidate)if((string)$candidate['id']===(string)($item['productId']??'')){$product=$candidate;break;}
+            $qty=(int)($item['qty']??0);$sell=filter_var($item['sellPrice']??null,FILTER_VALIDATE_FLOAT);
+            if(!$product||($product['published'] ?? true)!==true||$qty<1||$qty>(int)$product['stock']){$pdo->rollBack();response(['message'=>'A selected CAMY product is hidden or unavailable in the requested quantity.'],409);}
+            if($sell===false||!is_finite($sell)||$sell<(float)$product['price']||$sell>100000000){$pdo->rollBack();response(['message'=>'Your client price can be any amount at or above the CAMY product price.'],422);}
+            $sell=round((float)$sell,2);$base=workflow_product_price($product);$delivery=workflow_delivery_cost($product);
+            $selected[]=['id'=>$product['id'],'productId'=>$product['id'],'name'=>$product['name'],'qty'=>$qty,'price'=>$sell,'camyPrice'=>$base,'deliveryCost'=>$delivery,'image'=>$product['image']??'','category'=>$product['category']??'Other'];
+            $clientTotal+=($sell+$delivery)*$qty;$camyCost+=($base+$delivery)*$qty;$count+=$qty;
+        }
+        $clientTotal=round($clientTotal,2);$camyCost=round($camyCost,2);$margin=round($clientTotal-$camyCost,2);
+        workflow_reserve($state,$selected,null);
+        $groupId='DROP-'.bin2hex(random_bytes(5));$id=workflow_next_order_id($state);$token=bin2hex(random_bytes(24));
+        $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
+        $entrepreneurName=(string)$user['full_name'];
+        $order=[
+            'id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'phone2'=>$phone2,'district'=>$district,'deliveryAddress'=>$address,'address'=>trim($address.($address!==''?', ':'').$district),'notes'=>$notes,
+            'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,
+            'amount'=>$clientTotal,'camyCost'=>$camyCost,'entrepreneurMargin'=>$margin,
+            'clientPaymentMethod'=>'cod','clientPaymentStatus'=>'Collect on delivery',
+            'payoutAmount'=>$margin,'payoutStatus'=>$margin>0?'pending_delivery':'not_required',
+            'date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Pending','trackingToken'=>$token,'reserved'=>true,
+            'entrepreneur'=>$entrepreneurName,'entrepreneurId'=>(string)$user['member_id'],'source'=>'shop','orderMode'=>'dropship','createdBy'=>'Entrepreneur'
+        ];
+        $state['orders'][]=$order;
+        $pdo->prepare("INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status) VALUES(?,?,?,?, 'Pending')")->execute([$id,$groupId,$user['member_id'],$clientTotal]);
+        $pdo->prepare("INSERT INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount) VALUES(?,?,?,?,?,?)")->execute([$id,$user['member_id'],'cod',$clientTotal,$camyCost,$margin]);
+        foreach($selected as $item){$code='';foreach($state['products'] as $product)if((string)$product['id']===(string)$item['id']){$code=(string)($product['code']??$product['id']);break;}$pdo->prepare('INSERT INTO shop_order_items(order_id,product_code,quantity,sell_price) VALUES(?,?,?,?)')->execute([$id,$code,$item['qty'],$item['price']]);}
+        market_save($pdo,$state);$pdo->commit();
+        $safe=$order;unset($safe['trackingToken'],$safe['receiptPath']);response(['order'=>$safe],201);
+    }
+    if(preg_match('#^/marketplace/orders/([^/]+)/client-details$#',$path,$clientDetailsMatch)&&$method==='PATCH'){
+        $user=current_user($pdo);if(!$user)response(['message'=>'Authentication required.'],401);
+        $admin=in_array($user['role'],['admin','manager'],true);
+        if(!$admin&&($user['role']!=='entrepreneur'||!$user['member_id']))response(['message'=>'Administrator or entrepreneur access is required.'],403);
+        $data=input();$orderId=(string)$clientDetailsMatch[1];
+        $name=trim((string)($data['name']??''));$phone=trim((string)($data['phone']??''));$phone2=trim((string)($data['phone2']??''));$cleanPhone=preg_replace('/[\s()-]/','',$phone);$cleanPhone2=preg_replace('/[\s()-]/','',$phone2);$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
+        if(!$name||strlen($name)>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone)||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone2)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter the client name, two valid Sri Lankan phone numbers, district and delivery address.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;foreach($state['orders'] as $key=>$candidate)if((string)$candidate['id']===$orderId){$index=$key;break;}
+        if($index===null){$pdo->rollBack();response(['message'=>'Order not found.'],404);}$order=$state['orders'][$index];
+        if(($order['orderMode']??'')!=='dropship'||(!$admin&&(string)$order['entrepreneurId']!==(string)$user['member_id'])){$pdo->rollBack();response(['message'=>'You cannot edit this order.'],403);}
+        if(!in_array(($order['status']??''),['Pending','Awaiting payment','Payment review','Approved','Processing'],true)){$pdo->rollBack();response(['message'=>'Client details can only be edited before CAMY dispatches the order.'],409);}
+        $state['orders'][$index]=array_merge($order,['customer'=>$name,'phone'=>$phone,'phone2'=>$phone2,'district'=>$district,'deliveryAddress'=>$address,'address'=>trim($address.($address!==''?', ':'').$district),'notes'=>$notes,'updatedAt'=>date(DATE_ATOM)]);
+        $pdo->prepare('UPDATE customer_order_groups SET customer_name=?,customer_phone=?,district=?,delivery_address=? WHERE id=?')->execute([$name,$phone,$district,$address,$order['groupId']]);
+        market_save($pdo,$state);$pdo->commit();$saved=$state['orders'][$index];unset($saved['trackingToken'],$saved['receiptPath']);response(['order'=>$saved,'message'=>'Client details updated before dispatch.']);
+    }
+    if(preg_match('#^/marketplace/orders/([^/]+)/payout-receipt$#',$path,$payoutReceipt)&&$method==='GET'){
+        $user=current_user($pdo);if(!$user)response(['message'=>'Authentication required.'],401);
+        $query=$pdo->prepare('SELECT entrepreneur_member_id,payout_receipt_path FROM entrepreneur_payouts WHERE order_id=?');$query->execute([$payoutReceipt[1]]);$payout=$query->fetch();
+        if(!$payout)response(['message'=>'Payout record not found.'],404);
+        if(!in_array($user['role'],['admin','manager'],true)&&($user['role']!=='entrepreneur'||(string)$user['member_id']!==(string)$payout['entrepreneur_member_id']))response(['message'=>'You cannot view this payout receipt.'],403);
+        $file=private_path('receipts/'.basename((string)$payout['payout_receipt_path']));if(!is_file($file))response(['message'=>'Payout receipt not found.'],404);
+        header('Content-Type: '.(mime_content_type($file) ?: 'application/octet-stream'));header('Content-Disposition: inline; filename="'.basename($file).'"');header('Content-Length: '.filesize($file));readfile($file);exit;
+    }
+    if(preg_match('#^/marketplace/orders/([^/]+)/payout$#',$path,$payoutMatch)&&$method==='POST'){
+        $admin=require_admin($pdo);$data=input();$orderId=(string)$payoutMatch[1];
+        error_log('[CAMY payout] request started order='.$orderId.' admin='.(string)$admin['id']);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
+        foreach($state['orders'] as $key=>$candidate)if((string)$candidate['id']===$orderId){$index=$key;break;}
+        if($index===null){$pdo->rollBack();response(['message'=>'Order not found.'],404);}
+        $order=$state['orders'][$index];
+        if(($order['orderMode'] ?? '')!=='dropship'){$pdo->rollBack();response(['message'=>'This payout action is only for CAMY dropship orders.'],409);}
+        if($order['status']!=='Delivered'){$pdo->rollBack();response(['message'=>'Entrepreneur earnings can be transferred only after a successful delivery.'],409);}
+        $row=$pdo->prepare('SELECT * FROM entrepreneur_payouts WHERE order_id=? FOR UPDATE');$row->execute([$orderId]);$payout=$row->fetch();
+        if(!$payout){$pdo->rollBack();response(['message'=>'Payout ledger record not found.'],404);}
+        if($payout['payout_status']==='paid'){$pdo->rollBack();response(['message'=>'This entrepreneur payout is already recorded as paid.'],409);}
+        $amount=round((float)$payout['payout_amount'],2);
+        if($amount<=0){$pdo->prepare("UPDATE entrepreneur_payouts SET payout_status='cancelled',collection_status='collected',collected_at=COALESCE(collected_at,NOW()) WHERE order_id=?")->execute([$orderId]);$state['orders'][$index]['payoutStatus']='not_required';market_save($pdo,$state);$pdo->commit();response(['order'=>$state['orders'][$index],'message'=>'No entrepreneur margin is due for this order.']);}
+        $bank = [];
+        foreach ($state['entrepreneurs'] as $person) {
+            if ((string) $person['id'] === (string) $order['entrepreneurId']) {
+                $bank = $person['bankDetails'] ?? [];
+                break;
+            }
+        }
+
+        // Bank details improve payout accuracy, but are not a hard blocker.
+        // The transfer reference and uploaded proof remain the payout audit record.
+        $reference=trim((string)($data['reference'] ?? ''));$receipt=workflow_receipt(['receipt'=>(string)($data['receipt'] ?? ''),'reference'=>$reference],$orderId.'-payout');
+        $pdo->prepare("UPDATE entrepreneur_payouts SET collection_status='collected',payout_status='paid',payout_reference=?,payout_receipt_path=?,collected_at=COALESCE(collected_at,NOW()),paid_at=NOW(),recorded_by=? WHERE order_id=?")->execute([$reference,$receipt,$admin['id'],$orderId]);
+        $state['orders'][$index]['payoutStatus']='paid';$state['orders'][$index]['payoutAmount']=$amount;$state['orders'][$index]['payoutReference']=$reference;$state['orders'][$index]['payoutReceipt']='/api/marketplace/orders/'.$orderId.'/payout-receipt';$state['orders'][$index]['payoutPaidAt']=date(DATE_ATOM);$state['orders'][$index]['payoutBankDetails']=$bank;$state['orders'][$index]['updatedAt']=date(DATE_ATOM);
+        market_save($pdo,$state);$pdo->commit();
+        error_log('[CAMY payout] transfer recorded order='.$orderId.' amount='.(string)$amount.' admin='.(string)$admin['id']);
+        response(['order'=>$state['orders'][$index],'message'=>'Entrepreneur margin transfer recorded successfully.']);
+    }
+    if(preg_match('#^/marketplace/orders/([^/]+)/confirm-delivery$#',$path,$match)&&$method==='POST'){
+        $customer=customer_required($pdo);$pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
+        foreach($state['orders'] as $key=>$order)if($order['id']===$match[1]){$index=$key;break;}
+        if($index===null)response(['message'=>'Order not found.'],404);
+        $order=$state['orders'][$index];
+        if((int)($order['customerId']??0)!==(int)$customer['id'])response(['message'=>'This order belongs to another customer.'],403);
+        if(!in_array($order['status'],['Dispatched','Delivered'],true)||!empty($order['return']))response(['message'=>'Only dispatched or delivered orders without a return can be confirmed.'],409);
+        if(empty($order['deliveryConfirmations']['customer'])){
+            $state['orders'][$index]['deliveryConfirmations']['customer']=['id'=>(int)$customer['id'],'name'=>$customer['name'],'at'=>date(DATE_ATOM)];
+            $state['orders'][$index]['status']='Delivered';$state['orders'][$index]['updatedAt']=date(DATE_ATOM);$state['orders'][$index]['deliveredAt']=date(DATE_ATOM);
+            $pdo->prepare("UPDATE shop_orders SET status='Delivered',delivered_at=COALESCE(delivered_at,NOW()) WHERE id=?")->execute([$order['id']]);
+            $shop=$order['entrepreneurId'];$sales=0;foreach($state['orders'] as $entry)if($entry['entrepreneurId']===$shop&&$entry['status']==='Delivered')$sales+=catalogue_order_sales_value($entry);
+            $credit=catalogue_credit_for_sales($state['tiers'],$sales);
+            foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$shop){$person['sales']=$sales;$person['credit']=$credit;$person['stage']=$credit>0?'Credit eligible':'Trial seller';break;}unset($person);
+            market_save($pdo,$state);
+        }
+        $result=$state['orders'][$index];$token=(string)($result['trackingToken']??'');unset($result['trackingToken'],$result['receiptPath']);
+        if(!empty($result['receipt']))$result['receipt'].='?token='.rawurlencode($token);
+        $pdo->commit();response(['order'=>$result]);
+    }
+    if($path==='/marketplace/shop-contact'&&$method==='POST'){
+        $user=current_user($pdo);
+        if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
+        $data=input();$raw=trim((string)($data['phone']??''));$phone=preg_replace('/[\s-]/','',$raw);
+        if(strlen($raw)>30||!preg_match('/^(?:\+94|0)7\d{8}$/',$phone))response(['message'=>'Enter a valid Sri Lankan mobile number, such as 0771234567.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
+        foreach($state['entrepreneurs'] as $key=>$person)if((string)$person['id']===(string)$user['member_id']){$index=$key;break;}
+        if($index===null){$pdo->rollBack();response(['message'=>'Your shop could not be found.'],404);}
+        $pdo->prepare('UPDATE entrepreneurs SET phone=? WHERE user_id=? AND member_id=?')->execute([$phone,$user['id'],$user['member_id']]);
+        $state['entrepreneurs'][$index]['phone']=$phone;market_save($pdo,$state);$pdo->commit();response(['phone'=>$phone]);
+    }
+    if($path==='/marketplace/credit/settlements' && $method==='POST'){
+        $user=current_user($pdo);if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);
+        $data=input();$requestId=trim((string)($data['requestId'] ?? ''));$amount=filter_var($data['amount'] ?? null,FILTER_VALIDATE_FLOAT);$reference=trim((string)($data['reference'] ?? ''));$paymentMethod=(string)($data['method'] ?? 'bank_transfer');
+        if(!in_array($paymentMethod,['bank_transfer','cash_at_camy'],true))response(['message'=>'Choose bank transfer or cash at a CAMY store.'],422);
+        if(!$requestId||$amount===false||!is_finite($amount)||$amount<=0||$amount>100000000)response(['message'=>'Choose a credit-stock purchase and its full payment amount.'],422);
+        if($paymentMethod==='bank_transfer'&&(!$reference||strlen($reference)>100||empty($data['receipt'])))response(['message'=>'Attach the bank-transfer reference and receipt.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$personIndex=null;foreach($state['entrepreneurs'] as $index=>$person)if((string)$person['id']===(string)$user['member_id']){$personIndex=$index;break;}
+        if($personIndex===null)response(['message'=>'Your entrepreneur account could not be found.'],404);$outstanding=(float)($state['entrepreneurs'][$personIndex]['used'] ?? 0);if($outstanding<=0)response(['message'=>'There is no outstanding credit balance to settle.'],409);
+        $creditRequest=null;foreach($state['requests'] as $entry)if((string)($entry['id'] ?? '')===$requestId){$creditRequest=$entry;break;}if(!$creditRequest||(string)($creditRequest['entrepreneurId'] ?? '')!==(string)$user['member_id']||($creditRequest['creditMode'] ?? false)!==true||($creditRequest['status'] ?? '')!=='Dispatched')response(['message'=>'Choose one of your dispatched credit-stock purchases.'],422);$required=round((float)($creditRequest['creditIssuedAmount'] ?? $creditRequest['total'] ?? 0),2);if(abs((float)$amount-$required)>0.009)response(['message'=>'Pay the full stock price of '.number_format($required,2,'.','').' for this credit purchase.'],422);
+        $changeIndex=null;foreach($state['settlements'] as $settlementIndex=>$entry)if((string)$entry['entrepreneurId']===(string)$user['member_id']){
+            if($reference!==''&&$entry['reference']===$reference && $entry['status']!=='Rejected')response(['message'=>'This payment reference has already been submitted.'],409);
+            if((string)($entry['requestId'] ?? '')===$requestId&&$entry['status']!=='Rejected'){
+                $canChangeToBank=$paymentMethod==='bank_transfer'&&($entry['method']??'')==='cash'&&($entry['status']??'')==='Pending verification'&&($entry['collectionStatus']??'awaiting_collection')==='awaiting_collection';
+                if($canChangeToBank)$changeIndex=$settlementIndex;else response(['message'=>'A payment for this stock purchase is already waiting for review or has been paid.'],409);
+            }
+        }
+        if($changeIndex!==null){
+            $id=(string)$state['settlements'][$changeIndex]['id'];$receiptPath=workflow_receipt($data,$id.'-credit');
+            $state['settlements'][$changeIndex]['method']='bank_transfer';$state['settlements'][$changeIndex]['reference']=$reference;$state['settlements'][$changeIndex]['collectionStatus']='not_applicable';$state['settlements'][$changeIndex]['receiptPath']=$receiptPath;$state['settlements'][$changeIndex]['receipt']='/api/marketplace/credit/settlements/'.$id.'/receipt';$state['settlements'][$changeIndex]['receiptName']=basename((string)($data['receiptName']??'receipt'));$state['settlements'][$changeIndex]['updatedAt']=date(DATE_ATOM);
+            market_save($pdo,$state);$pdo->commit();$record=$state['settlements'][$changeIndex];unset($record['receiptPath']);response(['settlement'=>$record,'changedFromCash'=>true]);
+        }
+        $id='SET-'.bin2hex(random_bytes(5));$record=['id'=>$id,'requestId'=>$requestId,'entrepreneurId'=>(string)$user['member_id'],'amount'=>$required,'reference'=>$reference,'method'=>$paymentMethod==='cash_at_camy'?'cash':'bank_transfer','status'=>'Pending verification','collectionStatus'=>$paymentMethod==='cash_at_camy'?'awaiting_collection':'not_applicable','creditDueAt'=>$creditRequest['creditDueAt'] ?? null,'createdAt'=>date(DATE_ATOM)];
+        if($paymentMethod==='bank_transfer'){$receiptPath=workflow_receipt($data,$id.'-credit');$record['receiptPath']=$receiptPath;$record['receipt']='/api/marketplace/credit/settlements/'.$id.'/receipt';$record['receiptName']=basename((string)($data['receiptName']??'receipt'));}
+        $state['settlements'][]=$record;market_save($pdo,$state);$pdo->commit();unset($record['receiptPath']);response(['settlement'=>$record],201);
+    }
+    if(preg_match('#^/marketplace/credit/settlements/([^/]+)$#',$path,$matches)&&$method==='PUT'){
+        $user=current_user($pdo);if(!$user||$user['role']!=='entrepreneur'||!$user['member_id'])response(['message'=>'Entrepreneur access is required.'],403);$data=input();$paymentMethod=(string)($data['method']??'');$reference=trim((string)($data['reference']??''));if(!in_array($paymentMethod,['bank_transfer','cash_at_camy'],true))response(['message'=>'Choose bank transfer or cash at a CAMY store.'],422);if($paymentMethod==='bank_transfer'&&(!$reference||strlen($reference)>100||empty($data['receipt'])))response(['message'=>'Enter the bank-transfer reference and upload the new receipt.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;foreach($state['settlements']??[] as $key=>$entry)if((string)$entry['id']===(string)$matches[1]){$index=$key;break;}if($index===null){$pdo->rollBack();response(['message'=>'Payment submission not found.'],404);}$settlement=$state['settlements'][$index];if((string)($settlement['entrepreneurId']??'')!==(string)$user['member_id']){$pdo->rollBack();response(['message'=>'You cannot edit this payment submission.'],403);}if(($settlement['status']??'')!=='Pending verification'){$pdo->rollBack();response(['message'=>'Only pending payments can be edited.'],409);}if(($settlement['method']??'')==='cash'&&($settlement['collectionStatus']??'awaiting_collection')==='collected'){$pdo->rollBack();response(['message'=>'CAMY has already collected this cash. Contact CAMY if a correction is needed.'],409);}
+        foreach($state['settlements'] as $entry)if((string)($entry['id']??'')!==(string)$matches[1]&&$reference!==''&&($entry['reference']??'')===$reference&&($entry['status']??'')!=='Rejected'){$pdo->rollBack();response(['message'=>'This payment reference has already been submitted.'],409);}
+        $state['settlements'][$index]['method']=$paymentMethod==='cash_at_camy'?'cash':'bank_transfer';$state['settlements'][$index]['reference']=$paymentMethod==='cash_at_camy'?'':$reference;$state['settlements'][$index]['collectionStatus']=$paymentMethod==='cash_at_camy'?'awaiting_collection':'not_applicable';$state['settlements'][$index]['cashCollectedAt']=null;$state['settlements'][$index]['cashCollectedBy']=null;$state['settlements'][$index]['updatedAt']=date(DATE_ATOM);
+        if($paymentMethod==='bank_transfer'){$file=workflow_receipt($data,$settlement['id'].'-credit-edited');$state['settlements'][$index]['receiptPath']=$file;$state['settlements'][$index]['receipt']='/api/marketplace/credit/settlements/'.$settlement['id'].'/receipt';$state['settlements'][$index]['receiptName']=basename((string)($data['receiptName']??'receipt'));}else{unset($state['settlements'][$index]['receiptPath'],$state['settlements'][$index]['receipt'],$state['settlements'][$index]['receiptName']);}
+        market_save($pdo,$state);$pdo->commit();$record=$state['settlements'][$index];unset($record['receiptPath']);response(['settlement'=>$record,'state'=>$state]);
+    }
+    if(preg_match('#^/marketplace/credit/settlements/([^/]+)/receipt$#',$path,$matches)&&$method==='GET'){
+        $user=current_user($pdo);if(!$user)response(['message'=>'Authentication required.'],401);$state=market_state($pdo);$record=null;foreach($state['settlements']??[] as $entry)if((string)$entry['id']===(string)$matches[1]){$record=$entry;break;}if(!$record)response(['message'=>'Settlement not found.'],404);if(!in_array($user['role'],['admin','manager'],true)&&(string)($record['entrepreneurId']??'')!==(string)$user['member_id'])response(['message'=>'You cannot view this receipt.'],403);$file=private_path('receipts/'.basename((string)($record['receiptPath']??'')));if(!is_file($file))response(['message'=>'Receipt not found.'],404);header('Content-Type: '.(mime_content_type($file)?:'application/octet-stream'));header('Content-Disposition: inline; filename="'.basename($file).'"');header('Content-Length: '.filesize($file));readfile($file);exit;
+    }
+    if(preg_match('#^/marketplace/credit/settlements/([^/]+)/collection$#',$path,$matches)&&$method==='POST'){
+        $admin=require_admin($pdo);$data=input();$collected=filter_var($data['collected']??null,FILTER_VALIDATE_BOOLEAN,FILTER_NULL_ON_FAILURE);if($collected===null)response(['message'=>'Choose whether the store cash was collected.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;foreach($state['settlements']??[] as $key=>$item)if((string)$item['id']===(string)$matches[1]){$index=$key;break;}
+        if($index===null){$pdo->rollBack();response(['message'=>'Settlement not found.'],404);}$settlement=$state['settlements'][$index];if(($settlement['method']??'')!=='cash'){ $pdo->rollBack();response(['message'=>'Cash collection applies only to CAMY-store cash payments.'],409); }if(($settlement['status']??'')!=='Pending verification'){ $pdo->rollBack();response(['message'=>'Only pending cash payments can be edited.'],409); }
+        $state['settlements'][$index]['collectionStatus']=$collected?'collected':'awaiting_collection';$state['settlements'][$index]['cashCollectedAt']=$collected?date(DATE_ATOM):null;$state['settlements'][$index]['cashCollectedBy']=$collected?$admin['id']:null;$state['settlements'][$index]['updatedAt']=date(DATE_ATOM);
+        market_save($pdo,$state);$pdo->commit();response(['settlement'=>$state['settlements'][$index],'state'=>$state]);
+    }
+    if(preg_match('#^/marketplace/credit/settlements/([^/]+)/(verify|reject)$#',$path,$matches)&&$method==='POST'){
+        require_admin($pdo);$data=input();$reason=trim((string)($data['reason']??''));if($matches[2]==='reject'&&$reason==='')response(['message'=>'Enter a rejection reason for the entrepreneur.'],422);if(strlen($reason)>500)response(['message'=>'Rejection reason must be 500 characters or fewer.'],422);$pdo->beginTransaction();$state=market_state($pdo,true);$index=null;foreach($state['settlements'] ?? [] as $key=>$item)if($item['id']===$matches[1]){$index=$key;break;}if($index===null)response(['message'=>'Settlement not found.'],404);$settlement=$state['settlements'][$index];if($settlement['status']!=='Pending verification')response(['message'=>'Settlement has already been reviewed.'],409);
+        if($matches[2]==='verify'&&($settlement['method']??'')==='cash'&&($settlement['collectionStatus']??'awaiting_collection')!=='collected'){ $pdo->rollBack();response(['message'=>'Mark the CAMY-store cash as collected before verifying this payment.'],409); }
+        $next=$matches[2]==='verify'?'Verified':'Rejected';$state['settlements'][$index]['status']=$next;$state['settlements'][$index]['reviewedAt']=date(DATE_ATOM);if(($settlement['method']??'')==='cash_at_camy')$state['settlements'][$index]['collectionStatus']=$next==='Verified'?'collected':'cancelled';if($next==='Rejected')$state['settlements'][$index]['rejectionReason']=$reason;if($next==='Verified'){foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$settlement['entrepreneurId']){if((float)$settlement['amount']>(float)($person['used'] ?? 0)+0.009)response(['message'=>'The outstanding balance changed. Review this payment before verification.'],409);$person['used']=max(0,round((float)($person['used'] ?? 0)-(float)$settlement['amount'],2));break;}unset($person);foreach($state['requests'] as &$creditRequest)if((string)($creditRequest['id'] ?? '')===(string)($settlement['requestId'] ?? '')){$creditRequest['creditRepaymentStatus']='Paid';$creditRequest['creditPaidAt']=date(DATE_ATOM);$creditRequest['creditSettlementId']=$settlement['id'];break;}unset($creditRequest);}elseif(!empty($settlement['requestId']))foreach($state['requests'] as &$creditRequest)if((string)($creditRequest['id'] ?? '')===(string)$settlement['requestId']){$creditRequest['creditRepaymentStatus']='Rejected';$creditRequest['creditRejectionReason']=$reason;break;}unset($creditRequest);
+        if(($settlement['method']??'')==='cash')$state['settlements'][$index]['collectionStatus']=$next==='Verified'?'collected':'cancelled';
+        market_save($pdo,$state);$pdo->commit();response(['state'=>$state]);
+    }
+    if($path==='/marketplace/bank'&&$method==='POST'){
+        $user=current_user($pdo);if(!$user)response(['message'=>'Authentication required.'],401);$data=input();$bank=[];foreach(['bank','branch','holder','account'] as $key){$bank[$key]=trim((string)($data[$key] ?? ''));if(strlen($bank[$key])>120)response(['message'=>'Bank detail is too long.'],422);}workflow_bank_required($bank);
+        $pdo->beginTransaction();$state=market_state($pdo,true);
+        if(in_array($user['role'],['admin','manager'],true))$state['camyBank']=$bank;
+        elseif($user['role']==='entrepreneur'&&$user['member_id']){foreach($state['entrepreneurs'] as &$person)if((string)$person['id']===(string)$user['member_id']){$person['bankDetails']=$bank;break;}unset($person);$pdo->prepare('UPDATE entrepreneurs SET bank_name=?,bank_branch=?,account_holder=?,account_number=? WHERE user_id=?')->execute([$bank['bank'],$bank['branch'],$bank['holder'],$bank['account'],$user['id']]);}
+        else response(['message'=>'Seller access required.'],403);
+        market_save($pdo,$state);$pdo->commit();response(['bank'=>$bank]);
+    }
+    if(preg_match('#^/marketplace/(orders|requests)/([^/]+)/(tracking|receipt|verify|retry)$#',$path,$m)){
+        $supply=$m[1]==='requests';$action=$m[3];$data=$method==='POST'?input():[];$user=current_user($pdo);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$list=$supply?'requests':'orders';$index=null;foreach($state[$list] as $i=>$row)if($row['id']===$m[2]){$index=$i;break;}if($index===null)response(['message'=>'Order not found.'],404);
+        $row=$state[$list][$index];$token=(string)($data['token'] ?? $_GET['token'] ?? '');$customer=!$supply&&!empty($row['trackingToken'])&&hash_equals($row['trackingToken'],$token);
+        if(!$customer){if(!$user)response(['message'=>'A private tracking link or seller login is required.'],401);workflow_owner($user,(string)$row['entrepreneurId']);}
+        if($action==='tracking'&&$method==='GET'){
+            if(!$supply){
+                $row['sellerPhone']='';
+                foreach($state['entrepreneurs'] as $person)if((string)$person['id']===(string)$row['entrepreneurId']){$row['sellerPhone']=(string)($person['phone']??'');break;}
+            }
+            unset($row['trackingToken'],$row['receiptPath']);if($customer&&!empty($row['receipt']))$row['receipt'].='?token='.rawurlencode($token);$pdo->commit();response(['order'=>$row]);
+        }
+        if($action==='receipt'&&$method==='GET'){
+            $receiptPath=$row['receiptPath'] ?? '';if(!$receiptPath&&$supply){$q=$pdo->prepare('SELECT receipt_path FROM stock_supply_requests WHERE id=?');$q->execute([$row['id']]);$receiptPath=$q->fetchColumn() ?: '';}
+            $file=private_path('receipts/'.basename((string)$receiptPath));if(!is_file($file))response(['message'=>'Receipt not found.'],404);$pdo->commit();header('Content-Type: '.(mime_content_type($file) ?: 'application/octet-stream'));header('Content-Disposition: inline; filename="'.basename($file).'"');header('Content-Length: '.filesize($file));readfile($file);exit;
+        }
+        if($method!=='POST')response(['message'=>'Method not allowed.'],405);
+        if($action==='receipt'){
+            if(!$supply&&!$customer)response(['message'=>'Use the customer tracking link to upload payment proof.'],403);
+            if($supply&&(!$user||$user['role']!=='entrepreneur'||(string)$user['member_id']!==(string)$row['entrepreneurId']))response(['message'=>'Only the buyer may upload the receipt.'],403);
+            if($row['status']!=='Awaiting payment')response(['message'=>'Wait for approval before paying and uploading a receipt.'],409);
+            $file=workflow_receipt($data,$row['id']);$state[$list][$index]['receiptPath']=$file;$state[$list][$index]['receipt']='/api/marketplace/'.$m[1].'/'.$row['id'].'/receipt';$state[$list][$index]['receiptName']=basename((string)($data['receiptName'] ?? 'receipt'));$state[$list][$index]['reference']=trim((string)$data['reference']);$state[$list][$index]['status']='Payment review';$state[$list][$index]['receiptUploadedAt']=date(DATE_ATOM);$state[$list][$index]['paymentNote']='';
+            if($supply)$pdo->prepare('UPDATE stock_supply_requests SET payment_reference=?,receipt_path=? WHERE id=?')->execute([trim((string)$data['reference']),$file,$row['id']]);
+        }elseif(in_array($action,['verify','retry'],true)){
+            if(!$user)response(['message'=>'Seller login required.'],401);workflow_owner($user,(string)$row['entrepreneurId']);if($supply&&!in_array($user['role'],['admin','manager'],true))response(['message'=>'CAMY Admin must verify stock payments.'],403);
+            if($action==='verify'&&empty($row['receipt']))response(['message'=>'A payment receipt is required before verification.'],409);$next=$action==='verify'?($supply?'Approved':'Processing'):'Awaiting payment';workflow_transition($row['status'],$next,$supply);if($supply&&$action==='verify'&&!array_key_exists('reserved',$row)){workflow_reserve($state,$row['items'],null);$state[$list][$index]['reserved']=true;}if($action==='retry'){$reason=trim((string)($data['reason'] ?? ''));if(!$reason||strlen($reason)>500)response(['message'=>'Enter a receipt correction reason up to 500 characters.'],422);$state[$list][$index]['paymentNote']=$reason;}$state[$list][$index]['status']=$next;
+        }else response(['message'=>'Invalid action.'],422);
+        $state[$list][$index]['updatedAt']=date(DATE_ATOM);$table=$supply?'stock_supply_requests':'shop_orders';$pdo->prepare("UPDATE $table SET status=? WHERE id=?")->execute([$state[$list][$index]['status'],$row['id']]);market_save($pdo,$state);$pdo->commit();$row=$state[$list][$index];unset($row['trackingToken'],$row['receiptPath']);if($customer&&!empty($row['receipt']))$row['receipt'].='?token='.rawurlencode($token);response(['order'=>$row]);
+    }
+}
