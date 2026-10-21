@@ -34,8 +34,8 @@ DirectoryIndex index.html
   <FilesMatch "\.(?:css|js|png|jpe?g|webp|svg|ico|woff2?)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
-  <FilesMatch "^(?:index\.html|robots\.txt|sitemap\.xml)$">
-    Header set Cache-Control "public, max-age=3600, must-revalidate"
+  <FilesMatch "^(?:index\.html|register\.html|sw\.js|robots\.txt|sitemap\.xml)$">
+    Header set Cache-Control "no-cache, must-revalidate"
   </FilesMatch>
 </IfModule>
 
