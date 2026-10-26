@@ -7,6 +7,10 @@
 </p>
 
 <p align="center">
+  🌐 <b>Live Platform:</b> <a href="https://camymarket.com/">https://camymarket.com/</a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/React-Frontend-61DAFB?style=flat-square&logo=react&logoColor=111827" alt="React" />
   <img src="https://img.shields.io/badge/PHP-API-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP" />
   <img src="https://img.shields.io/badge/MySQL-Database-4479A1?style=flat-square&logo=mysql&logoColor=white" alt="MySQL" />
