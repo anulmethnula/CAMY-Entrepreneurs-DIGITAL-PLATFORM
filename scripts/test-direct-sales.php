@@ -94,6 +94,10 @@ try {
  $after=market_state($pdo);ensure($after['entrepreneurs']===$baseline['entrepreneurs']&&$after['inventory']===$baseline['inventory']&&$after['orders']===$baseline['orders']&&$after['requests']===$baseline['requests']&&$after['settlements']===$baseline['settlements'],'COD, credit, commission or entrepreneur financial records changed');
  foreach($products as $original)foreach($after['products'] as $p)if($p['id']===$original['id'])foreach(['price','billingPrice','deliveryCost','packagingCost'] as $key)ensure((float)$p[$key]===(float)$original[$key],'Catalogue price was modified');
  ensure((int)$pdo->query('SELECT COUNT(*) FROM entrepreneur_payouts')->fetchColumn()===0,'Direct sale created a commission');
+ $directCount=(int)$pdo->query('SELECT COUNT(*) FROM direct_sales')->fetchColumn();
+ $assisted=endpoint($pdo,'/admin/manual-order','POST',['entrepreneurId'=>'E1','customer'=>'Assisted COD Buyer','phone'=>'0771234567','phone2'=>'0712345678','district'=>'Colombo','address'=>'Test assisted address','items'=>[['productId'=>4,'qty'=>1,'sellPrice'=>350]]],201)['order'];
+ ensure($assisted['orderMode']==='dropship'&&$assisted['clientPaymentMethod']==='cod'&&$assisted['entrepreneurMargin']===50.0,'Assisted COD pricing or commission changed');
+ ensure((int)$pdo->query('SELECT COUNT(*) FROM direct_sales')->fetchColumn()===$directCount,'Assisted order was incorrectly mixed into direct sales');
  $report=endpoint($pdo,'/admin/reports/data');ensure(count($report['directSales'])>0&&count($report['directStockMovements'])>0,'Direct reports missing');
  echo "PASS: cash / bank / walk-in / partial payments, price snapshots, discounts, approvals, secure receipt versions, reload persistence, failed-upload and DB rollback, draft repricing, reservations, handover exactly once, cancellation, physical returns, refunds, concurrent last-unit sales, profile ownership, reports and unchanged COD/credit/commission/catalogue pricing.\n";
 } finally {

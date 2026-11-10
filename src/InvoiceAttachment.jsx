@@ -16,7 +16,7 @@ function usePreview(file) {
   return url
 }
 
-function InvoiceCamera({ onAccept, onClose, kind = 'invoice' }) {
+function InvoiceCamera({ onAccept, onClose, kind = 'invoice', inline = false }) {
   const video = useRef(null)
   const stream = useRef(null)
   const mounted = useRef(false)
@@ -54,16 +54,17 @@ function InvoiceCamera({ onAccept, onClose, kind = 'invoice' }) {
     } catch (failure) { if (mounted.current) setError(failure.message) }
     finally { if (mounted.current) setCapturing(false) }
   }
-  return <PortalOverlay className="camy-invoice-camera-layer" label={`${kind === 'receipt' ? 'Receipt' : 'Invoice'} camera`} onClose={close}><section className="camy-invoice-camera"><header><div><h2>{photo ? `Review ${kind} photo` : `Photograph ${kind}`}</h2><p>{photo ? 'Use this photo or retake it before attaching.' : `Keep the complete ${kind} in view and make sure the text is readable.`}</p></div><button type="button" onClick={close} aria-label={`Close ${kind} camera`}><X/></button></header>
+  const Frame = inline ? 'div' : PortalOverlay
+  return <Frame className={inline ? 'camy-invoice-inline-camera' : 'camy-invoice-camera-layer'} {...(inline ? {} : { label: `${kind === 'receipt' ? 'Receipt' : 'Invoice'} camera`, onClose: close })}><section className="camy-invoice-camera"><header><div><h2>{photo ? `Review ${kind} photo` : `Photograph ${kind}`}</h2><p>{photo ? 'Use this photo or retake it before attaching.' : `Keep the complete ${kind} in view and make sure the text is readable.`}</p></div><button type="button" onClick={close} aria-label={`Close ${kind} camera`}><X/></button></header>
     {!error && !ready && <p role="status">Requesting camera access...</p>}
     <video ref={video} autoPlay muted playsInline hidden={Boolean(photo) || Boolean(error)} onLoadedMetadata={() => setReady(Boolean(video.current?.videoWidth))}/>
     {photo && preview && <img className="camy-invoice-captured" src={preview} alt={`Captured ${kind} for review`}/>}
     {error && <p className="market-error" role="alert">{error}</p>}
     <footer>{photo ? <><button type="button" className="btn secondary" onClick={() => { setPhoto(null); setError('') }}><RotateCcw/> Retake</button><button type="button" className="btn primary" onClick={() => { stop(); onAccept(photo); onClose() }}><Check/> Use photo</button></> : <><button type="button" className="btn secondary" onClick={close}>{error ? kind === 'receipt' ? 'Close and upload receipt' : 'Close and upload document' : 'Cancel'}</button><button type="button" className="btn primary" disabled={!ready || capturing || Boolean(error)} onClick={capture}><Camera/>{capturing ? 'Capturing...' : 'Capture photo'}</button></>}</footer>
-  </section></PortalOverlay>
+  </section></Frame>
 }
 
-export function InvoiceAttachment({ file, onChange, disabled = false, kind = 'invoice' }) {
+export function InvoiceAttachment({ file, onChange, disabled = false, kind = 'invoice', inlineCamera = false }) {
   const [cameraOpen, setCameraOpen] = useState(false)
   const [fromCamera, setFromCamera] = useState(false)
   const [error, setError] = useState('')
@@ -80,6 +81,6 @@ export function InvoiceAttachment({ file, onChange, disabled = false, kind = 'in
     {file && <div className="camy-invoice-file-preview">{preview ? <img src={preview} alt={`Selected ${kind} preview`}/> : <FileText/>}<div><strong>{file.name}</strong><small>{file.type === 'application/pdf' ? 'PDF document' : 'Image attached for review'}</small></div><button type="button" disabled={disabled} aria-label={`Remove ${kind} attachment`} onClick={() => { onChange(null); setError(''); if (input.current) input.current.value = '' }}><Trash2/> Remove</button></div>}
     {error && <p className="market-error" role="alert">{error}</p>}
     {kind === 'receipt' && file && fromCamera && <button type="button" className="camy-receipt-retake" disabled={disabled} onClick={() => setCameraOpen(true)}><RotateCcw/> Retake</button>}
-    {cameraOpen && <InvoiceCamera kind={kind} onClose={() => setCameraOpen(false)} onAccept={next => choose(next, true)}/>}
+    {cameraOpen && <InvoiceCamera inline={inlineCamera} kind={kind} onClose={() => setCameraOpen(false)} onAccept={next => choose(next, true)}/>}
   </div>
 }

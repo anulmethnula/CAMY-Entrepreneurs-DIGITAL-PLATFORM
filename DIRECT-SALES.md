@@ -1,4 +1,4 @@
-﻿# CAMY Direct Sales
+# CAMY Direct Sales
 
 Direct Sales is a separate business ledger, available under **Admin → Customer Orders → New Direct Sale**. Existing COD, assisted orders, commissions, credit tiers, credit balances and public/credit stock workflows remain separate.
 
@@ -9,7 +9,7 @@ Direct Sales is a separate business ledger, available under **Admin → Customer
 - `api/marketplace.php`: route integration and protection against removing/renaming products still linked to direct sales.
 - `api/reports.php`: separate direct-sale and movement datasets with permission-based financial redaction.
 - `api/staff.php`, `api/security.php`, `api/.htaccess`: granular role permissions, configurable upload request allowance and source-file protection.
-- `src/DirectSales.jsx`, `src/direct-sales.css`: buyer/product lookup, five-step creation, detail actions, private receipt versions, profile history and responsive UI. Reuses `InvoiceAttachment`, its camera flow, `ReceiptPreview` and `PortalOverlay`.
+- `src/DirectSales.jsx`, `src/direct-sales.css`: buyer/product lookup, compact single-page creation, detail actions, private receipt versions, profile history and responsive UI. Reuses `InvoiceAttachment`, its camera flow, `ReceiptPreview` and `PortalOverlay`.
 - `src/directSalesModel.js`, `src/directInvoice.js`: pricing previews, filtering, finance aggregation, explicit Excel sheet grains, printable invoices and local PDF download.
 - `src/App.jsx`: Customer Orders button, order-type filter, combined workbook download, purchase-profile tab and staff permission labels.
 - `src/ReportsWorkspace.jsx`, `src/reportModel.js`: Direct Sales report, Direct Sales Finance section and Products & Stock movement history.
@@ -92,13 +92,21 @@ npm run build
 node scripts/run-php.mjs scripts/test-direct-sales.php
 node scripts/test-direct-sales-model.mjs
 node scripts/review-direct-sales.mjs
+node scripts/test-direct-invoice-pdf.mjs
 ```
 
 The backend test creates a temporary database and private receipt directory, exercises cash/bank/walk-in sales, four-product mixed pricing, partial payments, discounts/approval, receipt corrections, failed uploads/saves, draft edits, reservations, returns/refunds, role restrictions, product relationships and two concurrent last-unit sale attempts, then removes its fixtures.
 
 The browser test starts an isolated PHP/MySQL/Vite session with test accounts. It exercises real HTTP authentication, camera capture/retake, bank verification, handover, persistent receipt correction/download, sales-only receipt denial, profile/report integration, PDF generation and widths 1440/1100/800/390. Test accounts/products are not seeded into the working application database.
 
-Existing invoice correction, ERP API/report, stock workflow, dropship payout/credit, report-model and customer-order export regressions were also run.
+Existing invoice correction, ERP API/report, stock workflow, assisted COD creation, dropship payout/credit, credit-policy, report-model and customer-order export regressions also passed. The new real-HTTP suite verifies anonymous receipt denial and sales-only access restrictions.
+
+Two older regression scripts were attempted and failed before reaching Direct Sales:
+
+- `scripts/test-workflow-api.php` inserts a marketplace state row already seeded by `schema.sql`, producing duplicate primary key `1`. Its remaining scenarios target the retired customer portal.
+- `scripts/test-staff-auth.php` creates a copied API router without rewriting the newer `notifications.php` include, producing an invalid bootstrap response before the anonymous-access assertion. It also assumes the old built-in staff role creation workflow.
+
+These legacy fixtures were not changed to re-enable retired business flows. Current Direct Sales authorization is covered by the isolated backend and real-HTTP browser tests.
 
 ## Scope and remaining operational limits
 
@@ -106,3 +114,8 @@ Existing invoice correction, ERP API/report, stock workflow, dropship payout/cre
 - The purchased-stock ownership ledger is distinct from the existing credit/public-shop stock ledger; this flow does not publish purchased goods for online resale.
 - Bank verification and actual cash/refund collection remain authorized human confirmations, not bank API integrations.
 - Production deployment and real company/policy configuration remain operational steps; this implementation does not deploy itself or send customer emails.
+
+
+## Compact inline interface
+
+Direct Sale creation now replaces the Customer Orders content in the main workspace. There is no wizard, overlay or new browser window. Buyer selection and compact product rows share the page with payment and totals. Optional discounts, service charges, extra buyer details and approval controls expand only when needed. Sale details use Overview / Products / Payments / History tabs. Camera, payment proof and invoice previews stay inline, with the existing server permissions and financial rules preserved.

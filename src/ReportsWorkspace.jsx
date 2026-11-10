@@ -29,6 +29,7 @@ export default function ReportsWorkspace(){
   downloadWorkbook(`camy-${kind}-${filters.from||'all'}-${filters.to||'dates'}.xlsx`,sheets)
  }
  const order=detail&&report.orders.find(o=>o.id===(detail.detailId||detail.id))
+ if(detail&&kind==='direct')return <div className="content-page erp-reports"><DirectSaleDetails sale={report.directSales.find(s=>s.id===detail.id)} access={{finance:access.directFinance}} readOnly close={()=>setDetail(null)}/></div>
  return <div className="content-page erp-reports"><header className="erp-report-heading"><div>{kind&&<button className="erp-back" onClick={()=>setKind(null)}><ArrowLeft size={17}/> All reports</button>}<small>MANAGEMENT REPORTS</small><h1>{selected?.[1]||'Business reports'}</h1><p>{selected?.[2]||'View, filter and review your business records before downloading.'}</p></div><button onClick={load} disabled={busy}><RefreshCw size={16}/>{busy?'Refreshing...':'Refresh data'}</button></header>
  {error&&<p role="alert" className="login-error">{error}</p>}{!data&&busy&&<p role="status">Loading reports...</p>}
  {!kind&&data&&<div className="erp-report-cards">{reportTypes.map(([id,title,description])=>{const preview=buildReport(id,data);return <article key={id}><FileBarChart/><h2>{title}</h2><p>{description}</p><strong>{canView(id)?`${preview.kpis[0]?.[0]}: ${preview.kpis[0]?.[1]}`:'Additional finance permission required'}</strong><button disabled={!canView(id)} onClick={()=>choose(id)}>View Report <ArrowRight size={16}/></button></article>})}</div>}

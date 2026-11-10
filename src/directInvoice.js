@@ -5,9 +5,17 @@ export function directInvoiceHtml(sale, company = {}) {
   return `<html><head><title>${esc(sale.id)} sales invoice</title><style>body{font:14px Arial,sans-serif;color:#15354d;margin:35px}table{width:100%;border-collapse:collapse}th,td{padding:10px;text-align:left;border-bottom:1px solid #ddd}p{line-height:1.7}h1{font-size:25px}footer{margin-top:30px;font-size:12px}button{padding:12px}@media print{button{display:none}thead{display:table-header-group}tr{break-inside:avoid}}</style></head><body><button onclick="window.print()">Print / Save as PDF</button><h1>${esc(company.name || 'Sales invoice')}</h1><p>${Object.entries(company).filter(([key])=>key!=='name').map(([key,value])=>esc(key)+': '+esc(value)).join('<br>')}</p><h2>Sales invoice ${esc(sale.id)}</h2><p>Date: ${esc(sale.saleDate)}<br>${esc(sale.buyer.name)} ${esc(sale.entrepreneurId)}<br>${esc(sale.buyer.phone)}<br>${esc(sale.buyer.address || '')}</p><table><thead><tr><th>Product / code</th><th>Qty</th><th>Base unit</th><th>Discount / unit</th><th>Final unit</th><th>Total</th></tr></thead><tbody>${sale.items.map(i=>`<tr><td>${esc(i.code)}<br>${esc(i.name)}</td><td>${i.qty}</td><td>${dsMoney(i.baseUnitPrice)}</td><td>${dsMoney(i.discountPerUnit)}</td><td>${dsMoney(i.finalUnitPrice)}</td><td>${dsMoney(i.lineTotal)}</td></tr>`).join('')}</tbody></table><p>Total payable: <b>${dsMoney(sale.total)}</b><br>Verified paid: ${dsMoney(sale.amountReceived)}<br>Refunded: ${dsMoney(sale.refundTotal)}<br>Balance due: ${dsMoney(sale.balance)}<br>Payment: ${esc(sale.paymentMethod)} / ${esc(sale.paymentStatus)}</p><footer>A sales invoice is separate from payment proof. Bank receipt submission does not confirm payment.</footer></body></html>`
 }
 export function printDirectInvoice(sale, company) {
-  const win = window.open('', '_blank')
-  if (!win) throw Error('Allow pop-ups to view or print the invoice.')
-  win.document.write(directInvoiceHtml(sale, company)); win.document.close()
+  const frame = document.createElement('iframe')
+  frame.title = 'Print sales invoice'
+  Object.assign(frame.style, { position:'fixed', width:'1px', height:'1px', right:'0', bottom:'0', border:'0', opacity:'0', pointerEvents:'none' })
+  frame.onload = () => {
+    const target = frame.contentWindow
+    if (!target) { frame.remove(); return }
+    target.addEventListener('afterprint', () => frame.remove(), { once:true })
+    target.focus(); target.print()
+  }
+  frame.srcdoc = directInvoiceHtml(sale, company)
+  document.body.appendChild(frame)
 }
 // Raster pages retain Unicode customer/product names using the browser's fonts.
 export async function directInvoicePdf(sale, company = {}) {

@@ -977,6 +977,8 @@ export function AdminOrders({ orders, openOrder, products, entrepreneurs, onManu
     try { if(await onManualOrder(form))setManualOrder(false) }
     finally { setCreating(false) }
   }
+  if(directCreate)return <div className="content-page admin-orders-page"><DirectSaleCreator products={products} entrepreneurs={entrepreneurs} sales={directData.sales} access={directData.access} receiptMaxMb={directData.receiptMaxMb} close={()=>setDirectCreate(false)} onCreated={sale=>{loadDirect();setDirectSelected(sale)}}/></div>
+  if(directSelected)return <div className="content-page admin-orders-page"><DirectSaleDetails sale={directSelected} products={products} entrepreneurs={entrepreneurs} access={directData.access} company={directData.company} receiptMaxMb={directData.receiptMaxMb} close={()=>setDirectSelected(null)} onUpdated={loadDirect}/></div>
   return <div className="content-page admin-orders-page">
     <PageTitle eyebrow="ORDER OPERATIONS" title="Orders" text="Manage COD orders, delivery, payments, and entrepreneur payouts from one workspace."><><Button icon={Plus} onClick={()=>setManualOrder(true)}>New assisted order</Button><Button icon={Plus} disabled={!directData.access.create||directLoading} title={directError||'Create a separate cash or bank direct sale'} onClick={()=>setDirectCreate(true)}>New Direct Sale</Button><Button variant="secondary" icon={Download} title="Download the currently filtered orders with full product details." onClick={downloadOrders}>Download Excel</Button></></PageTitle>
     <section className="admin-order-summary">
@@ -993,8 +995,6 @@ export function AdminOrders({ orders, openOrder, products, entrepreneurs, onManu
     </div>
     {orderType!=='direct'&&<article className="card table-card"><header className="order-directory-heading"><div><span>ORDER DIRECTORY</span><h2>Customer orders</h2></div><b>{visible.length} {visible.length===1?'order':'orders'}</b></header><OrderTable orders={visible} admin onOpen={openOrder}/>{!visible.length&&<Empty icon={PackageSearch} title={orders.length?'No orders match these filters':'No customer orders yet'} text={orders.length?'Clear the filters or try another search.':'Create an assisted order, or wait for an entrepreneur to place a client order.'}/>}</article>}
     {['all','direct'].includes(orderType)&&<section className="ds-directory card"><header><div><small>SEPARATE SALES LEDGER</small><h2>Direct Sales</h2><p>Cash and bank purchases from CAMY. No entrepreneur commission or credit debt.</p></div><button type="button" className="ds-secondary" onClick={loadDirect}>Refresh direct sales</button></header>{directError&&<p role="alert">{directError}</p>}<DirectSalesFilters filters={directFilters} onChange={setDirectFilters}/><DirectSalesTable sales={directVisible} onOpen={setDirectSelected}/></section>}
-    {directCreate&&<DirectSaleCreator products={products} entrepreneurs={entrepreneurs} sales={directData.sales} access={directData.access} receiptMaxMb={directData.receiptMaxMb} close={()=>setDirectCreate(false)} onCreated={sale=>{loadDirect();setDirectSelected(sale)}}/>}
-    {directSelected&&<DirectSaleDetails sale={directSelected} products={products} entrepreneurs={entrepreneurs} access={directData.access} company={directData.company} receiptMaxMb={directData.receiptMaxMb} close={()=>setDirectSelected(null)} onUpdated={loadDirect}/>}
     {manualOrder&&<ManualOrderModal products={products} entrepreneurs={entrepreneurs} close={()=>!creating&&setManualOrder(false)} submit={createOrder} saving={creating}/>}
   </div>
 }
