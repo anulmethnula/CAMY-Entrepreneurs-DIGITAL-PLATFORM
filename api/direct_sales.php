@@ -33,6 +33,7 @@ function ds_lines(array $data,array $state,array $user): array {
         $product=null;foreach($state['products'] as $p)if((string)$p['id']===$id){$product=$p;break;}
         if(!$product)ds_fail('A selected product no longer exists.');
         $qty=filter_var($input['qty'] ?? null,FILTER_VALIDATE_INT);if($qty===false||$qty<1||$qty>1000000)ds_fail('Enter a whole product quantity greater than zero.');
+        if($qty>(int)$product['stock'])ds_fail('Insufficient available warehouse stock for '.$product['name'].'.',409);
         $method=$input['pricingMethod'] ?? 'catalogue';if(!in_array($method,['catalogue','billing','custom','discount'],true))ds_fail('Invalid pricing method.');
         $baseMode=$method==='discount'?($input['baseMode'] ?? 'catalogue'):$method;if(!in_array($baseMode,['catalogue','billing','custom'],true))ds_fail('Invalid discount base.');
         $billing=ds_amount($product['billingPrice'] ?? $product['price']);$delivery=ds_amount($product['deliveryCost'] ?? 0);$packaging=ds_amount($product['packagingCost'] ?? 0);
@@ -59,7 +60,7 @@ function ds_lines(array $data,array $state,array $user): array {
             if(!ds_permission($user,'direct-sales-approve')||($data['approvePricing'] ?? false)!==true)ds_fail('This offer requires an authorized price approver to explicitly approve it.',403);
             if($reason==='')ds_fail('An approval reason is required.');
         }
-        $lines[]=['productId'=>$product['id'],'code'=>$product['code'] ?? $id,'name'=>$product['name'],'image'=>$product['image'] ?? '', 'qty'=>$qty,'catalogueUnitPrice'=>$catalogue,'billingPrice'=>$billing,'originalDelivery'=>$delivery,'originalPackaging'=>$packaging,'pricingMethod'=>$method,'baseMode'=>$baseMode,'baseUnitPrice'=>$base,'discountType'=>$type,'discountValue'=>$value,'discountPerUnit'=>$discount,'finalUnitPrice'=>$final,'lineTotal'=>round($final*$qty,2),'includeDelivery'=>$deliveryIncluded,'includePackaging'=>$packagingIncluded,'deliveryCharge'=>$chosenDelivery,'packagingCharge'=>$chosenPackaging,'priceReason'=>$reason];
+        $lines[]=['productId'=>$product['id'],'code'=>$product['code'] ?? $id,'name'=>$product['name'],'image'=>$product['image'] ?? '', 'qty'=>$qty,'catalogueUnitPrice'=>$catalogue,'billingPrice'=>$billing,'originalDelivery'=>$delivery,'originalPackaging'=>$packaging,'pricingMethod'=>$method,'baseMode'=>$baseMode,'baseUnitPrice'=>$base,'discountType'=>$type,'discountValue'=>$value,'discountPerUnit'=>$discount,'finalUnitPrice'=>$final,'lineTotal'=>round($final*$qty,2),'includeDelivery'=>$deliveryIncluded,'includePackaging'=>$packagingIncluded,'deliveryCharge'=>$chosenDelivery,'packagingCharge'=>$chosenPackaging,'priceReason'=>$reason,'approvedBy'=>(($data['approvePricing'] ?? false)===true&&ds_permission($user,'direct-sales-approve'))?$user['id']:null];
     }
     return $lines;
 }
@@ -94,6 +95,10 @@ function ds_receipt(PDO $pdo,array &$sale,array &$payment,array $data,array $use
     $raw=(string)$data['receipt'];$max=max(1,min(50,(int)(getenv('CAMY_DIRECT_RECEIPT_MAX_MB') ?: 20)))*1024*1024;
     if(strlen($raw)>(int)ceil($max*4/3)+128)ds_fail('Receipt exceeds the configured '.($max/1024/1024).' MB limit.',413);
     $reason=ds_text($data['reason'] ?? '',1000);if(!empty($payment['receipts'])&&$reason==='')ds_fail('Enter a reason for replacing the receipt.');
+    if(!preg_match('#^data:(image/(?:png|jpeg|webp)|application/pdf);base64,(.+)$#s',$raw,$parts))ds_fail('Upload a JPG, JPEG, PNG, WebP or PDF payment receipt.');
+    $bytes=base64_decode($parts[2],true);if($bytes===false||$bytes==='')ds_fail('The receipt could not be decoded.');
+    if(strlen($bytes)>$max)ds_fail('Receipt exceeds the configured limit.',413);
+    if((str_starts_with($parts[1],'image/')&&((@getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))ds_fail('Receipt content does not match its file type.');
     $file=workflow_invoice_document($raw,$sale['id'].'-payment');$newFiles[]=$file;
     $id=bin2hex(random_bytes(12));$meta=['id'=>$id,'by'=>$user['id'],'name'=>$user['full_name'] ?? '', 'at'=>date(DATE_ATOM),'reason'=>$reason,'receipt'=>'/api/admin/direct-sales/'.$sale['id'].'/receipts/'.$id];
     $pdo->prepare('INSERT INTO direct_sale_receipts(id,sale_id,payment_id,storage_name,record_json) VALUES(?,?,?,?,?)')->execute([$id,$sale['id'],$payment['id'],$file,storage_json($meta)]);
@@ -164,7 +169,7 @@ function direct_sales_route(PDO $pdo,string $path,string $method): void {
                 if(empty($buyer['name'])||empty($buyer['phone'])||!preg_match('/^[+0-9 ()-]{7,30}$/',$buyer['phone']))ds_fail('Buyer name and a valid contact number are required.');
                 if(!empty($buyer['phone2'])&&!preg_match('/^[+0-9 ()-]{7,30}$/',$buyer['phone2']))ds_fail('Invalid alternative phone number.');
                 $mode=$data['fulfilmentMethod'] ?? 'collection';if(!in_array($mode,['collection','delivery'],true))ds_fail('Choose collection or courier delivery.');
-                $draft=($data['draft'] ?? false)===true;$sale=['id'=>'DS-'.strtoupper(bin2hex(random_bytes(7))),'idempotencyKey'=>$key,'orderType'=>'direct','customerType'=>$type,'entrepreneurId'=>$member,'buyer'=>$buyer,'saleDate'=>ds_date($data['saleDate'] ?? date('Y-m-d')),'createdAt'=>date(DATE_ATOM),'createdBy'=>$actor['id'],'createdByName'=>$actor['full_name'] ?? '', 'items'=>ds_lines($data,$state,$actor),'payments'=>[],'refunds'=>[],'history'=>[],'businessStatus'=>$draft?'Draft':'Confirmed','fulfilmentMethod'=>$mode,'fulfilmentStatus'=>'Not released','reserved'=>false,'preferredPaymentMethod'=>$data['payment']['method'] ?? 'cash'];
+                $draft=($data['draft'] ?? false)===true;if(!$draft&&empty($state['catalogue_live']))ds_fail('Activate the verified CAMY catalogue before confirming direct sales.',409);$sale=['id'=>'DS-'.strtoupper(bin2hex(random_bytes(7))),'idempotencyKey'=>$key,'orderType'=>'direct','customerType'=>$type,'entrepreneurId'=>$member,'buyer'=>$buyer,'saleDate'=>ds_date($data['saleDate'] ?? date('Y-m-d')),'createdAt'=>date(DATE_ATOM),'createdBy'=>$actor['id'],'createdByName'=>$actor['full_name'] ?? '', 'items'=>ds_lines($data,$state,$actor),'payments'=>[],'refunds'=>[],'history'=>[],'businessStatus'=>$draft?'Draft':'Confirmed','fulfilmentMethod'=>$mode,'fulfilmentStatus'=>'Not released','reserved'=>false,'preferredPaymentMethod'=>$data['payment']['method'] ?? 'cash'];
                 ds_totals($sale);ds_audit($sale,'Sale created',$actor,['pricingApproved'=>($data['approvePricing'] ?? false)===true]);ds_save($pdo,$sale);
                 if(!$draft){if(($data['reserve'] ?? false)===true)ds_stock($pdo,$sale,$state,$actor,'Reserved');if((float)($data['payment']['amount'] ?? 0)>0)ds_add_payment($pdo,$sale,$data['payment'],$actor,$newFiles);}
                 ds_save($pdo,$sale);if($sale['reserved'])market_save($pdo,$state);$pdo->commit();$status=201;$result=['sale'=>ds_public($sale,$finance),'message'=>'Direct sale saved. Payment verification and handover are separate actions.'];
@@ -177,7 +182,10 @@ function direct_sales_route(PDO $pdo,string $path,string $method): void {
                 if((int)($data['version'] ?? -1)!==(int)$sale['version'])ds_fail('This sale changed in another session. Reload before continuing.',409);
                 $stockChanged=false;
                 if($action==='confirm'){
-                    if($sale['businessStatus']!=='Draft')ds_fail('This sale is already confirmed.',409);$sale['businessStatus']='Confirmed';
+                    if($sale['businessStatus']!=='Draft')ds_fail('This sale is already confirmed.',409);
+                    if(empty($state['catalogue_live']))ds_fail('Activate the verified catalogue before confirming a sale.',409);
+                    foreach($sale['items'] as $item){$available=null;foreach($state['products'] as $p)if((string)$p['id']===(string)$item['productId']){$available=(int)$p['stock'];break;}if($available===null||$available<$item['qty'])ds_fail('Insufficient available stock to confirm this draft.',409);}
+                    $sale['businessStatus']='Confirmed';
                     if(($data['reserve'] ?? false)===true){ds_stock($pdo,$sale,$state,$actor,'Reserved');$stockChanged=true;}
                 }elseif($action==='prices'){
                     if($sale['businessStatus']!=='Draft'||!empty($sale['payments'])||!empty($sale['reserved']))ds_fail('Only an unpaid, unreserved draft can be repriced.',409);
@@ -198,7 +206,7 @@ function direct_sales_route(PDO $pdo,string $path,string $method): void {
                         if(empty($data['receipt']))ds_fail('Select a replacement receipt.');
                         ds_receipt($pdo,$sale,$payment,$data,$actor,$newFiles);
                         // Corrected proof is flagged for review; confirmed bank money is never silently unbooked.
-                        if($payment['method']==='bank')$payment['proofReviewRequired']=true;
+                        if($payment['method']==='bank'){$payment['proofReviewRequired']=true;if($payment['status']==='Rejected'){$payment['status']='Verification Pending';unset($payment['verifiedBy'],$payment['verifiedAt']);}}
                     }
                     unset($payment);
                 }elseif($action==='fulfilment'){

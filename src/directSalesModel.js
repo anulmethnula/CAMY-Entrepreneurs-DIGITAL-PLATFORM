@@ -1,4 +1,4 @@
-﻿import { downloadWorkbook } from './reports'
+import { downloadWorkbook } from './reports.js'
 export const dsMoney = value => `Rs. ${Number(value || 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 export const dsToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
 const round = value => Math.round((Number(value) + Number.EPSILON) * 100) / 100
@@ -27,7 +27,7 @@ export function directFinance(sales, within = () => true) {
   const payments = sales.flatMap(s => s.payments.filter(p => p.status === 'Verified' && within(p.date)))
   const sum = list => round(list.reduce((a, p) => a + Number(p.amount), 0)), refunds = sales.flatMap(s => (s.refunds || []).filter(r => within(r.date)))
   const active = sales.filter(s => within(s.saleDate) && s.businessStatus !== 'Draft' && !['Cancelled','Returned'].includes(s.fulfilmentStatus))
-  return [['Direct sales count', sales.filter(s => within(s.saleDate)).length, 'count'], ['Direct cash received', sum(payments.filter(p => p.method === 'cash'))], ['Direct verified bank transfers', sum(payments.filter(p => p.method === 'bank'))], ['Direct awaiting balance', round(active.reduce((a,s) => a + Number(s.balance),0))], ['Direct discounts', round(active.reduce((a,s) => a + Number(s.discountTotal),0))], ['Direct refunds paid', sum(refunds)], ['Direct net cash received', round(sum(payments) - sum(refunds))], ['Direct released sale revenue', round(sales.filter(s => s.releasedAt && within(s.releasedAt)).reduce((a,s) => a + Number(s.total),0) - sum(refunds))], ['Direct returned sale count', sales.filter(s => s.returnedAt && within(s.returnedAt)).length, 'count']]
+  return [['Direct sales count', sales.filter(s => within(s.saleDate)).length, 'count'], ['Direct cash received', sum(payments.filter(p => p.method === 'cash'))], ['Direct verified bank transfers', sum(payments.filter(p => p.method === 'bank'))], ['Direct awaiting balance', round(active.reduce((a,s) => a + Number(s.balance),0))], ['Direct discounts', round(active.reduce((a,s) => a + Number(s.discountTotal),0))], ['Direct refunds paid', sum(refunds)], ['Direct net cash received', round(sum(payments) - sum(refunds))], ['Direct released sale revenue', round(sales.filter(s => s.releasedAt && within(s.releasedAt)).reduce((a,s) => a + Number(s.total),0) - sales.filter(s=>s.returnedAt&&within(s.returnedAt)).reduce((a,s)=>a+Number(s.total),0))], ['Direct returned sale count', sales.filter(s => s.returnedAt && within(s.returnedAt)).length, 'count']]
 }
 export function filterDirectSales(sales, f = {}) { return sales.filter(s => {
   const text = `${s.id} ${s.entrepreneurId} ${s.buyer.name} ${s.buyer.phone} ${s.items.map(i => i.name+' '+i.code).join(' ')}`.toLowerCase()

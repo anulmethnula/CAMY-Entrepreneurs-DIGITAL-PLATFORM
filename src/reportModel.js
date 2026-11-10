@@ -1,4 +1,4 @@
-import { directSaleSheets, directFinance, filterDirectSales } from './directSalesModel'
+import { directSaleSheets, directFinance, filterDirectSales } from './directSalesModel.js'
 // Explicit business columns are shared by the preview and workbook. No raw records are exported.
 export const reportTypes = [
  ['direct','Direct Sales','Direct purchases, payments, discounts, fulfilment and separate item/payment ledgers.'],
