@@ -1,0 +1,70 @@
+﻿/* Scoped catalogue layout; loaded after legacy page and mobile rules. */
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-order-page {
+  --catalogue-ink:#0b314b; padding-top:24px!important; min-width:0; max-width:100%;
+}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-order-page :is(.order-workspace-head,.order-progress,.stock-catalogue-title,.catalogue-browser){position:relative!important;top:auto!important;transform:none!important;z-index:auto!important;margin-top:0!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .order-workspace-head{background:#fff!important;color:#0b314b!important;border:1px solid #dce5ed!important;box-shadow:0 3px 12px #0b314b06!important;border-radius:16px!important;padding:24px!important;min-height:0!important;gap:16px!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .order-workspace-head::after{display:none!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .order-workspace-head :is(h1,small){color:#0b314b!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .order-workspace-head p{color:#62788b!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .order-workspace-head>button{background:#f3f7fa!important;color:#164664!important;border:1px solid #dce5ed!important;box-shadow:none!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-buy-layout:not(.cart-only-layout){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(360px,410px)!important;gap:24px!important;align-items:start!important;margin-top:24px!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-buy-layout>section{min-width:0!important;padding:20px!important;background:#fff!important;border:1px solid #dce5ed!important;border-radius:16px!important;box-shadow:none!important;overflow:visible!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-catalogue-title{display:flex!important;flex-wrap:wrap;gap:12px!important;margin-bottom:20px!important;height:auto!important;padding:0!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-catalogue-title h2{margin:8px 0!important;font-size:24px!important;line-height:1.3!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .catalogue-browser{margin-bottom:20px!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))!important;gap:20px!important;align-items:stretch!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-card{display:flex!important;flex-direction:column!important;min-width:0!important;height:auto!important;border:1px solid #dce5ed!important;border-radius:14px!important;overflow:hidden;box-shadow:0 3px 10px #0b314b08!important;transform:none!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-image{flex:none!important;width:100%!important;height:200px!important;min-height:200px!important;padding:18px!important;background:#f7f9fb!important;border-bottom:1px solid #e7edf2!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-image img{width:100%!important;height:100%!important;object-fit:contain!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-copy{display:flex!important;flex-direction:column!important;flex:1!important;gap:10px!important;padding:18px!important;min-width:0!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-copy h3{margin:0!important;font-size:17px!important;line-height:1.4!important;min-height:48px!important;overflow-wrap:anywhere}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-copy>p{display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;height:40px!important;min-height:40px!important;margin:0!important;font-size:13px!important;line-height:20px!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-delivery{margin:0!important;min-height:30px;align-items:center}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-meta{margin:auto 0 0!important;display:flex!important;flex-wrap:wrap;align-items:center;gap:8px!important;padding-top:10px}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .catalogue-card-quantity{display:flex!important;align-items:center!important;justify-content:space-between!important;flex-wrap:wrap;gap:10px!important;margin:0!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .catalogue-card-quantity>div,
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-stepper{display:grid!important;grid-template-columns:38px minmax(38px,1fr) 38px!important;height:42px!important;width:128px!important;min-width:0!important;padding:0!important;gap:0!important;border:1px solid #cddce7!important;border-radius:8px!important;overflow:hidden;background:#fff!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) :is(.catalogue-card-quantity>div,.dropship-stepper)>:is(button,input){width:100%!important;min-width:0!important;height:40px!important;min-height:40px!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;text-align:center!important;background:#fff!important;color:#0b314b!important;box-shadow:none!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) input[type=number]{appearance:textfield;-moz-appearance:textfield}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) input[type=number]::-webkit-inner-spin-button{appearance:none}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-actions{display:grid!important;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)!important;gap:8px!important;margin:0!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-actions button{display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;min-width:0!important;min-height:44px!important;height:auto!important;padding:10px 8px!important;font-size:12px!important;line-height:1.3!important;border-radius:8px!important;white-space:normal!important;box-shadow:none!important;transform:none!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-actions .market-primary{background:#126b96!important;color:white!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .erp-card-download{margin:0!important;min-height:40px!important;padding:8px!important;background:#fff!important;border:1px solid #e0e8ee!important;border-radius:8px!important;font-size:12px!important;color:#41647d!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-checkout{position:static!important;top:auto!important;max-height:none!important;overflow:visible!important;width:100%!important;min-width:0!important;margin:0!important;border:1px solid #dce5ed!important;border-radius:16px!important;box-shadow:0 3px 12px #0b314b08!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-checkout>header{position:static!important;flex-wrap:wrap!important;padding:20px!important;gap:12px!important;background:#f5f9fc!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .current-order-items{padding:0 20px!important;max-height:none!important;overflow:visible!important;background:#fff!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-order-line{padding:20px 0!important;border-bottom:1px solid #e3ebf1!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-line-heading{display:grid!important;grid-template-columns:52px minmax(0,1fr) 32px!important;gap:12px!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-line-heading>img{width:52px!important;height:52px!important;object-fit:contain!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-line-product{min-width:0!important;overflow-wrap:anywhere}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-line-product strong{font-size:14px!important;line-height:1.4!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-line-controls{display:grid!important;grid-template-columns:minmax(0,1fr) 128px!important;gap:14px!important;margin-top:16px!important;align-items:start!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-line-controls label{min-width:0!important;font-size:12px!important;line-height:1.5!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-price-input{height:42px!important;margin-top:7px!important;min-width:0!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-stepper{margin-top:7px!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .customer-fields{display:grid!important;gap:16px!important;padding:20px!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .customer-fields>div{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:16px!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .customer-fields label{display:grid!important;gap:7px!important;min-width:0!important;font-size:13px!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .customer-fields :is(input,select,textarea){width:100%!important;min-width:0!important;margin:0!important;min-height:44px!important;padding:11px 12px!important;font-size:14px!important;box-sizing:border-box!important;border-radius:8px!important}
+.invoice-notify-form{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin-top:22px;padding-top:20px;border-top:1px solid #dce5ed}
+.invoice-notify-form label{display:grid;gap:8px;flex:1 1 220px;min-width:0;font-size:13px;font-weight:700}
+.invoice-notify-form input{width:100%;min-width:0;padding:12px;border:1px solid #cddce7;border-radius:8px}
+.invoice-notify-form>small{flex-basis:100%;color:#62788b}
+.invoice-audit{margin-top:18px;padding:14px;border:1px solid #dce5ed;border-radius:10px;overflow-wrap:anywhere}
+.invoice-audit summary{cursor:pointer;font-weight:700}.invoice-audit p{font-size:13px;line-height:1.6}.invoice-audit small{display:block}
+@media(max-width:1200px){
+ .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-buy-layout:not(.cart-only-layout){grid-template-columns:minmax(0,1fr)!important}
+}
+@media(max-width:600px){
+ .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-product-grid{grid-template-columns:minmax(0,1fr)!important}
+ .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .stock-buy-layout>section{padding:14px!important}
+ .entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .dropship-line-controls{grid-template-columns:minmax(0,1fr)!important}
+ .invoice-form-footer{flex-wrap:wrap;gap:12px}.invoice-notify-form button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.dropship-order-page *{scroll-behavior:auto!important}}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .cart-back-to-products{color:#164664!important;background:#fff!important;border:1px solid #cddce7!important;min-height:42px!important;padding:10px 12px!important;border-radius:8px!important;opacity:1!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .customer-fields label{margin:0!important;padding:0!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) .catalogue-browser button.active{background:#126b96!important;box-shadow:none!important}
+.entrepreneur-shell:is([data-page="products"],[data-page="catalogue"]) :is(.stock-product-actions,.erp-card-download,.dropship-stepper,.catalogue-card-quantity) button:disabled{opacity:.5!important;cursor:not-allowed!important}

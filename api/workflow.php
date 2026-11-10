@@ -51,7 +51,7 @@ function workflow_receipt(array $data,string $id,bool $payoutProof=false): strin
     $raw=(string)($data['receipt'] ?? '');$ref=trim((string)($data['reference'] ?? ''));
     if(!$ref||strlen($ref)>120||(!$payoutProof&&strlen($raw)>7500000)||!preg_match('#^data:(image/(?:png|jpeg|webp)|application/pdf);base64,(.+)$#s',$raw,$parts))response(['message'=>$payoutProof?'Enter a reference and upload a JPG, PNG, WebP or PDF receipt.':'Enter a reference and upload a JPG, PNG, WebP or PDF receipt up to 5 MB.'],422);
     $bytes=base64_decode($parts[2],true);if(!$bytes||(!$payoutProof&&strlen($bytes)>5*1024*1024))response(['message'=>$payoutProof?'The receipt file could not be read.':'Invalid receipt or file exceeds 5 MB.'],422);
-    if((str_starts_with($parts[1],'image/')&&((getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Receipt content does not match the file type.'],422);
+    if((str_starts_with($parts[1],'image/')&&((@getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Receipt content does not match the file type.'],422);
     $dir=private_path('receipts');if(!is_dir($dir)&&!mkdir($dir,0700,true))throw new RuntimeException('Could not create receipt storage.');
     $file=$id.'-'.bin2hex(random_bytes(8)).'.'.['image/png'=>'png','image/jpeg'=>'jpg','image/webp'=>'webp','application/pdf'=>'pdf'][$parts[1]];
     if(file_put_contents($dir.'/'.$file,$bytes)===false)throw new RuntimeException('Could not save receipt.');return $file;
@@ -59,10 +59,10 @@ function workflow_receipt(array $data,string $id,bool $payoutProof=false): strin
 function workflow_invoice_document(string $raw,string $id): string {
     if(!preg_match('#^data:(image/(?:png|jpeg|webp)|application/pdf);base64,(.+)$#s',$raw,$parts))response(['message'=>'Upload a JPG, PNG, WebP or PDF invoice.'],422);
     $bytes=base64_decode($parts[2],true);if($bytes===false||$bytes==='')response(['message'=>'The invoice file could not be read.'],422);
-    if((str_starts_with($parts[1],'image/')&&((getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Invoice content does not match the selected file type.'],422);
+    if((str_starts_with($parts[1],'image/')&&((@getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Invoice content does not match the selected file type.'],422);
     $dir=private_path('receipts');if(!is_dir($dir)&&!mkdir($dir,0700,true))throw new RuntimeException('Could not create invoice storage.');
     $file=$id.'-'.bin2hex(random_bytes(8)).'.'.['image/png'=>'png','image/jpeg'=>'jpg','image/webp'=>'webp','application/pdf'=>'pdf'][$parts[1]];
-    if(file_put_contents($dir.'/'.$file,$bytes)===false)throw new RuntimeException('Could not save the invoice file.');return $file;
+    if(file_put_contents($dir.'/'.$file,$bytes,LOCK_EX)!==strlen($bytes)){@unlink($dir.'/'.$file);throw new RuntimeException('Could not save the complete invoice file.');}return $file;
 }
 function workflow_route(PDO $pdo,string $path,string $method): void {
     if($path==='/admin/manual-order'&&$method==='POST'){

@@ -62,6 +62,8 @@ function initialise_database(PDO $pdo): void
     $schema = file_get_contents($schemaFile);
     if ($schema === false) throw new RuntimeException('Database schema could not be loaded.');
     $pdo->exec($schema);
+    // Additive migration for hosts with an older private schema copy.
+    $pdo->exec(file_get_contents(__DIR__.'/direct-sales-schema.sql'));
     // Additive upgrade for hosts whose private schema file predates status history.
     $pdo->exec("CREATE TABLE IF NOT EXISTS order_status_history (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
  order_id VARCHAR(80) NOT NULL,

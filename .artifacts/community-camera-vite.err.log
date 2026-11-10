@@ -1,0 +1,56 @@
+3:23:34 PM [vite] (client) [console.error] API Error (ibn/c): TypeError: Failed to fetch
+    at e.<anonymous> (https://filtering.adblock360.com/config/in-browser-notifications:1:3746)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:3345
+    at Object.next (https://filtering.adblock360.com/config/in-browser-notifications:1:3450)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:2293
+    at new Promise (<anonymous>)
+    at g (https://filtering.adblock360.com/config/in-browser-notifications:1:2041)
+    at n.request (https://filtering.adblock360.com/config/in-browser-notifications:1:3598)
+    at n.get (https://filtering.adblock360.com/config/in-browser-notifications:1:4172)
+    at e.<anonymous> (https://filtering.adblock360.com/config/in-browser-notifications:1:7130)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:6247
+3:23:34 PM [vite] (client) [console.error] [in-browser-notifications] init failed TypeError: Failed to fetch
+    at e.<anonymous> (https://filtering.adblock360.com/config/in-browser-notifications:1:3746)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:3345
+    at Object.next (https://filtering.adblock360.com/config/in-browser-notifications:1:3450)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:2293
+    at new Promise (<anonymous>)
+    at g (https://filtering.adblock360.com/config/in-browser-notifications:1:2041)
+    at n.request (https://filtering.adblock360.com/config/in-browser-notifications:1:3598)
+    at n.get (https://filtering.adblock360.com/config/in-browser-notifications:1:4172)
+    at e.<anonymous> (https://filtering.adblock360.com/config/in-browser-notifications:1:7130)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:6247
+3:32:18 PM [vite] (client) [console.error] API Error (ibn/c): TypeError: Failed to fetch
+    at e.<anonymous> (https://filtering.adblock360.com/config/in-browser-notifications:1:3746)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:3345
+    at Object.next (https://filtering.adblock360.com/config/in-browser-notifications:1:3450)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:2293
+    at new Promise (<anonymous>)
+    at g (https://filtering.adblock360.com/config/in-browser-notifications:1:2041)
+    at n.request (https://filtering.adblock360.com/config/in-browser-notifications:1:3598)
+    at n.get (https://filtering.adblock360.com/config/in-browser-notifications:1:4172)
+    at e.<anonymous> (https://filtering.adblock360.com/config/in-browser-notifications:1:7130)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:6247
+3:32:18 PM [vite] (client) [console.error] [in-browser-notifications] init failed TypeError: Failed to fetch
+    at e.<anonymous> (https://filtering.adblock360.com/config/in-browser-notifications:1:3746)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:3345
+    at Object.next (https://filtering.adblock360.com/config/in-browser-notifications:1:3450)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:2293
+    at new Promise (<anonymous>)
+    at g (https://filtering.adblock360.com/config/in-browser-notifications:1:2041)
+    at n.request (https://filtering.adblock360.com/config/in-browser-notifications:1:3598)
+    at n.get (https://filtering.adblock360.com/config/in-browser-notifications:1:4172)
+    at e.<anonymous> (https://filtering.adblock360.com/config/in-browser-notifications:1:7130)
+    at https://filtering.adblock360.com/config/in-browser-notifications:1:6247
+3:44:57 PM [vite] (client) [console.error] API Error (ru/c): TypeError: Failed to fetch
+    at c.request (https://filtering.adblock360.com/config/rate-us:1:2372)
+    at c.get (https://filtering.adblock360.com/config/rate-us:1:2653)
+    at c.fetchUserData (https://filtering.adblock360.com/config/rate-us:1:3115)
+    at t.init (https://filtering.adblock360.com/config/rate-us:1:42902)
+    at HTMLDocument.handleVisibilityChange (https://filtering.adblock360.com/config/rate-us:1:42484)
+3:44:57 PM [vite] (client) [console.error] TypeError: Failed to fetch
+    at c.request (https://filtering.adblock360.com/config/rate-us:1:2372)
+    at c.get (https://filtering.adblock360.com/config/rate-us:1:2653)
+    at c.fetchUserData (https://filtering.adblock360.com/config/rate-us:1:3115)
+    at t.init (https://filtering.adblock360.com/config/rate-us:1:42902)
+    at HTMLDocument.handleVisibilityChange (https://filtering.adblock360.com/config/rate-us:1:42484)
