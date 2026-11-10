@@ -1,5 +1,7 @@
+import { directSaleSheets, directFinance, filterDirectSales } from './directSalesModel'
 // Explicit business columns are shared by the preview and workbook. No raw records are exported.
 export const reportTypes = [
+ ['direct','Direct Sales','Direct purchases, payments, discounts, fulfilment and separate item/payment ledgers.'],
  ['finance','Finance Summary','COD collections, retained amounts, commission and credit balances.'],
  ['pending','Pending Commission Payouts','Delivered commissions ready for CAMY Finance to transfer.'],
  ['history','Commission Payment History','Commission register, payment dates and transfer references.'],
@@ -26,6 +28,7 @@ const C=(key,label)=>c(key,label,'currency'),D=(key,label)=>c(key,label,'date')
 const base=[c('id','Order ID'),D('deliveredAt','Delivered Date'),c('entrepreneurId','Member ID'),c('entrepreneur','Entrepreneur')]
 export function buildReport(kind,data,filters={}){
  const people=data.entrepreneurs||[],products=data.products||[],settlements=data.settlements||[]
+ if(kind==='direct'){const sales=filterDirectSales(data.directSales||[],filters),sheets=directSaleSheets(sales);return {rows:sheets[0].rows,columns:sheets[0].columns,extra:sheets.slice(1),kpis:[['Direct sales',sales.length],['Sale total',money(sales.reduce((n,s)=>n+Number(s.total),0))],['Verified received',money(sales.reduce((n,s)=>n+Number(s.amountReceived),0))],['Balance due',money(sales.reduce((n,s)=>n+Number(s.balance),0))]],orders:[],directSales:sales}}
  const dates=(value)=>{const key=dateKey(value);return (!filters.from&&!filters.to)||!!key&&(!filters.from||key>=filters.from)&&(!filters.to||key<=filters.to)}
  const matches=row=>(!filters.entrepreneur||String(row.entrepreneurId||row.id)===filters.entrepreneur)&&(!filters.search||Object.values(row).filter(v=>typeof v!=='object').join(' ').toLowerCase().includes(filters.search.toLowerCase()))
  const orders=(data.orders||[]).map(order=>{
@@ -55,10 +58,12 @@ export function buildReport(kind,data,filters={}){
   rows=products.map(p=>({...p,status:p.published===false?'Hidden':'Published',free:p.freeDelivery===false?'No':'Yes'})).filter(p=>matches(p)&&(!filters.category||p.category===filters.category)&&(!filters.status||p.status===filters.status)&&(!filters.stock||(filters.stock==='out'?n(p.stock)<=0:filters.stock==='low'?n(p.stock)>0&&n(p.stock)<=5:n(p.stock)>0)))
   columns=[c('code','Product Code'),c('name','Product Name'),c('category','Category'),c('status','Product Status'),C('price','CAMY Product Price'),C('billingPrice','Billing Price'),C('deliveryCost','Delivery Charge'),C('packagingCost','Packaging Cost'),c('free','Free Delivery'),c('stock','Warehouse Stock','number')]
   kpis=[['Products',rows.length],['In Stock',rows.filter(p=>n(p.stock)>0).length],['Low Stock (1-5)',rows.filter(p=>n(p.stock)>0&&n(p.stock)<=5).length],['Out of Stock',rows.filter(p=>n(p.stock)<=0).length]]
+  extra=[{name:'Direct Stock Movements',columns:[c('saleId','Direct Sale ID'),D('at','Movement Date'),c('code','Product Code'),c('name','Product Name'),c('qty','Quantity','number'),c('type','Movement Type'),c('stockBefore','Available Before','number'),c('stockAfter','Available After','number'),c('availabilityDelta','Availability Change','number'),c('by','Processed By')],rows:(data.directStockMovements||[]).filter(m=>dates(m.at)&&(!filters.search||`${m.saleId} ${m.code} ${m.name}`.toLowerCase().includes(filters.search.toLowerCase())))}]
  }else{
   const delivered=orders.filter(o=>o.status==='Delivered'&&matches(o)&&dates(o.deliveredAt));const returned=orders.filter(o=>o.status==='Returned'&&matches(o)&&dates(o.statusHistory?.filter(h=>h.status==='Returned').at(-1)?.at));const paid=orders.filter(o=>(o.payoutStatus==='paid'||o.payoutPaidAt)&&matches(o)&&dates(o.payoutPaidAt));const pending=delivered.filter(o=>o.payoutStatus==='pending_transfer');
   rows=[['Client COD collected',sum(delivered.filter(o=>o.clientPaymentStatus==='Collected by CAMY'),'amount')],['CAMY Retained Amount',sum(delivered.filter(o=>o.clientPaymentStatus==='Collected by CAMY'),'retained')],['Entrepreneur commissions earned',sum(delivered,'commission')],['Commission paid',sum(paid,'commission')],['Commission waiting to pay',sum(pending,'commission')],['Credit outstanding (current)',data.access?.credit?sum(people.filter(matches),'used'):null],['Delivered order value',sum(delivered,'amount')],['Returned order value',sum(returned,'amount')],['Delivered order count',delivered.length],['Returned order count',returned.length]].map(([metric,value])=>({metric,amount:metric.endsWith('count')?null:value,count:metric.endsWith('count')?value:null}))
   columns=[c('metric','Metric'),C('amount','Amount (LKR)'),c('count','Order Count','number')];kpis=rows.slice(0,4).map(r=>[r.metric,money(r.amount)])
  }
+ if(kind==='finance'&&data.access?.directFinance){extra=[{name:'Direct Sales Finance',columns:[c('metric','Direct Sales Metric'),C('amount','Amount (LKR)'),c('count','Sale Count','number')],rows:directFinance(data.directSales||[],dates).map(([metric,value,type])=>({metric,amount:type==='count'?null:value,count:type==='count'?value:null}))}]}
  return {rows,columns,extra,kpis,orders}
 }

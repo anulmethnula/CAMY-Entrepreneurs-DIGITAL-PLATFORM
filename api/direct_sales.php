@@ -82,7 +82,7 @@ function ds_save(PDO $pdo,array &$sale): void {
 }
 function ds_public(array $sale,bool $finance=true): array {
     unset($sale['idempotencyKey']);
-    if(!$finance){foreach($sale['payments'] ?? [] as &$payment){unset($payment['reference'],$payment['bankName'],$payment['note'],$payment['receipts']);}unset($payment);unset($sale['history']);}
+    if(!$finance){foreach($sale['payments'] as &$payment){unset($payment['reference'],$payment['bankName'],$payment['note'],$payment['receipts']);}unset($payment);unset($sale['history']);}
     return $sale;
 }
 function ds_list(PDO $pdo,?string $member=null,bool $finance=true): array {
@@ -197,13 +197,14 @@ function direct_sales_route(PDO $pdo,string $path,string $method): void {
                     }else{
                         if(empty($data['receipt']))ds_fail('Select a replacement receipt.');
                         ds_receipt($pdo,$sale,$payment,$data,$actor,$newFiles);
-                        // A corrected proof does not silently retain a previous verification.
-                        if($payment['method']==='bank'&&$payment['status']==='Verified'){$payment['status']='Verification Pending';unset($payment['verifiedBy'],$payment['verifiedAt']);}
+                        // Corrected proof is flagged for review; confirmed bank money is never silently unbooked.
+                        if($payment['method']==='bank')$payment['proofReviewRequired']=true;
                     }
                     unset($payment);
                 }elseif($action==='fulfilment'){
                     $next=$data['status'] ?? '';
                     if($next==='Completed'){
+                        if($sale['paymentStatus']!=='Paid')ds_fail('Verify full payment before completion.',409);
                         if(!in_array($sale['fulfilmentStatus'],['Handed Over','Dispatched'],true))ds_fail('Record handover or dispatch before completion.',409);
                         $sale['fulfilmentStatus']='Completed';$sale['completedAt']=date(DATE_ATOM);
                     }else{

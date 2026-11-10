@@ -30,5 +30,9 @@ function reports_route(PDO $pdo,string $path,string $method): void {
     }
     $products=array_map(static fn($product)=>report_pick($product,['id','code','name','category','published','price','billingPrice','deliveryCost','packagingCost','freeDelivery','stock']),$state['products']);
     $settlements=$credit?array_map(static fn($entry)=>report_pick($entry,['id','entrepreneurId','amount','status','createdAt','submittedAt','reviewedAt','verifiedAt','reference']),$state['settlements'] ?? []):[];
-    response(['orders'=>$orders,'entrepreneurs'=>$people,'products'=>$products,'settlements'=>$settlements,'access'=>['finance'=>$finance,'credit'=>$credit]]);
+    $directFinance=ds_permission($user,'direct-sales-finance');
+    $directAccess=ds_permission($user,'direct-sales')||$directFinance;
+    $directSales=$directAccess?ds_list($pdo,null,$directFinance):[];
+    $movements=array_map(static fn($row)=>storage_decode($row['record_json']),$pdo->query('SELECT record_json FROM direct_sale_stock_movements ORDER BY id DESC')->fetchAll());
+    response(['directSales'=>$directSales,'directStockMovements'=>$movements,'orders'=>$orders,'entrepreneurs'=>$people,'products'=>$products,'settlements'=>$settlements,'access'=>['finance'=>$finance,'credit'=>$credit,'directSales'=>$directAccess,'directFinance'=>$directFinance]]);
 }

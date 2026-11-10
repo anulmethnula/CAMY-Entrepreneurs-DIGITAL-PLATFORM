@@ -1,7 +1,9 @@
+import { DirectSaleCreator, DirectSaleDetails, DirectSalesTable, DirectSalesFilters, DirectPurchases, useDirectSales } from './DirectSales'
+import { filterDirectSales, directSaleSheets } from './directSalesModel'
 import { uploadPayoutReceipt, cancelPayoutReceipt, payoutReceiptTypes } from './payoutReceipts'
 import { WhatsAppCommunity } from './WhatsAppCommunity'
 import { InvoiceAttachment } from './InvoiceAttachment'
-import { customerOrderDateRange, filterCustomerOrders, downloadCustomerOrders } from './customerOrdersExport'
+import { customerOrderDateRange, filterCustomerOrders, downloadCustomerOrders, customerOrdersWorkbook } from './customerOrdersExport'
 import ReportsWorkspace from './ReportsWorkspace'
 import { districts, occupations, businessCategories, businessDurations, incomeRanges, followerRanges, joinReasons } from './registration-options'
 import { ProductCostEditor } from './ProductCostEditor'
@@ -950,6 +952,8 @@ function LegacyAdminOrders({ orders, setOrders, openOrder, onUpdateStatus, produ
 }
 
 export function AdminOrders({ orders, openOrder, products, entrepreneurs, onManualOrder }) {
+  const {data:directData,error:directError,loading:directLoading,load:loadDirect}=useDirectSales()
+  const [directCreate,setDirectCreate]=useState(false),[directSelected,setDirectSelected]=useState(null),[orderType,setOrderType]=useState('all'),[directFilters,setDirectFilters]=useState({})
   const [search,setSearch]=useState('')
   const [filter,setFilter]=useState('All')
   const [fromDate,setFromDate]=useState('')
@@ -961,9 +965,12 @@ export function AdminOrders({ orders, openOrder, products, entrepreneurs, onManu
     const [from,to]=customerOrderDateRange(range)
     setFromDate(from);setToDate(to);setQuickDate(range)
   }
-  const visible=filterCustomerOrders(orders,{status:filter,search,from:fromDate,to:toDate})
-  const filtersActive=Boolean(search||filter!=='All'||fromDate||toDate||quickDate!=='all')
-  const clearFilters=()=>{setSearch('');setFilter('All');setFromDate('');setToDate('');setQuickDate('all')}
+  const typedOrders=orders.filter(o=>orderType==='all'||orderType==='direct'?orderType!=='direct':orderType==='assisted'?o.createdBy==='CAMY Admin'||!!o.createdByUserId:!(o.createdBy==='CAMY Admin'||o.createdByUserId))
+  const visible=filterCustomerOrders(typedOrders,{status:filter,search,from:fromDate,to:toDate})
+  const directVisible=filterDirectSales(directData.sales,{...directFilters,search,from:fromDate,to:toDate})
+  const downloadOrders=()=>{const book=customerOrdersWorkbook(visible,products,{status:filter,search,from:fromDate,to:toDate});const sheets=orderType==='direct'?[]:book.sheets;if(['all','direct'].includes(orderType))sheets.push(...directSaleSheets(directVisible).map(sheet=>({...sheet,title:`CAMY - ${sheet.name}`,showTotals:false})));downloadWorkbook(book.filename,sheets)}
+  const filtersActive=Boolean(search||filter!=='All'||fromDate||toDate||quickDate!=='all'||orderType!=='all'||Object.values(directFilters).some(Boolean))
+  const clearFilters=()=>{setSearch('');setFilter('All');setFromDate('');setToDate('');setQuickDate('all');setOrderType('all');setDirectFilters({})}
   const createOrder=async form=>{
     if(creating)return
     setCreating(true)
@@ -971,20 +978,23 @@ export function AdminOrders({ orders, openOrder, products, entrepreneurs, onManu
     finally { setCreating(false) }
   }
   return <div className="content-page admin-orders-page">
-    <PageTitle eyebrow="ORDER OPERATIONS" title="Orders" text="Manage COD orders, delivery, payments, and entrepreneur payouts from one workspace."><><Button icon={Plus} onClick={()=>setManualOrder(true)}>New assisted order</Button><Button variant="secondary" icon={Download} title="Download the currently filtered orders with full product details." onClick={()=>downloadCustomerOrders(visible,products,{status:filter,search,from:fromDate,to:toDate})}>Download Excel</Button></></PageTitle>
+    <PageTitle eyebrow="ORDER OPERATIONS" title="Orders" text="Manage COD orders, delivery, payments, and entrepreneur payouts from one workspace."><><Button icon={Plus} onClick={()=>setManualOrder(true)}>New assisted order</Button><Button icon={Plus} disabled={!directData.access.create||directLoading} title={directError||'Create a separate cash or bank direct sale'} onClick={()=>setDirectCreate(true)}>New Direct Sale</Button><Button variant="secondary" icon={Download} title="Download the currently filtered orders with full product details." onClick={downloadOrders}>Download Excel</Button></></PageTitle>
     <section className="admin-order-summary">
       {[[ReceiptText,orders.length,'All orders','Complete history','All'],[Truck,orders.filter(order=>!['Delivered','Returned','Rejected','Cancelled'].includes(order.status)).length,'In progress','Needs follow-up','In progress'],[PackageCheck,orders.filter(order=>order.status==='Delivered').length,'Delivered','Completed successfully','Delivered'],[CircleDollarSign,orders.filter(order=>['pending_delivery','pending_transfer'].includes(order.payoutStatus)).length,'Payouts pending','After COD collection','Payouts pending']].map(([Icon,value,label,detail,valueFilter])=><article className={filter===valueFilter?'active':''} key={label} role="button" tabIndex="0" aria-label={`Show ${label.toLowerCase()}`} aria-pressed={filter===valueFilter} onClick={()=>setFilter(valueFilter)} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setFilter(valueFilter)}}}><span><Icon/></span><div><small>{label}</small><strong>{value}</strong><em>{detail}</em></div></article>)}
     </section>
     <div className="order-filter-shell">
       <header className="order-filter-heading"><div><span>ORDER DIRECTORY</span><h2>Find and manage orders</h2><p>Search by invoice reference, customer, seller, product, or order information.</p></div><button type="button" className="clear-order-filters" disabled={!filtersActive} onClick={clearFilters}><X/> Reset filters</button></header>
-      <div className="management-filters">
+      <div className="management-filters"><label className="order-filter-field"><span>Order Type</span><select aria-label="Order Type" value={orderType} onChange={e=>setOrderType(e.target.value)}><option value="all">All Orders</option><option value="dropship">Dropshipping Orders</option><option value="assisted">Assisted Orders</option><option value="direct">Direct Sales</option></select></label>
         <div className="order-filter-field order-search-field"><label htmlFor="admin-order-search">Search orders</label><div className={search?'has-value':''}><span className="order-search-icon"><Search/></span><input id="admin-order-search" type="search" autoComplete="off" aria-label="Search orders by order, invoice reference, customer, phone, entrepreneur, or product" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Try an order ID, customer, phone, or product"/>{search&&<button type="button" className="order-search-clear" aria-label="Clear order search" onClick={()=>setSearch('')}><X/></button>}</div></div>
-        <label className="order-filter-field"><span>Status</span><select aria-label="Filter by order status" value={filter} onChange={event=>setFilter(event.target.value)}><option value="All">All statuses</option><option>In progress</option><option>Pending</option><option>Awaiting payment</option><option>Payment review</option><option>Processing</option><option>Dispatched</option><option>Delivered</option><option>Returned</option><option>Rejected</option><option>Cancelled</option><option>Payouts pending</option></select></label>
+        <label className="order-filter-field"><span>COD order status</span><select aria-label="Filter by order status" value={filter} onChange={event=>setFilter(event.target.value)}><option value="All">All statuses</option><option>In progress</option><option>Pending</option><option>Awaiting payment</option><option>Payment review</option><option>Processing</option><option>Dispatched</option><option>Delivered</option><option>Returned</option><option>Rejected</option><option>Cancelled</option><option>Payouts pending</option></select></label>
       </div>
       <div className="date-filter-row"><div className="date-range-shortcuts"><span>Date range</span><div className="date-quick-filters">{[['all','All dates'],['today','Today'],['week','Last 7 days'],['month','This month']].map(([value,label])=><button type="button" className={quickDate===value?'active':''} aria-pressed={quickDate===value} key={value} onClick={()=>applyQuickDate(value)}>{label}</button>)}</div></div><div className="date-inputs"><label>From<input aria-label="Orders from date" type="date" value={fromDate} onChange={event=>{setFromDate(event.target.value);setQuickDate('custom')}}/></label><label>To<input aria-label="Orders to date" type="date" min={fromDate} value={toDate} onChange={event=>{setToDate(event.target.value);setQuickDate('custom')}}/></label></div></div>
       <div className="order-filter-summary"><span><strong>{visible.length}</strong> of {orders.length} orders shown</span><span>Status changes are guided inside each order to prevent fulfilment mistakes.</span></div>
     </div>
-    <article className="card table-card"><header className="order-directory-heading"><div><span>ORDER DIRECTORY</span><h2>Customer orders</h2></div><b>{visible.length} {visible.length===1?'order':'orders'}</b></header><OrderTable orders={visible} admin onOpen={openOrder}/>{!visible.length&&<Empty icon={PackageSearch} title={orders.length?'No orders match these filters':'No customer orders yet'} text={orders.length?'Clear the filters or try another search.':'Create an assisted order, or wait for an entrepreneur to place a client order.'}/>}</article>
+    {orderType!=='direct'&&<article className="card table-card"><header className="order-directory-heading"><div><span>ORDER DIRECTORY</span><h2>Customer orders</h2></div><b>{visible.length} {visible.length===1?'order':'orders'}</b></header><OrderTable orders={visible} admin onOpen={openOrder}/>{!visible.length&&<Empty icon={PackageSearch} title={orders.length?'No orders match these filters':'No customer orders yet'} text={orders.length?'Clear the filters or try another search.':'Create an assisted order, or wait for an entrepreneur to place a client order.'}/>}</article>}
+    {['all','direct'].includes(orderType)&&<section className="ds-directory card"><header><div><small>SEPARATE SALES LEDGER</small><h2>Direct Sales</h2><p>Cash and bank purchases from CAMY. No entrepreneur commission or credit debt.</p></div><button type="button" className="ds-secondary" onClick={loadDirect}>Refresh direct sales</button></header>{directError&&<p role="alert">{directError}</p>}<DirectSalesFilters filters={directFilters} onChange={setDirectFilters}/><DirectSalesTable sales={directVisible} onOpen={setDirectSelected}/></section>}
+    {directCreate&&<DirectSaleCreator products={products} entrepreneurs={entrepreneurs} sales={directData.sales} access={directData.access} receiptMaxMb={directData.receiptMaxMb} close={()=>setDirectCreate(false)} onCreated={sale=>{loadDirect();setDirectSelected(sale)}}/>}
+    {directSelected&&<DirectSaleDetails sale={directSelected} products={products} entrepreneurs={entrepreneurs} access={directData.access} company={directData.company} receiptMaxMb={directData.receiptMaxMb} close={()=>setDirectSelected(null)} onUpdated={loadDirect}/>}
     {manualOrder&&<ManualOrderModal products={products} entrepreneurs={entrepreneurs} close={()=>!creating&&setManualOrder(false)} submit={createOrder} saving={creating}/>}
   </div>
 }
@@ -1231,7 +1241,7 @@ function EnhancedCreditControl({ entrepreneurs, setEntrepreneurs, tiers, setTier
 }
 
 function UserAccessPage({ users, setUsers, notify, currentUser }) {
-  const permissionOptions=adminNav.map(([id,label])=>({id,label})); const defaultRoles=[{id:'system-super-admin',name:'Super Admin',permissions:permissionOptions.map(item=>item.id),system:true}]
+  const permissionOptions=[...adminNav.map(([id,label])=>({id,label})),{id:'direct-sales',label:'Direct Sales'},{id:'direct-sales-pricing',label:'Direct Sale Custom Prices / Discounts'},{id:'direct-sales-finance',label:'Direct Sale Finance / Receipts / Refunds'},{id:'direct-sales-approve',label:'Direct Sale Price Approval'}]; const defaultRoles=[{id:'system-super-admin',name:'Super Admin',permissions:permissionOptions.map(item=>item.id),system:true}]
   const [selectedId,setSelectedId]=useState(users[0]?.id||''); const [search,setSearch]=useState(''); const [adding,setAdding]=useState(false); const [form,setForm]=useState({name:'',email:'',role:''}); const selected=users.find(user=>user.id===selectedId)||users[0]
   const [roles,setRoles]=useState(defaultRoles)
   const [roleEditor,setRoleEditor]=useState(null)
@@ -1885,9 +1895,10 @@ function EntrepreneurModal({ person, orders, requests=[], settlements=[], tiers=
     {loading&&<div className="admin-record-loading">Loading complete entrepreneur record…</div>}
 
     <nav className="entrepreneur-record-nav" aria-label="Entrepreneur record sections">
-      {[['profile','Profile',UserRound],['orders','Orders',ShoppingBag],['commissions','Commissions',WalletCards],['stock','Stock requests',PackageOpen]].map(([id,label,Icon])=><button type="button" className={view===id?'active':''} key={id} onClick={()=>setView(id)}><Icon/><span>{label}</span><b>{id==='orders'?memberOrders.length:id==='commissions'?commissionOrders.length:id==='stock'?memberRequests.length:''}</b></button>)}
+      {[['profile','Profile',UserRound],['orders','Orders',ShoppingBag],['commissions','Commissions',WalletCards],['stock','Stock requests',PackageOpen],['direct-purchases','Direct Purchases',ShoppingBag]].map(([id,label,Icon])=><button type="button" className={view===id?'active':''} key={id} onClick={()=>setView(id)}><Icon/><span>{label}</span><b>{id==='orders'?memberOrders.length:id==='commissions'?commissionOrders.length:id==='stock'?memberRequests.length:''}</b></button>)}
     </nav>
 
+    {view==='direct-purchases'&&<DirectPurchases member={person.id} readOnly={readOnly}/>}
     {view==='profile'&&<>
     <section className="admin-account-section">
       <div className="member-section-title"><div><span>PERSONAL & ACCOUNT</span><h3>Identity, contact and membership</h3></div><UserRound/></div>
