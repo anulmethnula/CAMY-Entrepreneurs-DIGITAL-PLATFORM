@@ -82,6 +82,7 @@ try{
  // Export the actual invoice PDF and workbook from saved API records.
  const pdf=await evaluate(`(async()=>{const {directInvoicePdf}=await import('/src/directInvoice.js');const blob=await directInvoicePdf(${JSON.stringify(saved)},{name:'QA Invoice Company'});return btoa(String.fromCharCode(...new Uint8Array(await blob.arrayBuffer()).subarray(0,8)))})()`)
  check(atob(pdf).startsWith('%PDF-1.4'),'PDF output invalid')
+ const pdfData=await evaluate(`(async()=>{const {directInvoicePdf}=await import('/src/directInvoice.js');const blob=await directInvoicePdf(${JSON.stringify(saved)},{});return await new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.readAsDataURL(blob)})})()`);await writeFile('.artifacts/direct-sale-invoice-test.pdf',Buffer.from(pdfData.split(',')[1],'base64'))
  const workbook=await evaluate(`(async()=>{const {directSaleSheets}=await import('/src/directSalesModel.js');const {createWorkbook}=await import('/src/reports.js');const sheets=directSaleSheets([${JSON.stringify(saved)}]);return {names:sheets.map(s=>s.name),counts:sheets.map(s=>s.rows.length)}})()`)
  check(workbook.counts[0]===1&&workbook.counts[1]===2&&workbook.counts[2]===1,'Export sale totals duplicated across item lines')
  await evaluate("document.querySelector('[aria-label=\"Close sale details\"]').click()");await click('New Direct Sale');await click('Other / Walk-in Customer');await field('Customer name','QA Walk-in Buyer');await field('Phone number','0712345678');await click('Continue');await evaluate("document.querySelectorAll('.ds-product-picker article button')[2].click()");await click('Continue');await field('Pricing method','custom');await field('Custom base unit price','2300');await field('Price / discount reason','QA special offer');await click('Continue');await field('Payment method','bank');await field('Transferred amount (0 = awaiting payment)','2300');await field('Bank transfer reference','QA-TXN-001')
@@ -104,7 +105,12 @@ try{
  check(await evaluate("document.querySelector('.erp-report-table').textContent.includes('QA Walk-in Buyer')"),'Direct report rows missing')
  await click('profile fixture');await until("document.querySelector('.ds-profile-summary')?.textContent.includes('Rs. 5,850.00')",'Entrepreneur direct purchase history missing')
  check(await evaluate("document.querySelectorAll('.ds-profile tbody tr').length===1"),'Walk-in linked to entrepreneur profile')
- const realErrors=errors.filter(e=>!e.includes('net::ERR_ABORTED'));check(realErrors.length===0,realErrors.join('\n'))
+ const receiptPath=proof.text?await evaluate(`fetch('/api/admin/direct-sales/${bankId}').then(r=>r.json()).then(r=>r.sale.payments[0].receipts.at(-1).receipt)`):''
+ check((await fetch('http://127.0.0.1:8002'+receiptPath)).status===401,'Private receipt exposed without authentication')
+ const denied=await evaluate(`(async()=>{const {api}=await import('/src/api.js');await api('/auth/logout',{method:'POST',body:'{}'});await api('/auth/login',{method:'POST',body:JSON.stringify({email:'qa-sales@example.invalid',password:'SalesTest!1234'})});return (await fetch(${JSON.stringify('PLACEHOLDER_RECEIPT')})).status})()`.replace(JSON.stringify('PLACEHOLDER_RECEIPT'),JSON.stringify(receiptPath)))
+ check(denied===403,'Sales-only staff could read a private bank receipt')
+
+ const realErrors=errors.filter(e=>!e.includes('net::ERR_ABORTED')&&!e.includes('403 ')&&!e.includes('403 (Forbidden)'));check(realErrors.length===0,realErrors.join('\n'))
  console.log('PASS: real HTTP login, order integration, two-product discounted entrepreneur cash sale, stock handover, bank camera capture/retake, pending proof, Finance verification, receipt correction/reload/download, profile separation, reports, PDF bytes, export row grains and responsive 1440/1100/800/390 UI. Temporary database only.')
 }catch(error){console.log('BROWSER FAILURE STATE',await evaluate('document.body.innerText.slice(-8000)'));await writeFile('.artifacts/direct-sale-browser-failure.png',Buffer.from((await send('Page.captureScreenshot',{format:'png'})).data,'base64'));throw error}finally{
  await send('Browser.close').catch(()=>{});browser.kill()

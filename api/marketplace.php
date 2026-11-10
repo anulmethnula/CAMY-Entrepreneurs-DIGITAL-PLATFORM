@@ -204,6 +204,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
         if((string)$updated['code']!==(string)$current['code'])foreach($state['inventory'] ?? [] as $item)if((string)$item['productId']===(string)$current['id']&&(int)$item['qty']>0){$pdo->rollBack();response(['message'=>'A stocked product code cannot be changed.'],409);}
         $baseStock=array_key_exists('baseStock',$data)?(int)$data['baseStock']:(int)$updated['stock'];
         $updated['stock']=max(0,(int)$current['stock']+((int)$updated['stock']-$baseStock));
+        $proposed=$state['products'];$proposed[$index]=$updated;try{ds_catalogue_guard($pdo,$proposed);}catch(DirectSaleFailure $error){$pdo->rollBack();response(['message'=>$error->getMessage()],$error->status);}
         $state['products'][$index]=$updated;$state['catalogue_seeded']=true;market_save($pdo,$state);$pdo->commit();response(['ok'=>true,'product'=>$updated,'revision'=>$state['revision']]);
     }
     if ($path === '/marketplace/catalog' && $method === 'POST') {
@@ -219,6 +220,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
         $serverStock=[];foreach($state['products'] as $product)$serverStock[(string)$product['id']]=(int)$product['stock'];
         $baseStock=is_array($data['baseStock'] ?? null)?$data['baseStock']:[];
         $incomingProducts=array_values($data['products']);foreach($incomingProducts as &$product){$id=(string)$product['id'];if(isset($serverStock[$id])){$base=array_key_exists($id,$baseStock)?(int)$baseStock[$id]:(int)$product['stock'];$product['stock']=max(0,$serverStock[$id]+((int)$product['stock']-$base));}}unset($product);
+        try{ds_catalogue_guard($pdo,$incomingProducts);}catch(DirectSaleFailure $error){$pdo->rollBack();response(['message'=>$error->getMessage()],$error->status);}
         $state['products']=$incomingProducts;
         $state['catalogue_seeded']=true;
         market_save($pdo,$state);$pdo->commit();response(['ok'=>true,'state'=>$state]);

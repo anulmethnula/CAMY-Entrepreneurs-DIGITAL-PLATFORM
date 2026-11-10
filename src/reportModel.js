@@ -1,13 +1,13 @@
 import { directSaleSheets, directFinance, filterDirectSales } from './directSalesModel.js'
 // Explicit business columns are shared by the preview and workbook. No raw records are exported.
 export const reportTypes = [
- ['direct','Direct Sales','Direct purchases, payments, discounts, fulfilment and separate item/payment ledgers.'],
  ['finance','Finance Summary','COD collections, retained amounts, commission and credit balances.'],
  ['pending','Pending Commission Payouts','Delivered commissions ready for CAMY Finance to transfer.'],
  ['history','Commission Payment History','Commission register, payment dates and transfer references.'],
  ['orders','Orders & Sales','Order summaries and individual product lines, without duplicate totals.'],
  ['credit','Credit & Entrepreneur Accounts','Verified sales, credit balances and settlement details.'],
  ['products','Products & Stock','Catalogue prices, delivery charges and current warehouse stock.'],
+ ['direct','Direct Sales','Direct purchases, payments, discounts, fulfilment and separate item/payment ledgers.'],
 ]
 export const payoutLabels={pending_delivery:'Waiting for Delivery',pending_transfer:'Ready to Pay',paid:'Paid',reversal_required:'Reversal Required',cancelled:'Cancelled',not_required:'No Payout Due'}
 export const label=value=>payoutLabels[value]||String(value||'Not recorded').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
@@ -16,6 +16,7 @@ export function dateKey(value){if(!value)return '';const date=new Date(value);re
 export function dateRange(preset,now=new Date()){
  const today=dateKey(now),[y,m,d]=today.split('-').map(Number),iso=(year,month,day)=>new Date(Date.UTC(year,month-1,day)).toISOString().slice(0,10)
  if(preset==='today')return [today,today]
+ if(preset==='thisWeek'){const day=new Date(Date.UTC(y,m-1,d)).getUTCDay()||7;return [iso(y,m,d-day+1),today]}
  if(preset==='week')return [iso(y,m,d-6),today]
  if(preset==='month')return [iso(y,m,1),iso(y,m+1,0)]
  if(preset==='lastMonth')return [iso(y,m-1,1),iso(y,m,0)]

@@ -1,7 +1,8 @@
-﻿import assert from 'node:assert/strict'
+import assert from 'node:assert/strict'
 import {directLine,newDirectItem,directSaleSheets,directFinance,filterDirectSales} from '../src/directSalesModel.js'
-import {buildReport} from '../src/reportModel.js'
+import {buildReport,dateRange} from '../src/reportModel.js'
 import {createWorkbook} from '../src/reports.js'
+assert.deepEqual(dateRange('thisWeek',new Date('2026-11-10T12:00:00Z')),['2026-11-09','2026-11-10'])
 const product={id:1,code:'00123',name:'QA <Product>',price:3290,billingPrice:2590,deliveryCost:550,packagingCost:150,freeDelivery:true}
 let item=newDirectItem(product,false)
 assert.equal(directLine(product,item).finalUnitPrice,2740,'Collection must omit delivery exactly once')

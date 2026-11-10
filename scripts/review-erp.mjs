@@ -48,9 +48,9 @@ try{
  await send('Page.addScriptToEvaluateOnNewDocument',{source:`window.__erpReviewData=${JSON.stringify(data)};`});
  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
  await send('Page.navigate',{url:'http://127.0.0.1:8080/.artifacts/erp-review.html'});
- for(let i=0;i<200;i++){if(await evaluate("document.querySelectorAll('.erp-report-cards article').length===6"))break;await pause(100)}
- if(!await evaluate("document.querySelectorAll('.erp-report-cards article').length===6"))console.log('Browser diagnostics',errors,await evaluate('JSON.stringify({body:document.body.innerText.slice(0,1500),url:location.href,state:document.readyState,scripts:[...document.scripts].map(s=>s.src)})'));
- check(await evaluate("document.querySelectorAll('.erp-report-cards article').length===6"),'Six report cards missing');
+ for(let i=0;i<200;i++){if(await evaluate("document.querySelectorAll('.erp-report-cards article').length===7"))break;await pause(100)}
+ if(!await evaluate("document.querySelectorAll('.erp-report-cards article').length===7"))console.log('Browser diagnostics',errors,await evaluate('JSON.stringify({body:document.body.innerText.slice(0,1500),url:location.href,state:document.readyState,scripts:[...document.scripts].map(s=>s.src)})'));
+ check(await evaluate("document.querySelectorAll('.erp-report-cards article').length===7"),'Seven report cards missing');
  await evaluate("document.querySelector('.erp-report-cards article:nth-child(2) button').click()");await pause(100);
  check(await evaluate("document.querySelector('.erp-report-heading h1').textContent==='Pending Commission Payouts'"),'Report view failed');
  check(await evaluate("!!document.querySelector('.erp-report-filters input[type=date]')"),'Date filters missing');
