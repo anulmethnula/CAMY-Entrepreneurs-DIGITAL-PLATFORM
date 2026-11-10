@@ -30,7 +30,7 @@ if (databaseCheck.error || databaseCheck.status !== 0) {
   process.exit(1)
 }
 
-const api = spawn(php, ['-S', '127.0.0.1:8000', '-t', 'api', 'api/index.php'], { stdio: 'inherit' })
+const api = spawn(php, ['-S', '127.0.0.1:8001', '-t', fileURLToPath(new URL('../api', import.meta.url)), fileURLToPath(new URL('../api/index.php', import.meta.url))], { stdio: 'inherit' })
 const vite = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '0.0.0.0', '--port', '8080'], { stdio: 'inherit' })
 
 let stopping = false
@@ -50,7 +50,7 @@ for (const [name, child] of [['API', api], ['web server', vite]]) {
   })
   child.on('exit', code => {
     if (stopping) return
-    console.error(`CAMY ${name} stopped. Check the output above and ensure ports 8000 and 8080 are available.`)
+    console.error(`CAMY ${name} stopped. Check the output above and ensure ports 8001 and 8080 are available.`)
     process.exitCode = code || 1
     stop()
   })

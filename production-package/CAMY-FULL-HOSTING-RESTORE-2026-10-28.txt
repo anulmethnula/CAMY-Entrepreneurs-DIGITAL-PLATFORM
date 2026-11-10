@@ -1,0 +1,19 @@
+CAMY full hosting restoration - 28 October 2026
+
+Target: /home/camymarket/public_html (camymarket.com).
+
+1. Back up the current public_html folder before replacing files. Keep the existing production database and /home/camymarket/private folder untouched.
+2. Upload CAMY-FULL-HOSTING-RESTORE-2026-10-28.zip into the domain document root, /home/camymarket/public_html.
+3. Extract directly there and overwrite matching files. The ZIP contains index.html, assets, products, api and .htaccess directly: do not extract inside a second public_html folder.
+4. Ensure the included root .htaccess replaced the accidentally uploaded site's routing. It selects CAMY index.html, routes the PHP API and retains the prior cPanel ea-php84 handler.
+5. Verify /home/camymarket/private/receipts has directory permission 0755 (the screenshot showed 0644). Do not change existing receipt-file permissions recursively.
+6. Open https://camymarket.com in an Incognito window, or press Ctrl+Shift+R. If the other site still appears, clear this domain's site data/service worker in Chrome, then reload. If it persists in Incognito, verify cPanel Domains points camymarket.com to this document root.
+7. Check CAMY login, existing orders and receipt proof saving.
+
+Includes all current built frontend pages/assets/products and all CAMY PHP API modules, including latest payout receipt storage fix. No source build commands are required on the host.
+
+No SQL import, database reset, new database, private-folder replacement or password change is required. Credentials, private uploads, receipts, sessions and production records are excluded. The API reads your existing /home/camymarket/private/camy.env.
+
+Leave unrelated files and folders in place during restoration; the included DirectoryIndex and routes restore the CAMY entry point without deleting them. Do not upload an older patch over this full restoration afterward.
+
+Validation: fresh production build, all PHP modules linted, referenced frontend assets present, archive integrity and source hashes checked, receipt storage test passes with rename/disk_free_space/chmod disabled. No deployment performed by the coding agent.

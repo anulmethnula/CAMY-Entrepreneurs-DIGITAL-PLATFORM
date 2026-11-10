@@ -66,7 +66,7 @@ CAMY connects the full entrepreneur operations cycle in one place: **sell → re
 
 ## Tech Stack
 
-`React + Vite` · `PHP` · `MySQL` · `XAMPP`
+
 
 ## Run Locally
 

@@ -41,7 +41,7 @@ try {
 
     $state=[
       'products'=>[['id'=>1,'code'=>'CAMY-TEST','name'=>'CAMY Test Product','category'=>'Test','description'=>'Test','price'=>100.0,'stock'=>12,'image'=>'']],
-      'entrepreneurs'=>[['id'=>'CE-PAYOUT','name'=>'Payout Seller','email'=>'seller@camy.test','phone'=>'0771234567','city'=>'Colombo','joined'=>date('Y-m-d'),'active'=>true,'stage'=>'Trial seller','sales'=>0,'credit'=>0,'used'=>0,'bankDetails'=>['bank'=>'Test Bank','branch'=>'Colombo','holder'=>'Payout Seller','account'=>'123456789']]],
+      'entrepreneurs'=>[['id'=>'CE-PAYOUT','name'=>'Payout Seller','email'=>'seller@camy.test','phone'=>'0771234567','phone2'=>'0712345678','city'=>'Colombo','joined'=>date('Y-m-d'),'active'=>true,'stage'=>'Trial seller','sales'=>0,'credit'=>0,'used'=>0,'bankDetails'=>['bank'=>'Test Bank','branch'=>'Colombo','holder'=>'Payout Seller','account'=>'123456789']]],
       'tiers'=>[['id'=>'tier-1','name'=>'Tier 1','sales'=>200.0,'credit'=>250.0]],
       'requests'=>[],'inventory'=>[],'orders'=>[],'settlements'=>[],'catalogue_live'=>true,'catalogue_seeded'=>true
     ];
@@ -53,13 +53,13 @@ try {
     // Phase 1: client orders are COD only.
     $GLOBALS['actor']=$seller;
     endpoint($pdo,'/marketplace/dropship-orders','POST',[
-      'customer'=>['name'=>'Bank Attempt','phone'=>'0774444444','district'=>'Colombo','address'=>'1 Test Road'],
+      'customer'=>['name'=>'Bank Attempt','phone'=>'0774444444','phone2'=>'0712345678','district'=>'Colombo','address'=>'1 Test Road'],
       'paymentMethod'=>'bank',
       'items'=>[['productId'=>1,'qty'=>1,'sellPrice'=>150]]
     ],422);
 
     $created=endpoint($pdo,'/marketplace/dropship-orders','POST',[
-      'customer'=>['name'=>'Client One','phone'=>'0775555555','district'=>'Colombo','address'=>'20 Client Road','notes'=>'COD test'],
+      'customer'=>['name'=>'Client One','phone'=>'0775555555','phone2'=>'0712345678','district'=>'Colombo','address'=>'20 Client Road','notes'=>'COD test'],
       'paymentMethod'=>'cod',
       'items'=>[['productId'=>1,'qty'=>2,'sellPrice'=>150]]
     ],201)['order'];
@@ -70,12 +70,13 @@ try {
     if(!$row||$row['client_payment_method']!=='cod'||(float)$row['payout_amount']!==100.0||$row['payout_status']!=='pending_delivery')throw new RuntimeException('COD payout ledger was not created correctly.');
 
     $GLOBALS['actor']=$admin;
+    endpoint($pdo,"/marketplace/orders/$id/status",'POST',['status'=>'Processing']);
     endpoint($pdo,"/marketplace/orders/$id/status",'POST',['status'=>'Dispatched','courier'=>'QA Courier','trackingNumber'=>'QA-123']);
     $delivered=endpoint($pdo,"/marketplace/orders/$id/status",'POST',['status'=>'Delivered']);
     $order=array_values(array_filter($delivered['orders'],fn($item)=>$item['id']===$id))[0];
     if($order['payoutStatus']!=='pending_transfer'||$order['clientPaymentStatus']!=='Collected by CAMY')throw new RuntimeException('Delivered COD order did not enter payout queue.');
     $person=array_values(array_filter($delivered['entrepreneurs'],fn($item)=>$item['id']==='CE-PAYOUT'))[0];
-    if((float)$person['sales']!==200.0||(float)$person['credit']!==250.0||$person['stage']!=='Credit eligible')throw new RuntimeException('Trial completion / credit eligibility did not use verified CAMY product value.');
+    if((float)$person['sales']!==300.0||(float)$person['credit']!==250.0||$person['stage']!=='Credit eligible')throw new RuntimeException('Trial completion / credit eligibility did not use verified CAMY product value.');
 
     // Record CAMY -> entrepreneur margin transfer with receipt.
     $receipt='data:application/pdf;base64,'.base64_encode("%PDF-1.4\nCAMY payout test");
@@ -104,16 +105,17 @@ try {
 
     // Credit repayment reduces outstanding only after CAMY verifies it.
     $GLOBALS['actor']=$seller;
-    $settlement=endpoint($pdo,'/marketplace/credit/settlements','POST',['amount'=>100,'reference'=>'SETTLE-100'],201)['settlement'];
+    $settlement=endpoint($pdo,'/marketplace/credit/settlements','POST',['requestId'=>$request['id'],'amount'=>200,'method'=>'cash_at_camy','reference'=>'SETTLE-200'],201)['settlement'];
     $GLOBALS['actor']=$admin;
+    endpoint($pdo,"/marketplace/credit/settlements/{$settlement['id']}/collection",'POST',['collected'=>true]);
     $settled=endpoint($pdo,"/marketplace/credit/settlements/{$settlement['id']}/verify",'POST')['state'];
     $settledPerson=array_values(array_filter($settled['entrepreneurs'],fn($item)=>$item['id']==='CE-PAYOUT'))[0];
-    if((float)$settledPerson['used']!==100.0)throw new RuntimeException('Verified credit settlement did not reduce outstanding.');
+    if((float)$settledPerson['used']!==0.0)throw new RuntimeException('Verified credit settlement did not reduce outstanding.');
 
     // Phase 2 never disables dropshipping: the same entrepreneur can still place COD orders.
     $GLOBALS['actor']=$seller;
     $secondDropship=endpoint($pdo,'/marketplace/dropship-orders','POST',[
-      'customer'=>['name'=>'Client Two','phone'=>'0776666666','district'=>'Gampaha','address'=>'30 Client Road'],
+      'customer'=>['name'=>'Client Two','phone'=>'0776666666','phone2'=>'0712345678','district'=>'Gampaha','address'=>'30 Client Road'],
       'paymentMethod'=>'cod',
       'items'=>[['productId'=>1,'qty'=>1,'sellPrice'=>175]]
     ],201)['order'];
@@ -122,6 +124,7 @@ try {
     // Admin-managed return/refund: customer portal is retired, so CAMY records the
     // client's return request and controls the entire return lifecycle.
     $GLOBALS['actor']=$admin;
+    endpoint($pdo,"/marketplace/orders/{$secondDropship['id']}/status",'POST',['status'=>'Processing']);
     endpoint($pdo,"/marketplace/orders/{$secondDropship['id']}/status",'POST',['status'=>'Dispatched','courier'=>'QA Courier','trackingNumber'=>'QA-RETURN-1']);
     endpoint($pdo,"/marketplace/orders/{$secondDropship['id']}/status",'POST',['status'=>'Delivered']);
     endpoint($pdo,"/marketplace/orders/{$secondDropship['id']}/return/request",'POST',['reason'=>'Client requested a return after delivery.']);

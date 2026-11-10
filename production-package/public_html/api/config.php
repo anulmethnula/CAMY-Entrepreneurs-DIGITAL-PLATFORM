@@ -62,6 +62,16 @@ function initialise_database(PDO $pdo): void
     $schema = file_get_contents($schemaFile);
     if ($schema === false) throw new RuntimeException('Database schema could not be loaded.');
     $pdo->exec($schema);
+    // Additive upgrade for hosts whose private schema file predates status history.
+    $pdo->exec("CREATE TABLE IF NOT EXISTS order_status_history (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ order_id VARCHAR(80) NOT NULL,
+ previous_status VARCHAR(40) NULL,
+ new_status VARCHAR(40) NOT NULL,
+ changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ changed_by INT UNSIGNED NULL,
+ note VARCHAR(500) NULL,
+ INDEX history_order_date (order_id, changed_at, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     // Numeric primary keys begin at 1000. MySQL keeps a higher existing sequence,
     // so this safely updates established databases without renumbering records.
     foreach (['users','staff_access_roles','entrepreneurs','products','audit_logs','entrepreneur_payouts','credit_tiers','registration_requests','login_attempts'] as $table) {
@@ -114,7 +124,7 @@ function initialise_database(PDO $pdo): void
 
     foreach(['stock_supply_requests','shop_orders'] as $table){$column=$pdo->query("SHOW COLUMNS FROM $table LIKE 'status'")->fetch();if(!str_contains($column['Type'],'varchar'))$pdo->exec("ALTER TABLE $table MODIFY status VARCHAR(40) NOT NULL DEFAULT 'Pending'");}
     if(!$pdo->query("SHOW COLUMNS FROM shop_orders LIKE 'delivered_at'")->fetch())$pdo->exec('ALTER TABLE shop_orders ADD COLUMN delivered_at DATETIME NULL AFTER status');
-    $pdo->exec("UPDATE shop_orders SET delivered_at=created_at WHERE status='Delivered' AND delivered_at IS NULL");
+    // Missing historical delivery dates remain unknown; never substitute the order creation date.
     if(!$pdo->query("SHOW COLUMNS FROM entrepreneur_payouts LIKE 'payout_due_at'")->fetch())$pdo->exec('ALTER TABLE entrepreneur_payouts ADD COLUMN payout_due_at DATETIME NULL AFTER collected_at');
     $payoutDueIndex=$pdo->prepare("SHOW INDEX FROM entrepreneur_payouts WHERE Key_name=?");$payoutDueIndex->execute(['payout_due_status']);
     if(!$payoutDueIndex->fetch())$pdo->exec('ALTER TABLE entrepreneur_payouts ADD INDEX payout_due_status (payout_status,payout_due_at)');

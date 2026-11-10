@@ -4,7 +4,10 @@ require_once __DIR__.'/customer_features.php';
 
 function customer_user(PDO $pdo): ?array {
     if(empty($_SESSION['customer_id']))return null;
-    if(time()-(int)($_SESSION['customer_activity'] ?? 0)>1800 || time()-(int)($_SESSION['customer_signed_in'] ?? 0)>28800){
+    $remembered=!empty($_SESSION['customer_remembered']);
+    $idleLimit=$remembered?30*24*60*60:1800;
+    $absoluteLimit=$remembered?30*24*60*60:28800;
+    if(time()-(int)($_SESSION['customer_activity'] ?? 0)>$idleLimit || time()-(int)($_SESSION['customer_signed_in'] ?? 0)>$absoluteLimit){
         unset($_SESSION['customer_id']);return null;
     }
     $query=$pdo->prepare('SELECT id,name,email,phone,district,address,session_version FROM customers WHERE id=?');
@@ -35,7 +38,7 @@ function customer_route(PDO $pdo,string $path,string $method): void {
     if(!str_starts_with($path,'/customer/'))return;
     if($path==='/customer/me' && $method==='GET')response(['customer'=>customer_user($pdo)]);
     if($path==='/customer/logout' && $method==='POST'){
-        unset($_SESSION['customer_id'],$_SESSION['customer_activity'],$_SESSION['customer_signed_in'],$_SESSION['customer_version']);
+        unset($_SESSION['customer_id'],$_SESSION['customer_activity'],$_SESSION['customer_signed_in'],$_SESSION['customer_version'],$_SESSION['customer_remembered']);
         session_regenerate_id(true);response(['ok'=>true]);
     }
     if(in_array($path,['/customer/register','/customer/login'],true) && $method==='POST'){
@@ -57,6 +60,8 @@ function customer_route(PDO $pdo,string $path,string $method): void {
         session_regenerate_id(true);$_SESSION['customer_id']=$id;
         $q=$pdo->prepare('SELECT session_version FROM customers WHERE id=?');$q->execute([$id]);$_SESSION['customer_version']=(int)$q->fetchColumn();
         $_SESSION['customer_signed_in']=$_SESSION['customer_activity']=time();
+        $_SESSION['customer_remembered']=$path==='/customer/login'&&!empty($data['remember']);
+        if($_SESSION['customer_remembered'])persist_session_cookie(true);
         response(['customer'=>customer_user($pdo)],$path==='/customer/register'?201:200);
     }
     if($path==='/customer/profile' && $method==='POST'){

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/config.php';
+require __DIR__ . '/notifications.php';
 require __DIR__ . '/marketplace.php';
 require __DIR__ . '/staff.php';
 require __DIR__ . '/security.php';
@@ -144,7 +145,7 @@ try {
         elseif(str_starts_with($path,'/admin/registrations') || str_starts_with($path,'/admin/entrepreneurs'))$required='entrepreneurs';
         elseif(str_starts_with($path,'/marketplace/credit/') || in_array($path,['/admin/credit-tiers','/admin/credit-settlements'],true))$required='credit-control';
         elseif(str_starts_with($path,'/marketplace/requests/'))$required='stock-supply';
-        elseif(preg_match('#^/marketplace/orders/[^/]+/payout(?:-receipt)?$#',$path))$required='payouts';
+        elseif(preg_match('#^/marketplace/orders/[^/]+/payout(?:-receipt|-upload(?:/[a-f0-9]{48})?)?$#',$path))$required='payouts';
         elseif(str_starts_with($path,'/marketplace/orders/'))$required='admin-orders';
         elseif(in_array($path,['/marketplace/catalog','/marketplace/activate-catalogue'],true))$required='admin-products';
         elseif($path==='/marketplace/bank')$required='stock-supply';
@@ -251,7 +252,10 @@ try {
         if (!$request) { $pdo->rollBack(); response(['message' => 'This registration was already reviewed or does not exist.'], 404); }
         if ($decision === 'reject') {
             if(mb_strlen($note)<3){$pdo->rollBack();response(['message'=>'Add a short rejection reason so the decision is recorded clearly.'],422);}
-            $pdo->prepare("UPDATE registration_requests SET status='rejected',admin_note=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$note,$admin['id'],$id]); $pdo->commit(); response(['message' => 'Application rejected and kept in the registration history.']);
+            $pdo->prepare("UPDATE registration_requests SET status='rejected',admin_note=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$note,$admin['id'],$id]);
+            $pdo->commit();
+            $emailSent=registration_decision_email($request,'rejected');
+            response(['message' => $emailSent?'Application rejected. The applicant was notified by email.':'Application rejected, but the notification email could not be sent. Check the server mail configuration.','emailSent'=>$emailSent]);
         }
         $check = $pdo->prepare('SELECT COUNT(*) FROM users WHERE email = ?'); $check->execute([$request['email']]);
         if ((int)$check->fetchColumn()) { $pdo->rollBack(); response(['message' => 'A user already exists with this email.'], 409); }
@@ -262,8 +266,9 @@ try {
         $entrepreneurInsert->execute([$userId,$memberId,$request['full_name'],$request['email'],$request['nic'],$request['nic_front_path'] ?: $request['nic_image_path'],$request['phone'],$request['address'],$request['city']]);
         $pdo->prepare("UPDATE registration_requests SET status='approved',admin_note=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?")->execute([$note ?: null,$admin['id'],$id]);
         $pdo->commit();
+        $emailSent=registration_decision_email($request,'approved',$memberId);
         $activationMessage="Hello {$request['full_name']}, your CAMY entrepreneur account has been approved. Your username is {$request['email']}. Please use the password you created during registration to sign in. Member ID: $memberId.";
-        response(['message'=>'Registration approved. The entrepreneur can now sign in.','memberId'=>$memberId,'phone'=>$request['phone'],'activationMessage'=>$activationMessage]);
+        response(['message'=>$emailSent?'Registration approved. The entrepreneur was notified by email.':'Registration approved, but the notification email could not be sent. Use the Message button or check the server mail configuration.','memberId'=>$memberId,'phone'=>$request['phone'],'activationMessage'=>$activationMessage,'emailSent'=>$emailSent]);
     }
     if ($path === '/admin/entrepreneurs' && $method === 'POST') {
         $admin=require_admin($pdo);$payload=input();

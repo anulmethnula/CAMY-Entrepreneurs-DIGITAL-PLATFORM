@@ -47,10 +47,10 @@ function workflow_reserve(array &$state,array $items,?string $shop): void {
 function workflow_release(array &$state,array $items,?string $shop): void {
     foreach($items as $item){$id=(string)($item['productId'] ?? $item['id']);if($shop===null){foreach($state['products'] as &$slot)if((string)$slot['id']===$id){$slot['stock']+=$item['qty'];break;}unset($slot);}else{foreach($state['inventory'] as &$slot)if((string)$slot['entrepreneurId']===$shop&&(string)$slot['productId']===$id){$slot['qty']+=$item['qty'];break;}unset($slot);}}
 }
-function workflow_receipt(array $data,string $id): string {
+function workflow_receipt(array $data,string $id,bool $payoutProof=false): string {
     $raw=(string)($data['receipt'] ?? '');$ref=trim((string)($data['reference'] ?? ''));
-    if(!$ref||strlen($ref)>120||strlen($raw)>7500000||!preg_match('#^data:(image/(?:png|jpeg|webp)|application/pdf);base64,(.+)$#s',$raw,$parts))response(['message'=>'Enter a reference and upload a JPG, PNG, WebP or PDF receipt up to 5 MB.'],422);
-    $bytes=base64_decode($parts[2],true);if(!$bytes||strlen($bytes)>5*1024*1024)response(['message'=>'Invalid receipt or file exceeds 5 MB.'],422);
+    if(!$ref||strlen($ref)>120||(!$payoutProof&&strlen($raw)>7500000)||!preg_match('#^data:(image/(?:png|jpeg|webp)|application/pdf);base64,(.+)$#s',$raw,$parts))response(['message'=>$payoutProof?'Enter a reference and upload a JPG, PNG, WebP or PDF receipt.':'Enter a reference and upload a JPG, PNG, WebP or PDF receipt up to 5 MB.'],422);
+    $bytes=base64_decode($parts[2],true);if(!$bytes||(!$payoutProof&&strlen($bytes)>5*1024*1024))response(['message'=>$payoutProof?'The receipt file could not be read.':'Invalid receipt or file exceeds 5 MB.'],422);
     if((str_starts_with($parts[1],'image/')&&((getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Receipt content does not match the file type.'],422);
     $dir=private_path('receipts');if(!is_dir($dir)&&!mkdir($dir,0700,true))throw new RuntimeException('Could not create receipt storage.');
     $file=$id.'-'.bin2hex(random_bytes(8)).'.'.['image/png'=>'png','image/jpeg'=>'jpg','image/webp'=>'webp','application/pdf'=>'pdf'][$parts[1]];
@@ -72,11 +72,12 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         // Accept the retired single-product form during staggered frontend/API deployments.
         if(!$rawItems&&!empty($data['productId']))$rawItems=[['productId'=>$data['productId'],'qty'=>$data['qty']??1,'sellPrice'=>$data['sellPrice']??($data['unitPrice']??null)]];
         $requested=workflow_items($rawItems);
-        $name=trim((string)($data['customer']??($data['name']??'')));$phone=preg_replace('/[\s()-]/','',trim((string)($data['phone']??'')));$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
+        $name=trim((string)($data['customer']??($data['name']??'')));$phone=preg_replace('/[\s()-]/','',trim((string)($data['phone']??'')));$phone2=preg_replace('/[\s()-]/','',trim((string)($data['phone2']??'')));$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
         if(!$member)response(['message'=>'Choose the entrepreneur who made this sale.'],422);
         if(!$requested)response(['message'=>'Add at least one product to this order.'],422);
         if(!$name||strlen($name)>150)response(['message'=>'Enter a valid customer name.'],422);
         if(!preg_match('/^(?:\+94|0)7\d{8}$/',$phone))response(['message'=>'Enter a valid Sri Lankan mobile number, such as 071 234 5678.'],422);
+        if(!preg_match('/^(?:\+94|0)7\d{8}$/',$phone2))response(['message'=>'Enter a valid alternative Sri Lankan mobile number.'],422);
         if(!$district||strlen($district)>80)response(['message'=>'Enter a valid delivery district.'],422);
         if(!$address||strlen($address)>500)response(['message'=>'Enter a complete delivery address (up to 500 characters).'],422);
         if(strlen($notes)>1000)response(['message'=>'Keep internal notes within 1,000 characters.'],422);
@@ -88,7 +89,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $clientTotal=round($clientTotal,2);$camyCost=round($camyCost,2);$margin=round($clientTotal-$camyCost,2);
         workflow_reserve($state,$selected,null);$groupId='DROP-'.bin2hex(random_bytes(5));$id=workflow_next_order_id($state);$token=bin2hex(random_bytes(24));
         $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
-        $order=['id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,'amount'=>$clientTotal,'camyCost'=>$camyCost,'entrepreneurMargin'=>$margin,'clientPaymentMethod'=>'cod','clientPaymentStatus'=>'Collect on delivery','payoutAmount'=>$margin,'payoutStatus'=>$margin>0?'pending_delivery':'not_required','date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>true,'entrepreneur'=>$entrepreneur['name'],'entrepreneurId'=>$member,'source'=>'shop','orderMode'=>'dropship','createdBy'=>'CAMY Admin','createdByUserId'=>$admin['id']];
+        $order=['id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'phone2'=>$phone2,'district'=>$district,'address'=>$address.', '.$district,'notes'=>$notes,'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,'amount'=>$clientTotal,'camyCost'=>$camyCost,'entrepreneurMargin'=>$margin,'clientPaymentMethod'=>'cod','clientPaymentStatus'=>'Collect on delivery','payoutAmount'=>$margin,'payoutStatus'=>$margin>0?'pending_delivery':'not_required','date'=>date('Y-m-d'),'createdAt'=>date(DATE_ATOM),'updatedAt'=>date(DATE_ATOM),'status'=>'Processing','trackingToken'=>$token,'reserved'=>true,'entrepreneur'=>$entrepreneur['name'],'entrepreneurId'=>$member,'source'=>'shop','orderMode'=>'dropship','createdBy'=>'CAMY Admin','createdByUserId'=>$admin['id']];
         $state['orders'][]=$order;
         $pdo->prepare("INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status) VALUES(?,?,?,?, 'Processing')")->execute([$id,$groupId,$member,$clientTotal]);
         $pdo->prepare("INSERT INTO entrepreneur_payouts(order_id,entrepreneur_member_id,client_payment_method,client_total,camy_cost,payout_amount) VALUES(?,?,?,?,?,?)")->execute([$id,$member,'cod',$clientTotal,$camyCost,$margin]);
@@ -101,8 +102,8 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $data=input();
         if(!is_array($data['customer']??null))response(['message'=>'Enter the client delivery details.'],422);
         $customer=$data['customer'];
-        $name=trim((string)($customer['name']??''));$phone=trim((string)($customer['phone']??''));$cleanPhone=preg_replace('/[\s()-]/','',$phone);$district=trim((string)($customer['district']??''));$address=trim((string)($customer['address']??''));$notes=trim((string)($customer['notes']??''));
-        if(!$name||strlen($name)>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter the client name, a valid Sri Lankan phone number, district and delivery address.'],422);
+        $name=trim((string)($customer['name']??''));$phone=trim((string)($customer['phone']??''));$phone2=trim((string)($customer['phone2']??''));$cleanPhone=preg_replace('/[\s()-]/','',$phone);$cleanPhone2=preg_replace('/[\s()-]/','',$phone2);$district=trim((string)($customer['district']??''));$address=trim((string)($customer['address']??''));$notes=trim((string)($customer['notes']??''));
+        if(!$name||strlen($name)>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone)||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone2)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter the client name, two valid Sri Lankan phone numbers, district and delivery address.'],422);
         $paymentMethod=strtolower(trim((string)($data['paymentMethod'] ?? 'cod')));
         if($paymentMethod!=='cod')response(['message'=>'CAMY client orders are Cash on Delivery only. No client bank receipt is accepted.'],422);
         $items=workflow_items($data['items']??[]);
@@ -125,7 +126,7 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?)')->execute([$groupId,$name,$phone,$district,$address]);
         $entrepreneurName=(string)$user['full_name'];
         $order=[
-            'id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'district'=>$district,'deliveryAddress'=>$address,'address'=>trim($address.($address!==''?', ':'').$district),'notes'=>$notes,
+            'id'=>$id,'groupId'=>$groupId,'customer'=>$name,'phone'=>$phone,'phone2'=>$phone2,'district'=>$district,'deliveryAddress'=>$address,'address'=>trim($address.($address!==''?', ':'').$district),'notes'=>$notes,
             'product'=>count($selected)===1?$selected[0]['name']:count($selected).' CAMY products','items'=>$selected,'qty'=>$count,
             'amount'=>$clientTotal,'camyCost'=>$camyCost,'entrepreneurMargin'=>$margin,
             'clientPaymentMethod'=>'cod','clientPaymentStatus'=>'Collect on delivery',
@@ -145,13 +146,13 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
         $admin=in_array($user['role'],['admin','manager'],true);
         if(!$admin&&($user['role']!=='entrepreneur'||!$user['member_id']))response(['message'=>'Administrator or entrepreneur access is required.'],403);
         $data=input();$orderId=(string)$clientDetailsMatch[1];
-        $name=trim((string)($data['name']??''));$phone=trim((string)($data['phone']??''));$cleanPhone=preg_replace('/[\s()-]/','',$phone);$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
-        if(!$name||strlen($name)>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter the client name, a valid Sri Lankan phone number, district and delivery address.'],422);
+        $name=trim((string)($data['name']??''));$phone=trim((string)($data['phone']??''));$phone2=trim((string)($data['phone2']??''));$cleanPhone=preg_replace('/[\s()-]/','',$phone);$cleanPhone2=preg_replace('/[\s()-]/','',$phone2);$district=trim((string)($data['district']??''));$address=trim((string)($data['address']??''));$notes=trim((string)($data['notes']??''));
+        if(!$name||strlen($name)>150||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone)||!preg_match('/^(?:0\d{9}|\+94\d{9})$/',$cleanPhone2)||!$district||strlen($district)>80||!$address||strlen($address)>500||strlen($notes)>1000)response(['message'=>'Enter the client name, two valid Sri Lankan phone numbers, district and delivery address.'],422);
         $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;foreach($state['orders'] as $key=>$candidate)if((string)$candidate['id']===$orderId){$index=$key;break;}
         if($index===null){$pdo->rollBack();response(['message'=>'Order not found.'],404);}$order=$state['orders'][$index];
         if(($order['orderMode']??'')!=='dropship'||(!$admin&&(string)$order['entrepreneurId']!==(string)$user['member_id'])){$pdo->rollBack();response(['message'=>'You cannot edit this order.'],403);}
         if(!in_array(($order['status']??''),['Pending','Awaiting payment','Payment review','Approved','Processing'],true)){$pdo->rollBack();response(['message'=>'Client details can only be edited before CAMY dispatches the order.'],409);}
-        $state['orders'][$index]=array_merge($order,['customer'=>$name,'phone'=>$phone,'district'=>$district,'deliveryAddress'=>$address,'address'=>trim($address.($address!==''?', ':'').$district),'notes'=>$notes,'updatedAt'=>date(DATE_ATOM)]);
+        $state['orders'][$index]=array_merge($order,['customer'=>$name,'phone'=>$phone,'phone2'=>$phone2,'district'=>$district,'deliveryAddress'=>$address,'address'=>trim($address.($address!==''?', ':'').$district),'notes'=>$notes,'updatedAt'=>date(DATE_ATOM)]);
         $pdo->prepare('UPDATE customer_order_groups SET customer_name=?,customer_phone=?,district=?,delivery_address=? WHERE id=?')->execute([$name,$phone,$district,$address,$order['groupId']]);
         market_save($pdo,$state);$pdo->commit();$saved=$state['orders'][$index];unset($saved['trackingToken'],$saved['receiptPath']);response(['order'=>$saved,'message'=>'Client details updated before dispatch.']);
     }
@@ -187,12 +188,30 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
 
         // Bank details improve payout accuracy, but are not a hard blocker.
         // The transfer reference and uploaded proof remain the payout audit record.
-        $reference=trim((string)($data['reference'] ?? ''));$receipt=workflow_receipt(['receipt'=>(string)($data['receipt'] ?? ''),'reference'=>$reference],$orderId.'-payout');
+        $reference=trim((string)($data['reference'] ?? ''));$proof=null;
+        if($reference===''||strlen($reference)>120){$pdo->rollBack();response(['message'=>'Enter a transfer reference of up to 120 characters.'],422);}
+        if(!empty($data['receiptUpload'])){
+            try{$proof=payout_upload_receipt((string)$data['receiptUpload'],$orderId,payout_upload_admin($pdo));$receipt=$proof['receipt'];}
+            catch(PayoutUploadFailure $failure){$pdo->rollBack();response(['message'=>$failure->getMessage()],$failure->httpStatus);}
+        }else{
+            try{$receipt=workflow_receipt(['receipt'=>(string)($data['receipt'] ?? ''),'reference'=>$reference],$orderId.'-payout',true);}
+            catch(RuntimeException $failure){if($pdo->inTransaction())$pdo->rollBack();error_log('[CAMY payout] storage failed order='.$orderId.' reason='.$failure->getMessage());throw $failure;}
+        }
+        try {
         $pdo->prepare("UPDATE entrepreneur_payouts SET collection_status='collected',payout_status='paid',payout_reference=?,payout_receipt_path=?,collected_at=COALESCE(collected_at,NOW()),paid_at=NOW(),recorded_by=? WHERE order_id=?")->execute([$reference,$receipt,$admin['id'],$orderId]);
         $state['orders'][$index]['payoutStatus']='paid';$state['orders'][$index]['payoutAmount']=$amount;$state['orders'][$index]['payoutReference']=$reference;$state['orders'][$index]['payoutReceipt']='/api/marketplace/orders/'.$orderId.'/payout-receipt';$state['orders'][$index]['payoutPaidAt']=date(DATE_ATOM);$state['orders'][$index]['payoutBankDetails']=$bank;$state['orders'][$index]['updatedAt']=date(DATE_ATOM);
         market_save($pdo,$state);$pdo->commit();
+        } catch(Throwable $failure) {
+            if($pdo->inTransaction())$pdo->rollBack();
+            payout_upload_close($proof['handle'] ?? null);
+            if(!$proof)@unlink(private_path('receipts/'.basename($receipt)));
+            error_log('[CAMY payout] payment save failed order='.$orderId.' admin='.$admin['id'].' exception='.get_class($failure).' code='.$failure->getCode().' reason='.$failure->getMessage());
+            response(['message'=>'The receipt was uploaded, but the payout could not be recorded. Please try again. A retry will not create a duplicate payout.'],500);
+        }
+        payout_upload_close($proof['handle'] ?? null);
+        if($proof)@unlink(private_path('payout-uploads/'.$proof['token'].'.json'));
         error_log('[CAMY payout] transfer recorded order='.$orderId.' amount='.(string)$amount.' admin='.(string)$admin['id']);
-        response(['order'=>$state['orders'][$index],'message'=>'Entrepreneur margin transfer recorded successfully.']);
+        response(['order'=>$state['orders'][$index],'message'=>'Payout recorded successfully.']);
     }
     if(preg_match('#^/marketplace/orders/([^/]+)/confirm-delivery$#',$path,$match)&&$method==='POST'){
         $customer=customer_required($pdo);$pdo->beginTransaction();$state=market_state($pdo,true);$index=null;

@@ -1,0 +1,20 @@
+1:49:38 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+
+  VITE v8.2.2  ready in 695 ms
+
+  ➜  Local:   http://127.0.0.1:8080/
+1:52:48 PM [vite] (client) hmr update /src/InvoiceAttachment.jsx
+1:52:48 PM [vite] (client) hmr update /src/App.jsx
+1:54:29 PM [vite] (client) page reload production-package/public_html/index.html
+1:54:29 PM [vite] (client) page reload production-package/public_html/register.html
+2:58:00 PM [vite] (client) hmr update /src/App.jsx
+3:04:15 PM [vite] (client) hmr update /src/InvoiceAttachment.jsx
+3:04:15 PM [vite] (client) hmr update /src/App.jsx
+3:04:15 PM [vite] (client) hmr update /src/camy-additions.css
+3:06:53 PM [vite] (client) hmr update /src/App.jsx
+3:06:53 PM [vite] (client) hmr update /src/App.jsx
+3:11:04 PM [vite] (client) hmr update /src/InvoiceAttachment.jsx
+3:11:33 PM [vite] (client) page reload .artifacts/payout-receipt-review.html
+3:12:38 PM [vite] (client) page reload .artifacts/payout-receipt-review.html
+3:13:12 PM [vite] (client) page reload production-package/public_html/index.html
+3:13:12 PM [vite] (client) page reload production-package/public_html/register.html

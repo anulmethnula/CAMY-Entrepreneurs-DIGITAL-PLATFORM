@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'camy-mobile-v5-catalogue-persistence'
+const CACHE_VERSION = 'camy-mobile-v6-order-tools'
 const APP_SHELL = ['/', '/register', '/site.webmanifest', '/camy-logo-transparent.png', '/camy-logo-tight.png']
 
 self.addEventListener('install', event => {

@@ -15,7 +15,9 @@ function security_request(string $method): void {
     if(strtolower(trim(explode(';',$_SERVER['CONTENT_TYPE'] ?? '')[0]))!=='application/json')response(['message'=>'Send a JSON request.'],415);
     $requestPath=(string)parse_url($_SERVER['REQUEST_URI']??'',PHP_URL_PATH);
     $largeUpload=in_array($requestPath,['/api/admin/product-media','/admin/product-media','/api/auth/register','/auth/register'],true);
-    $limit=$largeUpload?14*1024*1024:8*1024*1024;
+    $directUpload=preg_match('#/(?:admin/direct-sales)(?:/[^/]+/(?:payments|receipt))?$#',$requestPath);
+    $receiptMb=max(1,min(50,(int)(getenv('CAMY_DIRECT_RECEIPT_MAX_MB') ?: 20)));
+    $limit=$directUpload?(int)ceil($receiptMb*1024*1024*4/3)+1024*1024:($largeUpload?14*1024*1024:8*1024*1024);
     if((int)($_SERVER['CONTENT_LENGTH'] ?? 0)>$limit)response(['message'=>'The upload is too large. Maximum request size is '.($limit/1024/1024).' MB.'],413);
 }
 function security_client_data(array $data): array {

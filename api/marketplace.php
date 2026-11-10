@@ -116,7 +116,13 @@ function market_public(array $state): array {
     return ['products'=>array_map(static fn($product)=>array_merge($product,['stock'=>($product['stock'] ?? 0)>0?1:0]),$publishedProducts), 'entrepreneurs'=>array_map(static function($person){$name=trim((string)($person['name'] ?? 'CAMY Partner'));$parts=preg_split('/\s+/', $name) ?: [];return ['id'=>$person['id'],'name'=>$name,'initials'=>strtoupper(implode('',array_map(static fn($part)=>substr($part,0,1),array_slice($parts,0,2)))),'city'=>$person['city'] ?? 'Sri Lanka','stage'=>$person['stage'] ?? 'Trial seller','sales'=>round((float)($person['sales'] ?? 0),2)];}, $realEntrepreneurs), 'inventory'=>array_map(static fn($item)=>['entrepreneurId'=>$item['entrepreneurId'],'productId'=>$item['productId'],'qty'=>$item['qty']>0?999999:0,'price'=>$item['price'] ?? null],$publicInventory)];
 }
 require_once __DIR__.'/workflow.php';
+require_once __DIR__.'/payout_upload.php';
+require_once __DIR__.'/reports.php';
+require_once __DIR__.'/direct_sales.php';
 function market_route(PDO $pdo, string $path, string $method): void {
+    direct_sales_route($pdo,$path,$method);
+    payout_upload_route($pdo,$path,$method);
+    reports_route($pdo,$path,$method);
     if(str_starts_with($path,'/customer/')||in_array($path,['/marketplace/public','/marketplace/preview'],true)||($path==='/marketplace/orders'&&$method==='POST')) {
         response(['message'=>'The customer portal has been retired. Orders are now entered by CAMY entrepreneurs.'],410);
     }
@@ -198,6 +204,7 @@ function market_route(PDO $pdo, string $path, string $method): void {
         if((string)$updated['code']!==(string)$current['code'])foreach($state['inventory'] ?? [] as $item)if((string)$item['productId']===(string)$current['id']&&(int)$item['qty']>0){$pdo->rollBack();response(['message'=>'A stocked product code cannot be changed.'],409);}
         $baseStock=array_key_exists('baseStock',$data)?(int)$data['baseStock']:(int)$updated['stock'];
         $updated['stock']=max(0,(int)$current['stock']+((int)$updated['stock']-$baseStock));
+        $proposed=$state['products'];$proposed[$index]=$updated;try{ds_catalogue_guard($pdo,$proposed);}catch(DirectSaleFailure $error){$pdo->rollBack();response(['message'=>$error->getMessage()],$error->status);}
         $state['products'][$index]=$updated;$state['catalogue_seeded']=true;market_save($pdo,$state);$pdo->commit();response(['ok'=>true,'product'=>$updated,'revision'=>$state['revision']]);
     }
     if ($path === '/marketplace/catalog' && $method === 'POST') {
@@ -213,16 +220,57 @@ function market_route(PDO $pdo, string $path, string $method): void {
         $serverStock=[];foreach($state['products'] as $product)$serverStock[(string)$product['id']]=(int)$product['stock'];
         $baseStock=is_array($data['baseStock'] ?? null)?$data['baseStock']:[];
         $incomingProducts=array_values($data['products']);foreach($incomingProducts as &$product){$id=(string)$product['id'];if(isset($serverStock[$id])){$base=array_key_exists($id,$baseStock)?(int)$baseStock[$id]:(int)$product['stock'];$product['stock']=max(0,$serverStock[$id]+((int)$product['stock']-$base));}}unset($product);
+        try{ds_catalogue_guard($pdo,$incomingProducts);}catch(DirectSaleFailure $error){$pdo->rollBack();response(['message'=>$error->getMessage()],$error->status);}
         $state['products']=$incomingProducts;
         $state['catalogue_seeded']=true;
         market_save($pdo,$state);$pdo->commit();response(['ok'=>true,'state'=>$state]);
     }
+    if(preg_match('#^/marketplace/orders/([^/]+)/invoice/notify$#',$path,$matches)&&$method==='POST'){
+        $admin=require_admin($pdo);$data=input();$email=trim((string)($data['email'] ?? ''));
+        if(!filter_var($email,FILTER_VALIDATE_EMAIL))response(['message'=>'Enter the customer email address.'],422);
+        $pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
+        foreach($state['orders'] as $key=>$entry)if((string)$entry['id']===(string)$matches[1]){$index=$key;break;}
+        if($index===null){$pdo->rollBack();response(['message'=>'Order not found.'],404);}
+        $order=$state['orders'][$index];$document=private_path('receipts/'.basename((string)($order['invoicePath'] ?? '')));
+        if(empty($order['invoiceNumber'])||!is_file($document)){$pdo->rollBack();response(['message'=>'Save an invoice reference and document before sending.'],422);}
+        $reference=htmlspecialchars((string)$order['invoiceNumber'],ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
+        $accepted=notification_send_email($email,'CAMY invoice for order '.$order['id'],'<p>Please find the current invoice attached for your CAMY order.</p><p>Invoice reference: '.$reference.'</p>',$document);
+        $state['orders'][$index]['invoiceNotifications'][]=['email'=>$email,'attemptedAt'=>date(DATE_ATOM),'requestedBy'=>$admin['id'],'reference'=>$order['invoiceNumber'],'status'=>$accepted?'accepted_by_mail_server':'failed'];
+        market_save($pdo,$state);$pdo->commit();
+        response(['order'=>market_safe_order($state['orders'][$index]),'message'=>$accepted?'Invoice email accepted by the mail server. Customer delivery is not confirmed.':'The mail server did not accept the email. The invoice remains saved; you can retry.']);
+    }
     if(preg_match('#^/marketplace/orders/([^/]+)/invoice$#',$path,$matches)){
         $user=current_user($pdo);if(!$user)response(['message'=>'Authentication required.'],401);$pdo->beginTransaction();$state=market_state($pdo,$method==='POST');$index=null;foreach($state['orders'] as $key=>$entry)if((string)$entry['id']===(string)$matches[1]){$index=$key;break;}if($index===null){$pdo->rollBack();response(['message'=>'Order not found.'],404);}$order=$state['orders'][$index];
         if($method==='GET'){
-            if(!in_array($user['role'],['admin','manager'],true)&&(string)($order['entrepreneurId']??'')!==(string)$user['member_id']){$pdo->rollBack();response(['message'=>'You cannot view this invoice.'],403);}$file=private_path('receipts/'.basename((string)($order['invoicePath']??'')));if(!is_file($file)){$pdo->rollBack();response(['message'=>'Invoice not found.'],404);}$pdo->commit();header('Content-Type: '.(mime_content_type($file)?:'application/octet-stream'));header('Content-Disposition: inline; filename="'.basename($file).'"');header('Content-Length: '.filesize($file));readfile($file);exit;
+            if(!in_array($user['role'],['admin','manager'],true)&&(string)($order['entrepreneurId']??'')!==(string)$user['member_id']){$pdo->rollBack();response(['message'=>'You cannot view this invoice.'],403);}$file=private_path('receipts/'.basename((string)($order['invoicePath']??'')));if(!is_file($file)){$pdo->rollBack();response(['message'=>'Invoice not found.'],404);}$pdo->commit();header('Cache-Control: no-store');header('Content-Type: '.(mime_content_type($file)?:'application/octet-stream'));header('Content-Disposition: inline; filename="'.basename($file).'"');header('Content-Length: '.filesize($file));readfile($file);exit;
         }
-        $admin=require_admin($pdo);$data=input();$number=trim((string)($data['invoiceNumber']??''));if(!$number||strlen($number)>100){$pdo->rollBack();response(['message'=>'Enter a valid invoice reference number.'],422);}$hasDocument=!empty($data['invoice']);if($hasDocument){$file=workflow_invoice_document((string)$data['invoice'],$order['id'].'-invoice');$state['orders'][$index]['invoicePath']=$file;$state['orders'][$index]['invoice']='/api/marketplace/orders/'.rawurlencode($order['id']).'/invoice';}$state['orders'][$index]['invoiceNumber']=$number;$state['orders'][$index]['invoiceIssuedAt']=date(DATE_ATOM);$state['orders'][$index]['invoiceIssuedBy']=$admin['id'];$state['orders'][$index]['updatedAt']=date(DATE_ATOM);market_save($pdo,$state);$pdo->commit();$result=$state['orders'][$index];unset($result['invoicePath'],$result['trackingToken'],$result['receiptPath']);response(['order'=>$result,'message'=>$hasDocument?'Invoice reference and document saved successfully.':'Invoice reference saved successfully.']);
+        if($method!=='POST'){$pdo->rollBack();response(['message'=>'Method not allowed.'],405);}
+        $admin=require_admin($pdo);$data=input();$number=trim((string)($data['invoiceNumber']??''));
+        if($number===''||strlen($number)>100){$pdo->rollBack();response(['message'=>'Enter a valid invoice reference number.'],422);}
+        $version=(string)($order['invoiceVersion'] ?? $order['invoiceIssuedAt'] ?? '');
+        if(isset($data['expectedInvoiceVersion'])&&(string)$data['expectedInvoiceVersion']!==$version){$pdo->rollBack();response(['message'=>'This invoice changed in another session. Reopen the order before editing.'],409);}
+        $file=null;$hasDocument=!empty($data['invoice']);$now=date(DATE_ATOM);
+        try {
+            if($hasDocument)$file=workflow_invoice_document((string)$data['invoice'],$order['id'].'-invoice');
+            $next=&$state['orders'][$index];
+            if(!empty($order['invoiceNumber'])||!empty($order['invoicePath']))$next['invoiceHistory'][]=[
+                'reference'=>$order['invoiceNumber'] ?? '', 'documentName'=>basename((string)($order['invoicePath'] ?? '')),
+                'issuedAt'=>$order['invoiceIssuedAt'] ?? null, 'changedAt'=>$now, 'changedBy'=>$admin['id'],
+                'documentReplaced'=>$hasDocument
+            ];
+            if($file){$next['invoicePath']=$file;$next['invoice']='/api/marketplace/orders/'.rawurlencode($order['id']).'/invoice';}
+            $next['invoiceNumber']=$number;$next['invoiceIssuedAt']=$order['invoiceIssuedAt'] ?? $now;
+            $next['invoiceIssuedBy']=$order['invoiceIssuedBy'] ?? $admin['id'];
+            $next['invoiceUpdatedAt']=$now;$next['invoiceUpdatedBy']=$admin['id'];$next['invoiceVersion']=bin2hex(random_bytes(12));
+            market_save($pdo,$state);$pdo->commit();
+        } catch(Throwable $failure) {
+            if($pdo->inTransaction())$pdo->rollBack();
+            if($file)@unlink(private_path('receipts/'.basename($file)));
+            throw $failure;
+        }
+        // Delete only after the new record is committed. Failed saves retain the original.
+        if($file&&!empty($order['invoicePath'])&&$order['invoicePath']!==$file)@unlink(private_path('receipts/'.basename($order['invoicePath'])));
+        response(['order'=>market_safe_order($state['orders'][$index]),'message'=>empty($order['invoiceNumber'])?'Invoice submitted successfully.':'Invoice updated successfully.']);
     }
     if ($path === '/marketplace/requests' && $method === 'POST') {
         $user=current_user($pdo);if (!$user || $user['role']!=='entrepreneur' || !$user['member_id']) response(['message'=>'Entrepreneur access is required.'],403);
@@ -381,10 +429,10 @@ function market_route(PDO $pdo, string $path, string $method): void {
         if($status==='Dispatched'){
             $trackingNumber=trim((string)($data['trackingNumber'] ?? ''));
             $courier=trim((string)($data['courier'] ?? ''));
-            if(!$trackingNumber||strlen($trackingNumber)>120||preg_match('/[\x00-\x1F\x7F]/',$trackingNumber)||strlen($courier)>120)response(['message'=>'Enter the courier tracking number (up to 120 characters) before dispatching.'],422);
+            if($trackingNumber===''||strlen($trackingNumber)>120||preg_match('/[\x00-\x1F\x7F]/',$trackingNumber)||strlen($courier)>120||preg_match('/[\x00-\x1F\x7F]/',$courier))response(['message'=>'Enter the courier tracking number (up to 120 characters) before dispatching.'],422);
             $state['orders'][$index]['trackingNumber']=$trackingNumber;
             $state['orders'][$index]['courier']=$courier;
-            $state['orders'][$index]['dispatchedAt']=date(DATE_ATOM);
+            if(!$trackingOnlyUpdate)$state['orders'][$index]['dispatchedAt']=date(DATE_ATOM);
         }
         if($status==='Awaiting payment'){$bank=[];foreach($state['entrepreneurs'] as $person)if((string)$person['id']===(string)$order['entrepreneurId'])$bank=$person['bankDetails'] ?? [];workflow_bank_required($bank);if($order['status']==='Pending'){workflow_reserve($state,$order['items'],(string)$order['entrepreneurId']);$state['orders'][$index]['reserved']=true;$state['orders'][$index]['bankDetails']=$bank;}}
         if($order['status']==='Cancelled'&&$status==='Processing'){$reserveShop=(($order['orderMode'] ?? '')==='dropship')?null:(string)$order['entrepreneurId'];if(!($order['reserved'] ?? false)){workflow_reserve($state,$order['items'],$reserveShop);$state['orders'][$index]['reserved']=true;}$state['orders'][$index]['clientPaymentStatus']='Collect on delivery';$state['orders'][$index]['payoutStatus']=((float)($order['entrepreneurMargin'] ?? 0)>0)?'pending_delivery':'not_required';unset($state['orders'][$index]['cancelledAt'],$state['orders'][$index]['dispatchedAt'],$state['orders'][$index]['deliveredAt']);$pdo->prepare("UPDATE entrepreneur_payouts SET collection_status='pending',collected_at=NULL,payout_due_at=NULL,payout_status=IF(payout_amount>0,'pending_delivery','cancelled') WHERE order_id=? AND payout_status<>'paid'")->execute([$matches[1]]);}

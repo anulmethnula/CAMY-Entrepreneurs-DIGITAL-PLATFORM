@@ -7,11 +7,11 @@ const crcTable = Uint32Array.from({ length: 256 }, (_, index) => { let n = index
 function crc32(bytes) { let crc = 0xffffffff; for (const byte of bytes) crc = crcTable[(crc ^ byte) & 255] ^ (crc >>> 8); return (crc ^ 0xffffffff) >>> 0 }
 
 // A standards-compliant ZIP package using stored entries; no network or external library.
-function zip(files) {
+export function zip(files) {
   const parts = [], directory = []
   let offset = 0, directorySize = 0
   for (const [filename, value] of Object.entries(files)) {
-    const name = encoder.encode(filename), data = encoder.encode(value), crc = crc32(data)
+    const name = encoder.encode(filename), data = value instanceof Uint8Array ? value : encoder.encode(value), crc = crc32(data)
     const local = new Uint8Array(30 + name.length), header = new DataView(local.buffer)
     header.setUint32(0, 0x04034b50, true); header.setUint16(4, 20, true); header.setUint16(6, 0x800, true)
     header.setUint16(12, 33, true); header.setUint32(14, crc, true); header.setUint32(18, data.length, true); header.setUint32(22, data.length, true); header.setUint16(26, name.length, true); local.set(name, 30)
@@ -76,7 +76,7 @@ function columnWidth(column, rows) {
 }
 function rowHeight(row, columns, widths) {
   const lines = Math.max(1, ...columns.map((column, index) => text(row[column.key]).split(/\r?\n/).reduce((count, part) => count + Math.max(1, Math.ceil(part.length / Math.max(8, Math.floor(widths[index] * 1.25)))), 0)))
-  return Math.min(96, Math.max(28, 10 + lines * 17))
+  return Math.min(409, Math.max(28, 10 + lines * 17))
 }
 
 export function createWorkbook(sheets, generatedAt = new Date()) {
@@ -90,6 +90,7 @@ export function createWorkbook(sheets, generatedAt = new Date()) {
     const id = index + 1, columns = sheet.columns, last = columnName(columns.length - 1), end = Math.max(4, sheet.rows.length + 4)
     const columnWidths = columns.map(column => columnWidth(column, sheet.rows))
     const rows = [`<row r="1" ht="38" customHeight="1">${cell('A1', sheet.title || name, 'text', 1)}</row>`, `<row r="2" ht="24" customHeight="1">${cell('A2', `Generated ${generatedAt.toISOString().slice(0, 19).replace('T', ' ')} UTC  •  ${sheet.rows.length} records  •  Currency: LKR`, 'text', 0)}</row>`, `<row r="4" ht="38" customHeight="1">${columns.map((column, position) => cell(columnName(position) + '4', column.label, 'text', 2)).join('')}</row>`]
+    if (sheet.subtitle) rows.splice(2, 0, `<row r="3" ht="48" customHeight="1">${cell('A3', sheet.subtitle, 'text', 3)}</row>`)
     sheet.rows.forEach((row, rowIndex) => {
       const height = rowHeight(row, columns, columnWidths)
       rows.push(`<row r="${rowIndex + 5}" ht="${height}" customHeight="1">${columns.map((column, position) => cell(columnName(position) + (rowIndex + 5), row[column.key], column.type || 'auto', rowIndex % 2 ? 4 : 3)).join('')}</row>`)
@@ -98,12 +99,12 @@ export function createWorkbook(sheets, generatedAt = new Date()) {
     const hasTotals = sheet.showTotals !== false && sheet.rows.length > 0 && columns.some(column => totalKeys.has(column.key))
     if (hasTotals) rows.push(`<row r="${end + 2}" ht="32" customHeight="1">${columns.map((column, position) => position === 0 ? cell(`A${end + 2}`, 'TOTAL', 'text', 9) : totalKeys.has(column.key) ? cell(columnName(position) + (end + 2), sheet.rows.reduce((sum, row) => sum + Number(row[column.key] || 0), 0), column.type, column.type === 'currency' ? 10 : 11) : cell(columnName(position) + (end + 2), '', 'text', 9)).join('')}</row>`)
     const widths = columnWidths.map((width, position) => `<col min="${position + 1}" max="${position + 1}" width="${width}" customWidth="1"/>`).join('')
-    files[`xl/worksheets/sheet${id}.xml`] = `${declaration}<worksheet xmlns="${ns}"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:${last}${hasTotals ? end + 2 : end}"/><sheetViews><sheetView workbookViewId="0" showGridLines="0" zoomScale="90"><pane ySplit="4" topLeftCell="A5" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A5" sqref="A5"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="22"/><cols>${widths}</cols><sheetData>${rows.join('')}</sheetData><autoFilter ref="A4:${last}${end}"/>${columns.length > 1 ? `<mergeCells count="2"><mergeCell ref="A1:${last}1"/><mergeCell ref="A2:${last}2"/></mergeCells>` : ''}<printOptions horizontalCentered="1"/><pageMargins left="0.25" right="0.25" top="0.5" bottom="0.5" header="0.2" footer="0.2"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`
+    files[`xl/worksheets/sheet${id}.xml`] = `${declaration}<worksheet xmlns="${ns}"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:${last}${hasTotals ? end + 2 : end}"/><sheetViews><sheetView workbookViewId="0" showGridLines="0" zoomScale="90"><pane ySplit="4" topLeftCell="A5" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A5" sqref="A5"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="22"/><cols>${widths}</cols><sheetData>${rows.join('')}</sheetData><autoFilter ref="A4:${last}${end}"/>${columns.length > 1 ? `<mergeCells count="${sheet.subtitle ? 3 : 2}"><mergeCell ref="A1:${last}1"/><mergeCell ref="A2:${last}2"/>${sheet.subtitle ? `<mergeCell ref="A3:${last}3"/>` : ''}</mergeCells>` : ''}<printOptions horizontalCentered="1"/><pageMargins left="0.25" right="0.25" top="0.5" bottom="0.5" header="0.2" footer="0.2"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`
     workbookSheets.push(`<sheet name="${xml(name)}" sheetId="${id}" r:id="rId${id}"/>`)
     relationships.push(`<Relationship Id="rId${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${id}.xml"/>`)
     contentTypes.push(`<Override PartName="/xl/worksheets/sheet${id}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`)
   })
-  files['xl/styles.xml'] = styles
+  files['xl/styles.xml'] = sheets.every(sheet => sheet.currency === 'LKR') ? styles.replace('&quot;Rs. &quot;', '&quot;LKR &quot;') : styles
   files['xl/workbook.xml'] = `${declaration}<workbook xmlns="${ns}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets>${workbookSheets.join('')}</sheets></workbook>`
   files['xl/_rels/workbook.xml.rels'] = `${declaration}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${relationships.join('')}<Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`
   files['_rels/.rels'] = `${declaration}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`
@@ -111,8 +112,8 @@ export function createWorkbook(sheets, generatedAt = new Date()) {
   return zip(files)
 }
 
-export function downloadWorkbook(filename, sheets) {
-  const bytes = createWorkbook(sheets)
+export function downloadWorkbook(filename, sheets, generatedAt = new Date()) {
+  const bytes = createWorkbook(sheets, generatedAt)
   const url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
   const link = document.createElement('a')
   link.href = url; link.download = filename.replace(/\.(csv|xls|xlsx)$/i, '') + '.xlsx'

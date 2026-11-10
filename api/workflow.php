@@ -47,11 +47,11 @@ function workflow_reserve(array &$state,array $items,?string $shop): void {
 function workflow_release(array &$state,array $items,?string $shop): void {
     foreach($items as $item){$id=(string)($item['productId'] ?? $item['id']);if($shop===null){foreach($state['products'] as &$slot)if((string)$slot['id']===$id){$slot['stock']+=$item['qty'];break;}unset($slot);}else{foreach($state['inventory'] as &$slot)if((string)$slot['entrepreneurId']===$shop&&(string)$slot['productId']===$id){$slot['qty']+=$item['qty'];break;}unset($slot);}}
 }
-function workflow_receipt(array $data,string $id): string {
+function workflow_receipt(array $data,string $id,bool $payoutProof=false): string {
     $raw=(string)($data['receipt'] ?? '');$ref=trim((string)($data['reference'] ?? ''));
-    if(!$ref||strlen($ref)>120||strlen($raw)>7500000||!preg_match('#^data:(image/(?:png|jpeg|webp)|application/pdf);base64,(.+)$#s',$raw,$parts))response(['message'=>'Enter a reference and upload a JPG, PNG, WebP or PDF receipt up to 5 MB.'],422);
-    $bytes=base64_decode($parts[2],true);if(!$bytes||strlen($bytes)>5*1024*1024)response(['message'=>'Invalid receipt or file exceeds 5 MB.'],422);
-    if((str_starts_with($parts[1],'image/')&&((getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Receipt content does not match the file type.'],422);
+    if(!$ref||strlen($ref)>120||(!$payoutProof&&strlen($raw)>7500000)||!preg_match('#^data:(image/(?:png|jpeg|webp)|application/pdf);base64,(.+)$#s',$raw,$parts))response(['message'=>$payoutProof?'Enter a reference and upload a JPG, PNG, WebP or PDF receipt.':'Enter a reference and upload a JPG, PNG, WebP or PDF receipt up to 5 MB.'],422);
+    $bytes=base64_decode($parts[2],true);if(!$bytes||(!$payoutProof&&strlen($bytes)>5*1024*1024))response(['message'=>$payoutProof?'The receipt file could not be read.':'Invalid receipt or file exceeds 5 MB.'],422);
+    if((str_starts_with($parts[1],'image/')&&((@getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Receipt content does not match the file type.'],422);
     $dir=private_path('receipts');if(!is_dir($dir)&&!mkdir($dir,0700,true))throw new RuntimeException('Could not create receipt storage.');
     $file=$id.'-'.bin2hex(random_bytes(8)).'.'.['image/png'=>'png','image/jpeg'=>'jpg','image/webp'=>'webp','application/pdf'=>'pdf'][$parts[1]];
     if(file_put_contents($dir.'/'.$file,$bytes)===false)throw new RuntimeException('Could not save receipt.');return $file;
@@ -59,10 +59,10 @@ function workflow_receipt(array $data,string $id): string {
 function workflow_invoice_document(string $raw,string $id): string {
     if(!preg_match('#^data:(image/(?:png|jpeg|webp)|application/pdf);base64,(.+)$#s',$raw,$parts))response(['message'=>'Upload a JPG, PNG, WebP or PDF invoice.'],422);
     $bytes=base64_decode($parts[2],true);if($bytes===false||$bytes==='')response(['message'=>'The invoice file could not be read.'],422);
-    if((str_starts_with($parts[1],'image/')&&((getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Invoice content does not match the selected file type.'],422);
+    if((str_starts_with($parts[1],'image/')&&((@getimagesizefromstring($bytes)['mime'] ?? '')!==$parts[1]))||($parts[1]==='application/pdf'&&!str_starts_with($bytes,'%PDF-')))response(['message'=>'Invoice content does not match the selected file type.'],422);
     $dir=private_path('receipts');if(!is_dir($dir)&&!mkdir($dir,0700,true))throw new RuntimeException('Could not create invoice storage.');
     $file=$id.'-'.bin2hex(random_bytes(8)).'.'.['image/png'=>'png','image/jpeg'=>'jpg','image/webp'=>'webp','application/pdf'=>'pdf'][$parts[1]];
-    if(file_put_contents($dir.'/'.$file,$bytes)===false)throw new RuntimeException('Could not save the invoice file.');return $file;
+    if(file_put_contents($dir.'/'.$file,$bytes,LOCK_EX)!==strlen($bytes)){@unlink($dir.'/'.$file);throw new RuntimeException('Could not save the complete invoice file.');}return $file;
 }
 function workflow_route(PDO $pdo,string $path,string $method): void {
     if($path==='/admin/manual-order'&&$method==='POST'){
@@ -188,12 +188,30 @@ function workflow_route(PDO $pdo,string $path,string $method): void {
 
         // Bank details improve payout accuracy, but are not a hard blocker.
         // The transfer reference and uploaded proof remain the payout audit record.
-        $reference=trim((string)($data['reference'] ?? ''));$receipt=workflow_receipt(['receipt'=>(string)($data['receipt'] ?? ''),'reference'=>$reference],$orderId.'-payout');
+        $reference=trim((string)($data['reference'] ?? ''));$proof=null;
+        if($reference===''||strlen($reference)>120){$pdo->rollBack();response(['message'=>'Enter a transfer reference of up to 120 characters.'],422);}
+        if(!empty($data['receiptUpload'])){
+            try{$proof=payout_upload_receipt((string)$data['receiptUpload'],$orderId,payout_upload_admin($pdo));$receipt=$proof['receipt'];}
+            catch(PayoutUploadFailure $failure){$pdo->rollBack();response(['message'=>$failure->getMessage()],$failure->httpStatus);}
+        }else{
+            try{$receipt=workflow_receipt(['receipt'=>(string)($data['receipt'] ?? ''),'reference'=>$reference],$orderId.'-payout',true);}
+            catch(RuntimeException $failure){if($pdo->inTransaction())$pdo->rollBack();error_log('[CAMY payout] storage failed order='.$orderId.' reason='.$failure->getMessage());throw $failure;}
+        }
+        try {
         $pdo->prepare("UPDATE entrepreneur_payouts SET collection_status='collected',payout_status='paid',payout_reference=?,payout_receipt_path=?,collected_at=COALESCE(collected_at,NOW()),paid_at=NOW(),recorded_by=? WHERE order_id=?")->execute([$reference,$receipt,$admin['id'],$orderId]);
         $state['orders'][$index]['payoutStatus']='paid';$state['orders'][$index]['payoutAmount']=$amount;$state['orders'][$index]['payoutReference']=$reference;$state['orders'][$index]['payoutReceipt']='/api/marketplace/orders/'.$orderId.'/payout-receipt';$state['orders'][$index]['payoutPaidAt']=date(DATE_ATOM);$state['orders'][$index]['payoutBankDetails']=$bank;$state['orders'][$index]['updatedAt']=date(DATE_ATOM);
         market_save($pdo,$state);$pdo->commit();
+        } catch(Throwable $failure) {
+            if($pdo->inTransaction())$pdo->rollBack();
+            payout_upload_close($proof['handle'] ?? null);
+            if(!$proof)@unlink(private_path('receipts/'.basename($receipt)));
+            error_log('[CAMY payout] payment save failed order='.$orderId.' admin='.$admin['id'].' exception='.get_class($failure).' code='.$failure->getCode().' reason='.$failure->getMessage());
+            response(['message'=>'The receipt was uploaded, but the payout could not be recorded. Please try again. A retry will not create a duplicate payout.'],500);
+        }
+        payout_upload_close($proof['handle'] ?? null);
+        if($proof)@unlink(private_path('payout-uploads/'.$proof['token'].'.json'));
         error_log('[CAMY payout] transfer recorded order='.$orderId.' amount='.(string)$amount.' admin='.(string)$admin['id']);
-        response(['order'=>$state['orders'][$index],'message'=>'Entrepreneur margin transfer recorded successfully.']);
+        response(['order'=>$state['orders'][$index],'message'=>'Payout recorded successfully.']);
     }
     if(preg_match('#^/marketplace/orders/([^/]+)/confirm-delivery$#',$path,$match)&&$method==='POST'){
         $customer=customer_required($pdo);$pdo->beginTransaction();$state=market_state($pdo,true);$index=null;
