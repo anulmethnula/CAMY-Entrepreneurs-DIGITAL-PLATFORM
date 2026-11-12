@@ -1,8 +1,15 @@
 <?php
 declare(strict_types=1);
 
+function staff_is_viewer(array $user): bool {
+    return ($user['role'] ?? '')==='manager' && ($user['access_role'] ?? '')==='Viewer';
+}
+function staff_viewer_request_allowed(string $path,string $method): bool {
+    return $method==='GET' || ($method==='POST' && in_array($path,['/auth/logout','/auth/change-password'],true));
+}
+
 function staff_templates(): array {
-    return ['Super Admin'=>['overview','entrepreneurs','admin-orders','admin-products','payouts','stock-supply','credit-control','credit-settlements','reports','direct-sales','direct-sales-pricing','direct-sales-finance','direct-sales-approve','user-access']];
+    return ['Viewer'=>['overview','entrepreneurs','admin-orders','admin-products','payouts','stock-supply','credit-control','credit-settlements','reports','direct-sales'], 'Super Admin'=>['overview','entrepreneurs','admin-orders','admin-products','payouts','stock-supply','credit-control','credit-settlements','reports','direct-sales','direct-sales-pricing','direct-sales-finance','direct-sales-approve','user-access']];
 }
 function staff_assignable_permissions(): array { return array_values(array_filter(staff_templates()['Super Admin'],fn($item)=>$item!=='user-access')); }
 function staff_ensure_roles(PDO $pdo): void {
@@ -58,7 +65,7 @@ function staff_route(PDO $pdo,string $path,string $method): void {
     }
     if($path==='/admin/users'&&$method==='POST'){
         $data=input();$name=trim((string)($data['name'] ?? ''));$email=strtolower(trim((string)($data['email'] ?? '')));$role=(string)($data['role'] ?? '');
-        if(!$name||strlen($name)>150||strlen($email)>190||!filter_var($email,FILTER_VALIDATE_EMAIL)||!isset($roleMap[$role])||$roleMap[$role]['system'])response(['message'=>'Enter a valid name, email and a custom staff role.'],422);
+        if(!$name||strlen($name)>150||strlen($email)>190||!filter_var($email,FILTER_VALIDATE_EMAIL)||!isset($roleMap[$role])||($roleMap[$role]['system'] && $role!=='Viewer'))response(['message'=>'Enter a valid name, email and a staff role (including Viewer).'],422);
         $query=$pdo->prepare('SELECT id FROM users WHERE email=?');$query->execute([$email]);if($query->fetch())response(['message'=>'An account already exists with this email.'],409);
         $password='Camy!'.bin2hex(random_bytes(9)).'7';$permissions=$roleMap[$role]['permissions'];$insert=$pdo->prepare("INSERT INTO users(full_name,email,password_hash,role,status,must_change_password,access_role,permissions_json) VALUES(?,?,?,?,'active',1,?,?)");$insert->execute([$name,$email,password_hash($password,PASSWORD_DEFAULT),$role==='Super Admin'?'admin':'manager',$role,json_encode($permissions)]);
         $query=$pdo->prepare('SELECT * FROM users WHERE id=?');$query->execute([$pdo->lastInsertId()]);response(['user'=>staff_record($query->fetch(),$roleMap),'temporaryPassword'=>$password],201);
@@ -72,7 +79,7 @@ function staff_route(PDO $pdo,string $path,string $method): void {
     if(!empty($userMatches[2]))response(['message'=>'Method not allowed.'],405);
     if($method==='PATCH'){
         $data=input();$current=staff_record($row,$roleMap);$role=(string)($data['role'] ?? $current['role']);if(!isset($roleMap[$role]))response(['message'=>'Invalid staff role.'],422);
-        $permissions=staff_validate_permissions($data['permissions'] ?? $roleMap[$role]['permissions'],$role==='Super Admin');if($role==='Super Admin')$permissions=staff_templates()['Super Admin'];
+        $permissions=staff_validate_permissions($data['permissions'] ?? $roleMap[$role]['permissions'],$role==='Super Admin');if(isset(staff_templates()[$role]))$permissions=staff_templates()[$role];
         $pdo->prepare('UPDATE users SET role=?,access_role=?,permissions_json=?,status=? WHERE id=?')->execute([$role==='Super Admin'?'admin':'manager',$role,json_encode($permissions),($data['active'] ?? ($row['status']==='active'))?'active':'suspended',$id]);$query->execute([$id]);response(['user'=>staff_record($query->fetch(),$roleMap)]);
     }
     if($method==='DELETE'){$pdo->prepare("UPDATE users SET status='inactive' WHERE id=?")->execute([$id]);response(['ok'=>true]);}

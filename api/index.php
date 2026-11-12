@@ -135,6 +135,8 @@ try {
     $path = preg_replace('#^/api#', '', $path) ?: '/';
     $method = $_SERVER['REQUEST_METHOD'];
     $sessionUser=current_user($pdo);
+    // Apply read-only authorization before every route, including uploads and shared routes.
+    if($sessionUser && staff_is_viewer($sessionUser) && !staff_viewer_request_allowed($path,$method))response(['message'=>'Viewer access is read-only. You cannot create, edit or delete records.'],403);
     if($sessionUser && !empty($sessionUser['must_change_password']) && !in_array($path,['/auth/me','/auth/logout','/auth/change-password'],true))response(['message'=>'Set your own password before accessing CAMY.'],403);
     if($sessionUser && $sessionUser['role']==='manager' && $sessionUser['permissions_json']!==null){
         $permissions=json_decode($sessionUser['permissions_json'],true) ?: [];

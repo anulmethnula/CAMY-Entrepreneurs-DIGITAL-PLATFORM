@@ -99,6 +99,11 @@ try {
  ensure($assisted['orderMode']==='dropship'&&$assisted['clientPaymentMethod']==='cod'&&$assisted['entrepreneurMargin']===50.0,'Assisted COD pricing or commission changed');
  ensure((int)$pdo->query('SELECT COUNT(*) FROM direct_sales')->fetchColumn()===$directCount,'Assisted order was incorrectly mixed into direct sales');
  $report=endpoint($pdo,'/admin/reports/data');ensure(count($report['directSales'])>0&&count($report['directStockMovements'])>0,'Direct reports missing');
+ // Receipt files are optional for initial and subsequent bank payments.
+ $withoutReceipt=endpoint($pdo,'/admin/direct-sales','POST',sale_payload(['items'=>[['productId'=>2,'qty'=>1,'pricingMethod'=>'billing','includeDelivery'=>false,'includePackaging'=>false]],'payment'=>['method'=>'bank','amount'=>30,'reference'=>'OPTIONAL-1','date'=>'2026-11-10']]),201)['sale'];
+ ensure($withoutReceipt['payments'][0]['receipts']===[]&&$withoutReceipt['amountReceived']===0.0&&$withoutReceipt['paymentStatus']==='Verification Pending','No-receipt bank payment must remain unverified');
+ $withoutReceipt=action($pdo,$withoutReceipt,'payments',['method'=>'bank','amount'=>70,'reference'=>'OPTIONAL-2','date'=>'2026-11-10']);ensure(count($withoutReceipt['payments'])===2&&$withoutReceipt['payments'][1]['receipts']===[],'Subsequent bank payment must allow no receipt');
+ foreach($withoutReceipt['payments'] as $payment)$withoutReceipt=action($pdo,$withoutReceipt,'verify',['paymentId'=>$payment['id'],'decision'=>'Verified','confirmed'=>true]);ensure($withoutReceipt['paymentStatus']==='Paid'&&$withoutReceipt['amountReceived']===100.0,'Finance must be able to verify a transfer without an attachment');
  echo "PASS: cash / bank / walk-in / partial payments, price snapshots, discounts, approvals, secure receipt versions, reload persistence, failed-upload and DB rollback, draft repricing, reservations, handover exactly once, cancellation, physical returns, refunds, concurrent last-unit sales, profile ownership, reports and unchanged COD/credit/commission/catalogue pricing.\n";
 } finally {
  if(isset($pdo)&&$pdo->inTransaction())$pdo->rollBack();

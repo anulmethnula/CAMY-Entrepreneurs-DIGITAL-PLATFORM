@@ -2,6 +2,7 @@ import { downloadWorkbook } from './reports.js'
 export const dsMoney = value => `Rs. ${Number(value || 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 export const dsToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
 const round = value => Math.round((Number(value) + Number.EPSILON) * 100) / 100
+export const normalizeOptionalDiscount = value => value == null || (typeof value === 'string' && value.trim() === '') ? 0 : value
 export function directLine(product, input) {
   const billing = Number(product.billingPrice ?? product.price ?? 0), delivery = Number(product.deliveryCost || 0), packaging = Number(product.packagingCost || 0)
   const catalogue = round(Number(product.price || 0) + (product.freeDelivery === false ? delivery : 0))

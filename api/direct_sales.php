@@ -49,7 +49,7 @@ function ds_lines(array $data,array $state,array $user): array {
         $chosenPackaging=$packagingIncluded?ds_amount($input['packagingCharge'] ?? $packaging,'Packaging charge'):0;
         $base=ds_amount(round($base+$chosenDelivery+$chosenPackaging,2),'Base price');
         $type=$input['discountType'] ?? 'none';if(!in_array($type,['none','fixed','percent'],true))ds_fail('Invalid discount type.');
-        $value=ds_amount($input['discountValue'] ?? 0,'Discount');if($type==='percent'&&$value>100)ds_fail('Percentage discount cannot exceed 100.');
+        $rawDiscount=$input['discountValue'] ?? 0;if(is_string($rawDiscount)&&trim($rawDiscount)==='')$rawDiscount=0;$value=ds_amount($rawDiscount,'Discount for '.$product['name']);if($type==='percent'&&$value>100)ds_fail('Percentage discount cannot exceed 100.');
         $discount=$type==='fixed'?$value:($type==='percent'?round($base*$value/100,2):0);if($discount>$base)ds_fail('Discount cannot exceed the base price.');
         $final=round($base-$discount,2);$reason=ds_text($input['priceReason'] ?? '',1000);
         if(($baseMode==='custom'||$discount>0||$chosenDelivery!==($deliveryIncluded?$delivery:0)||$chosenPackaging!==($packagingIncluded?$packaging:0))){
@@ -85,7 +85,7 @@ function ds_totals(array &$sale): void {
 }
 function ds_save(PDO $pdo,array &$sale): void {
     ds_totals($sale);$sale['updatedAt']=ds_now();$sale['version']=(int)($sale['version'] ?? 0)+1;
-    $pdo->prepare('INSERT INTO direct_sales(id,idempotency_key,entrepreneur_member_id,customer_phone,sale_date,payment_status,fulfilment_status,version,record_json) VALUES(?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE payment_status=VALUES(payment_status),fulfilment_status=VALUES(fulfilment_status),version=VALUES(version),record_json=VALUES(record_json)')->execute([$sale['id'],$sale['idempotencyKey'],$sale['entrepreneurId'] ?: null,$sale['buyer']['phone'],$sale['saleDate'],$sale['paymentStatus'],$sale['fulfilmentStatus'],$sale['version'],storage_json($sale)]);
+    $pdo->prepare('INSERT INTO direct_sales(id,idempotency_key,entrepreneur_member_id,customer_phone,sale_date,payment_status,fulfilment_status,version,record_json) VALUES(?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE customer_phone=VALUES(customer_phone),sale_date=VALUES(sale_date),payment_status=VALUES(payment_status),fulfilment_status=VALUES(fulfilment_status),version=VALUES(version),record_json=VALUES(record_json)')->execute([$sale['id'],$sale['idempotencyKey'],$sale['entrepreneurId'] ?: null,$sale['buyer']['phone'],$sale['saleDate'],$sale['paymentStatus'],$sale['fulfilmentStatus'],$sale['version'],storage_json($sale)]);
 }
 function ds_public(array $sale,bool $finance=true): array {
     unset($sale['idempotencyKey']);
@@ -119,7 +119,7 @@ function ds_add_payment(PDO $pdo,array &$sale,array $data,array $user,array &$ne
     ds_totals($sale);if($sale['balance']<=0)ds_fail('This sale is already paid.',409);
     $date=ds_date($data['date'] ?? '');$reference=ds_text($data['reference'] ?? '',150);
     if($method==='cash'&&($data['confirmed'] ?? false)!==true)ds_fail('Confirm that the cash has actually been collected.');
-    if($method==='bank'&&($reference===''||empty($data['receipt'])))ds_fail('Provide the bank transfer reference and payment receipt.');
+    if($method==='bank'&&$reference==='')ds_fail('Provide the bank transfer reference. Receipt upload is optional.');
     if($method==='bank'&&$amount>$sale['balance'])ds_fail('Bank amount exceeds the remaining payable balance.');
     $applied=min($amount,$sale['balance']);$id=bin2hex(random_bytes(12));
     $payment=['id'=>$id,'method'=>$method,'amount'=>$applied,'tendered'=>$amount,'change'=>round($amount-$applied,2),'date'=>$date,'reference'=>$reference,'bankName'=>ds_text($data['bankName'] ?? '',150),'note'=>ds_text($data['note'] ?? '',1000),'status'=>$method==='cash'?'Verified':'Verification Pending','receivedBy'=>$user['id'],'receivedByName'=>$user['full_name'] ?? '', 'recordedAt'=>ds_now(),'receipts'=>[]];
@@ -154,7 +154,7 @@ function ds_catalogue_guard(PDO $pdo,array $products): void {
 }
 function ds_company(array $state): array {
     $configured=is_array($state['companySettings'] ?? null)?$state['companySettings']:[];
-    $out=[];foreach(['name','address','phone','email','taxNumber'] as $key){$env=getenv('CAMY_COMPANY_'.($key==='taxNumber'?'TAX_NUMBER':strtoupper($key)));$value=$configured[$key] ?? ($env!==false?$env:'');if($value!=='')$out[$key]=(string)$value;}return $out;
+    $out=['name'=>'CAMY','address'=>'56 Galle Road, Wellawatte, Colombo 06, Sri Lanka (M1, Supun Arcade Building)'];foreach(['name','address','phone','email','taxNumber'] as $key){$env=getenv('CAMY_COMPANY_'.($key==='taxNumber'?'TAX_NUMBER':strtoupper($key)));$value=$configured[$key] ?? ($env!==false?$env:'');if($value!=='')$out[$key]=(string)$value;}$out['address']='56 Galle Road, Wellawatte, Colombo 06, Sri Lanka (M1, Supun Arcade Building)';return $out;
 }
 function direct_sales_route(PDO $pdo,string $path,string $method): void {
     if(!str_starts_with($path,'/admin/direct-sales'))return;
@@ -167,7 +167,7 @@ function direct_sales_route(PDO $pdo,string $path,string $method): void {
         if($method==='GET'){if(!$operations&&!$finance&&!$profileReader)ds_fail('Your role does not allow direct-sale records.',403);$actor=$viewer;}
         else $actor=ds_authorize($pdo,preg_match('#/(verify|receipt|refund)$#',$path)?'direct-sales-finance':'direct-sales');
         if($path==='/admin/direct-sales'&&$method==='GET'){
-            $state=market_state($pdo);$result=['sales'=>ds_list($pdo,$memberFilter,$finance),'access'=>['create'=>$operations,'pricing'=>ds_permission($actor,'direct-sales-pricing'),'finance'=>$finance,'approve'=>ds_permission($actor,'direct-sales-approve')],'company'=>ds_company($state),'receiptMaxMb'=>max(1,min(50,(int)(getenv('CAMY_DIRECT_RECEIPT_MAX_MB') ?: 20)))];
+            $state=market_state($pdo);$result=['sales'=>ds_list($pdo,$memberFilter,$finance),'access'=>['create'=>$operations&&($viewer['access_role'] ?? '')!=='Viewer','pricing'=>ds_permission($actor,'direct-sales-pricing'),'finance'=>$finance,'approve'=>ds_permission($actor,'direct-sales-approve')],'company'=>ds_company($state),'receiptMaxMb'=>max(1,min(50,(int)(getenv('CAMY_DIRECT_RECEIPT_MAX_MB') ?: 20)))];
         }elseif(preg_match('#^/admin/direct-sales/([^/]+)/receipts/([a-f0-9]{24})$#',$path,$match)&&$method==='GET'){
             if(!$finance)ds_fail('Finance permission is required to view payment receipts.',403);
             $q=$pdo->prepare('SELECT storage_name FROM direct_sale_receipts WHERE sale_id=? AND id=?');$q->execute([$match[1],$match[2]]);$name=$q->fetchColumn();$file=private_path('receipts/'.basename((string)$name));if(!$name||!is_file($file))ds_fail('Receipt not found.',404);

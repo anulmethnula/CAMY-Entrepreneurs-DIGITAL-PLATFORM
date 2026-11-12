@@ -202,3 +202,9 @@ The GitHub quality workflow also checks React build, PHP syntax, a clean MySQL s
 - `CURRENT-DROPSHIP-FLOW.md` — current process reference
 
 The old public customer marketplace and `src/MarketplaceLegacy.jsx` are retained only for migration/history compatibility and are not part of the active ordering flow.
+
+Viewer-only access: in **Users & Access**, choose **Add user**, enter the person's name and email, and select **Viewer**. The system generates a temporary password and requires a password change on first sign-in. Existing staff can also be reassigned to Viewer. This built-in role can browse operational pages and reports but cannot create, update, upload, approve, or delete business records. The API enforces read-only access on every route. Viewers may change their own password and sign out; staff account management remains Super Admin-only.
+
+Customer orders now shows COD, assisted COD and direct sales in one filtered table. The Excel export starts with the same filtered sales summary. Super Admins can correct buyer details, sale date, product quantities/prices and direct payment entries, or permanently delete a mistaken sale after entering a reason and the exact sale ID. Corrections use a concurrency token; stock, entrepreneur totals and report data update transactionally. Deleted sales and their related database rows and receipt files are removed. A correction to a paid commission flags finance reconciliation and preserves the actual transfer amount. Viewer accounts cannot edit or delete sales.
+
+Direct sale entry starts with item selection. Packaging and delivery charges are visible checkboxes (included initially); unticking removes the chosen charge without adding it twice. Per-item discounts show the original and final unit prices. Printed and downloaded invoices use the official red CAMY logo and the Wellawatte/Supun Arcade address, with stored sale prices, a simple product table, discount totals and page numbers for PDF exports.

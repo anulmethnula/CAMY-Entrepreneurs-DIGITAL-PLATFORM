@@ -64,7 +64,7 @@ function InvoiceCamera({ onAccept, onClose, kind = 'invoice', inline = false }) 
   </section></Frame>
 }
 
-export function InvoiceAttachment({ file, onChange, disabled = false, kind = 'invoice', inlineCamera = false }) {
+export function InvoiceAttachment({ file, onChange, disabled = false, kind = 'invoice', inlineCamera = false, optional = kind !== 'receipt' }) {
   const [cameraOpen, setCameraOpen] = useState(false)
   const [fromCamera, setFromCamera] = useState(false)
   const [error, setError] = useState('')
@@ -76,7 +76,7 @@ export function InvoiceAttachment({ file, onChange, disabled = false, kind = 'in
     setError(''); setFromCamera(captured); onChange(next)
   }
   return <div className={`invoice-file-field camy-invoice-attachment ${file ? 'selected' : ''}`}>
-    <span>{kind === 'receipt' ? 'Payment proof' : <>Invoice document <em>Optional</em></>}</span>
+    <span>{kind === 'receipt' ? 'Payment proof' : 'Invoice document'}{optional&&<> <em>Optional</em></>}</span>
     <div className="camy-invoice-methods"><label className={`camy-invoice-upload ${disabled ? 'disabled' : ''}`}><input ref={input} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" disabled={disabled} onChange={event => { choose(event.target.files?.[0]); event.target.value = '' }}/><Upload/><span><strong>{file ? kind === 'receipt' ? 'Replace' : 'Replace document' : kind === 'receipt' ? 'Upload receipt' : 'Upload document'}</strong><small>JPG, JPEG, PNG, WebP or PDF</small></span></label><button type="button" className="camy-invoice-camera-button" disabled={disabled} onClick={() => { setError(''); setCameraOpen(true) }}><Camera/> Use camera</button></div>
     {file && <div className="camy-invoice-file-preview">{preview ? <img src={preview} alt={`Selected ${kind} preview`}/> : <FileText/>}<div><strong>{file.name}</strong><small>{file.type === 'application/pdf' ? 'PDF document' : 'Image attached for review'}</small></div><button type="button" disabled={disabled} aria-label={`Remove ${kind} attachment`} onClick={() => { onChange(null); setError(''); if (input.current) input.current.value = '' }}><Trash2/> Remove</button></div>}
     {error && <p className="market-error" role="alert">{error}</p>}

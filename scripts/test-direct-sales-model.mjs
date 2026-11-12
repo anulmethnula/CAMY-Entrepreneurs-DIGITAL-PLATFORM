@@ -1,9 +1,17 @@
 import assert from 'node:assert/strict'
-import {directLine,newDirectItem,directSaleSheets,directFinance,filterDirectSales} from '../src/directSalesModel.js'
+import {directLine,newDirectItem,normalizeOptionalDiscount,directSaleSheets,directFinance,filterDirectSales} from '../src/directSalesModel.js'
 import {buildReport,dateRange} from '../src/reportModel.js'
 import {createWorkbook} from '../src/reports.js'
 assert.deepEqual(dateRange('thisWeek',new Date('2026-11-10T12:00:00Z')),['2026-11-09','2026-11-10'])
 const product={id:1,code:'00123',name:'QA <Product>',price:3290,billingPrice:2590,deliveryCost:550,packagingCost:150,freeDelivery:true}
+// The simple sale UI starts with both charges checked; removing/re-adding
+// them must preserve the product basis and discount without compounding.
+const simple={...newDirectItem(product,true),discountType:'fixed',discountValue:190,qty:2}
+assert.equal(directLine(product,simple).finalUnitPrice,3100)
+assert.equal(directLine(product,{...simple,includePackaging:false}).finalUnitPrice,2950)
+assert.equal(directLine(product,{...simple,includeDelivery:false}).finalUnitPrice,2550)
+assert.equal(directLine(product,{...simple,includePackaging:false,includeDelivery:false}).lineTotal,4800)
+assert.equal(directLine(product,simple).lineTotal,6200)
 let item=newDirectItem(product,false)
 assert.equal(directLine(product,item).finalUnitPrice,2740,'Collection must omit delivery exactly once')
 item.includeDelivery=true;assert.equal(directLine(product,item).finalUnitPrice,3290,'Catalogue services must not double charge')
@@ -35,3 +43,7 @@ assert.equal(buildReport('products',data).extra[0].rows.length,1)
 const workbook=createWorkbook(sheets.map(s=>({...s,showTotals:false}))),xml=new TextDecoder().decode(workbook)
 assert.equal(new DataView(workbook.buffer).getUint32(0,true),0x04034b50);assert(!xml.includes('<f>'));assert(xml.includes('0771234567'));assert(xml.includes('00123'));assert(xml.includes('Direct Sale Payments'))
 console.log('PASS: non-compounding pricing, catalogue service de-duplication, negotiated prices, financial cash/revenue/return separation, unverified bank exclusion, report filters, no COD/credit/commission pollution, XLSX row grains and safe identifiers/formula text.')
+
+for(const value of ['', '   ',null,undefined,0])assert.equal(normalizeOptionalDiscount(value),0)
+assert.equal(normalizeOptionalDiscount('190'),'190')
+assert.equal(normalizeOptionalDiscount(-1),-1)
