@@ -2,3 +2,16 @@ node_modules/
 dist/
 private/
 .env
+
+# Local development logs
+*.log
+.dev-server*.log
+.vite-server*.log
+.php-api*.log
+.ngrok*.log
+
+# Local / generated artifacts
+.artifacts/
+coverage/
+.tmp/
+tmp/
