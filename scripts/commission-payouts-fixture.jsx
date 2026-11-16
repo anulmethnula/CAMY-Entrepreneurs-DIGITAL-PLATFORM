@@ -1,7 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { CommissionPayouts } from '../src/App'
-import camyLogo from '../camy-logo-official.png'
+import camyLogo from '../src/assets/camy-logo-official.png'
 
 const base={orderMode:'dropship',phone:'0771234567',date:'2026-09-29',clientPaymentStatus:'Collect on delivery'}
 const orders=[

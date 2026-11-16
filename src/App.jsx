@@ -33,7 +33,7 @@ import {
 } from 'lucide-react'
 import { initialEntrepreneurs, initialNotifications, initialOrders, initialProducts, initialTiers } from './data'
 import { AdminCreditStockPage, CreditInventoryPage, CreditStockPage, ShopHome, StockSupplyPage } from './Marketplace'
-import camyLogo from '../camy-logo-transparent.png'
+import camyLogo from './assets/camy-logo-transparent.png'
 
 const money = (value) => `Rs. ${Number(value || 0).toLocaleString('en-LK')}`
 const SUPPORT_PHONE_DISPLAY = '+94 77 716 5336'

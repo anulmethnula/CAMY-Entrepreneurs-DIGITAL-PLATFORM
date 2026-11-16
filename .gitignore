@@ -22,7 +22,7 @@ tmp/
 /*.zip
 /*.zip.sha256
 /innerWidth
-/window.innerWidth})
+/window.innerWidth[}])
 
 # Local environment overrides
 .env.*

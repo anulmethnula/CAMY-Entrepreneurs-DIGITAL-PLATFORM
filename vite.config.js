@@ -6,7 +6,7 @@ import { copyFileSync } from 'node:fs'
 const copyApacheConfig = () => ({
   name: 'copy-apache-config',
   closeBundle() {
-    copyFileSync(resolve(import.meta.dirname, 'production.htaccess'), resolve(import.meta.dirname, 'dist', '.htaccess'))
+    copyFileSync(resolve(import.meta.dirname, 'scripts/production.htaccess'), resolve(import.meta.dirname, 'dist', '.htaccess'))
   },
 })
 

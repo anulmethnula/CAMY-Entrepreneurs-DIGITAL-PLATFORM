@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="readme-banner.svg" width="100%" alt="CAMY Entrepreneurs Digital Platform" />
+  <img src="docs/assets/readme-banner.svg" width="100%" alt="CAMY Entrepreneurs Digital Platform" />
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 ## ✦ Platform at a Glance
 
 <p align="center">
-  <img src="readme-operations.svg" width="96%" alt="CAMY operations overview" />
+  <img src="docs/assets/readme-operations.svg" width="96%" alt="CAMY operations overview" />
 </p>
 
 ## ✦ Product Experience
@@ -38,7 +38,7 @@
 ## ✦ Business Workflow
 
 <p align="center">
-  <img src="readme-workflow.svg" width="96%" alt="CAMY business workflow" />
+  <img src="docs/assets/readme-workflow.svg" width="96%" alt="CAMY business workflow" />
 </p>
 
 ## What It Solves
@@ -98,7 +98,7 @@ The GitHub quality workflow also checks React build, PHP syntax, a clean MySQL s
 - `api/config.php` — database connection and automatic migrations
 - `database/schema.sql` — MySQL schema
 - `scripts/test-dropship-payout.php` — end-to-end business-flow integration test
-- `CURRENT-DROPSHIP-FLOW.md` — current process reference
+- `docs/CURRENT-DROPSHIP-FLOW.md` — current process reference
 
 The old public customer marketplace and `src/MarketplaceLegacy.jsx` are retained only for migration/history compatibility and are not part of the active ordering flow.
 

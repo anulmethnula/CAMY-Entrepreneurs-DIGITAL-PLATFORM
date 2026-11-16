@@ -1,4 +1,4 @@
-﻿"""Create a cPanel update ZIP from the current production build and API only."""
+"""Create a cPanel update ZIP from the current production build and API only."""
 from pathlib import Path, PurePosixPath
 from zipfile import ZipFile, ZIP_DEFLATED
 import hashlib
@@ -99,7 +99,7 @@ files['UPDATE-INSTRUCTIONS.txt'] = instructions.encode('utf-8')
 missing = REQUIRED - files.keys()
 if missing:
     raise RuntimeError('Missing hosting files: ' + ', '.join(sorted(missing)))
-assert files['.htaccess'] == (ROOT / 'production.htaccess').read_bytes()
+assert files['.htaccess'] == (ROOT / 'scripts' / 'production.htaccess').read_bytes()
 assert b'camy-mobile-v14-simple-payment-status' in files['sw.js']
 assert b'direct-sales-schema.sql' in files['api/config.php']
 assert b'direct_sales.php' in files['api/marketplace.php']
