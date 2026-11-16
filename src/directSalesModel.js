@@ -36,3 +36,11 @@ export function filterDirectSales(sales, f = {}) { return sales.filter(s => {
 }) }
 export const directPaymentStatuses = ['Awaiting Payment','Verification Pending','Partially Paid','Paid','Rejected','Partially Refunded','Refunded']
 export const directFulfilmentStatuses = ['Not released','Handed Over','Dispatched','Completed','Cancelled','Returned']
+
+export function directSaleStatus(sale) {
+  const method=sale.paymentMethod||sale.preferredPaymentMethod||'cash'
+  const paymentLabel=({Paid:method==='cash'?'Cash received':'Payment received','Verification Pending':'Payment pending verification','Partially Paid':'Part payment received','Awaiting Payment':'Payment pending',Rejected:'Payment rejected',Refunded:'Refunded','Partially Refunded':'Partially refunded'})[sale.paymentStatus]||'Payment pending'
+  const orderLabel=({Cancelled:'Order cancelled',Returned:'Order returned',Completed:'Order completed','Handed Over':'Items collected',Dispatched:'Order dispatched'})[sale.fulfilmentStatus]||(sale.businessStatus==='Draft'?'Draft order':sale.paymentStatus==='Paid'?(sale.fulfilmentMethod==='delivery'?'Ready for dispatch':'Ready for collection'):'Awaiting payment')
+  const closed=['Cancelled','Returned'].includes(sale.fulfilmentStatus)
+  return {paymentLabel,orderLabel,label:closed?orderLabel:sale.businessStatus==='Draft'?'Draft order':paymentLabel,tone:closed?'closed':sale.paymentStatus==='Paid'?'received':'pending',methodLabel:method==='cash'?'Cash':method==='bank'?'Bank transfer':method}
+}

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {directLine,newDirectItem,normalizeOptionalDiscount,directSaleSheets,directFinance,filterDirectSales} from '../src/directSalesModel.js'
+import {directLine,newDirectItem,normalizeOptionalDiscount,directSaleStatus,directSaleSheets,directFinance,filterDirectSales} from '../src/directSalesModel.js'
 import {buildReport,dateRange} from '../src/reportModel.js'
 import {createWorkbook} from '../src/reports.js'
 assert.deepEqual(dateRange('thisWeek',new Date('2026-11-10T12:00:00Z')),['2026-11-09','2026-11-10'])
@@ -47,3 +47,10 @@ console.log('PASS: non-compounding pricing, catalogue service de-duplication, ne
 for(const value of ['', '   ',null,undefined,0])assert.equal(normalizeOptionalDiscount(value),0)
 assert.equal(normalizeOptionalDiscount('190'),'190')
 assert.equal(normalizeOptionalDiscount(-1),-1)
+
+assert.equal(directSaleStatus({...sale,paymentMethod:'cash'}).label,'Cash received')
+assert.equal(directSaleStatus({...sale,paymentMethod:'bank'}).label,'Payment received')
+assert.equal(directSaleStatus(pending).label,'Payment pending verification')
+assert.equal(directSaleStatus(cancelled).label,'Order cancelled')
+assert.equal(directSaleStatus(returned).label,'Order returned')
+assert.equal(directSaleStatus({...pending,paymentStatus:'Partially Paid'}).label,'Part payment received')

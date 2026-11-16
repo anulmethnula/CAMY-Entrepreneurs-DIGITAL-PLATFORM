@@ -7,18 +7,29 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / 'dist'
-OUTPUT = ROOT / 'production-package' / 'CAMY-HOSTING-UPDATE-2026-11-12-v5.zip'
+OUTPUT = ROOT / 'production-package' / 'CAMY-HOSTING-UPDATE-2026-11-12-v7.zip'
 REQUIRED = {'index.html', 'register.html', '.htaccess', 'sw.js', 'site.webmanifest', 'api/index.php', 'api/config.php', 'api/direct_sales.php', 'api/sales_corrections.php', 'api/direct-sales-schema.sql', 'api/.htaccess'}
 
 instructions = '''CAMY HOSTING UPDATE - 12 NOVEMBER 2026
 
 FOR THE EXISTING camymarket.com INSTALLATION
 
+NEW: Direct-sale details now clearly show Cash received, Payment received,
+Payment pending, or Order cancelled / returned. Payment and cancellation
+actions stay on the overview. Item collection/delivery controls are tucked
+into a separate collapsed section, preserving accurate stock updates.
+
+NEW: Removed More price options and Price approval from the direct-sale form.
+Receipt uploads are optional for direct bank payments (initial and later
+payments). The transfer reference is retained; Finance verifies bank payments
+whether or not an attachment was supplied. Optional uploads and camera remain
+available. Existing stored prices, receipts and approval permissions are kept.
+
 FIX: A blank or cleared optional discount now means zero. Negative/invalid
 discounts still fail validation and identify the affected product.
 
 1. Back up the existing public_html, private folder and database.
-2. Upload CAMY-HOSTING-UPDATE-2026-11-12-v5.zip into the active public_html.
+2. Upload CAMY-HOSTING-UPDATE-2026-11-12-v7.zip into the active public_html.
 3. Extract the ZIP there and allow existing files to be overwritten.
    index.html, assets/ and api/ must be directly inside public_html.
 4. Keep the existing private/camy.env and all private uploads unchanged.
@@ -89,7 +100,7 @@ missing = REQUIRED - files.keys()
 if missing:
     raise RuntimeError('Missing hosting files: ' + ', '.join(sorted(missing)))
 assert files['.htaccess'] == (ROOT / 'production.htaccess').read_bytes()
-assert b'camy-mobile-v12-blank-discount-fix' in files['sw.js']
+assert b'camy-mobile-v14-simple-payment-status' in files['sw.js']
 assert b'direct-sales-schema.sql' in files['api/config.php']
 assert b'direct_sales.php' in files['api/marketplace.php']
 assert files['api/direct-sales-schema.sql'].count(b'CREATE TABLE IF NOT EXISTS') == 4
