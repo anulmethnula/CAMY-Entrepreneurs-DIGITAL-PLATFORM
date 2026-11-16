@@ -15,3 +15,21 @@ private/
 coverage/
 .tmp/
 tmp/
+
+# Generated deployment packages and local review output
+/artifacts/
+/production-package/
+/*.zip
+/*.zip.sha256
+/innerWidth
+/window.innerWidth})
+
+# Local environment overrides
+.env.*
+!.env*.example
+
+# Local caches and operating-system files
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
