@@ -14,7 +14,7 @@ function notification_log(string $message): void
     error_log('['.date(DATE_ATOM).'] '.$message."\n",3,$directory.'/email-notifications.log');
 }
 
-function notification_send_email(string $to,string $subject,string $html): bool
+function notification_send_email(string $to,string $subject,string $html,?string $attachment=null): bool
 {
     if(!filter_var($to,FILTER_VALIDATE_EMAIL)||preg_match('/[\r\n]/',$to.$subject))return false;
     $from=(string)(getenv('CAMY_MAIL_FROM') ?: 'notifications@camymarket.com');
@@ -27,6 +27,15 @@ function notification_send_email(string $to,string $subject,string $html): bool
         'Reply-To: '.$from,
         'X-Mailer: CAMY Platform',
     ];
+    if($attachment!==null){
+        $bytes=file_get_contents($attachment);if($bytes===false)return false;
+        $boundary='camy-'.bin2hex(random_bytes(16));
+        $mime=mime_content_type($attachment) ?: 'application/octet-stream';
+        $extension=['application/pdf'=>'pdf','image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime] ?? 'bin';
+        $headers[1]='Content-Type: multipart/mixed; boundary="'.$boundary.'"';
+        $html='--'.$boundary."\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n".chunk_split(base64_encode($html)).
+            '--'.$boundary."\r\nContent-Type: ".$mime."\r\nContent-Disposition: attachment; filename=\"invoice.".$extension."\"\r\nContent-Transfer-Encoding: base64\r\n\r\n".chunk_split(base64_encode($bytes)).'--'.$boundary."--\r\n";
+    }
     $sent=@mail($to,$subject,$html,implode("\r\n",$headers));
     if(!$sent)notification_log('Email delivery was not accepted by the server for '.$to.' ('.$subject.').');
     return $sent;

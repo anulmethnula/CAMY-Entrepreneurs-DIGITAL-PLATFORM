@@ -32,10 +32,16 @@ function storage_read(PDO $pdo): ?array {
             $state[$key][]=$record;
         }
     }
+    $histories=[];
+    foreach($pdo->query('SELECT order_id,previous_status,new_status,changed_at,UNIX_TIMESTAMP(changed_at) AS changed_epoch,note FROM order_status_history ORDER BY changed_at,id')->fetchAll() as $event){
+        $histories[$event['order_id']][]=['previousStatus'=>$event['previous_status'],'status'=>$event['new_status'],'at'=>date(DATE_ATOM,(int)$event['changed_epoch']),'note'=>$event['note']];
+    }
+    foreach($state['orders'] as &$order)$order['statusHistory']=$histories[$order['id']] ?? [];
+    unset($order);
     return $state;
 }
 
-function storage_write(PDO $pdo,array $state): void {
+function storage_write(PDO $pdo,array &$state): void {
     $products=[];
     // Preserve platform IDs in product metadata; relational auto-increment IDs may differ.
     $productWrite=$pdo->prepare("INSERT INTO products(code,name,category,description,price,billing_price,delivery_cost,packaging_cost,free_delivery,stock,image,status,record_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE name=VALUES(name),category=VALUES(category),description=VALUES(description),price=VALUES(price),billing_price=VALUES(billing_price),delivery_cost=VALUES(delivery_cost),packaging_cost=VALUES(packaging_cost),free_delivery=VALUES(free_delivery),stock=VALUES(stock),image=VALUES(image),status=VALUES(status),record_json=VALUES(record_json)");
@@ -62,13 +68,24 @@ function storage_write(PDO $pdo,array $state): void {
     $groupWrite=$pdo->prepare('INSERT INTO customer_order_groups(id,customer_name,customer_phone,district,delivery_address) VALUES(?,?,?,?,?) ON DUPLICATE KEY UPDATE customer_name=VALUES(customer_name),customer_phone=VALUES(customer_phone),district=VALUES(district),delivery_address=VALUES(delivery_address)');
     $orderWrite=$pdo->prepare('INSERT INTO shop_orders(id,group_id,entrepreneur_member_id,total,status,delivered_at,record_json) VALUES(?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE total=VALUES(total),status=VALUES(status),delivered_at=COALESCE(VALUES(delivered_at),delivered_at),record_json=VALUES(record_json)');
     $orderItem=$pdo->prepare('INSERT INTO shop_order_items(order_id,product_code,quantity,sell_price) VALUES(?,?,?,?)');
-    foreach($state['orders'] ?? [] as $order){
+    $priorStatuses=[];
+    foreach($pdo->query('SELECT id,status,record_json FROM shop_orders')->fetchAll() as $row){$saved=storage_decode($row['record_json']);$priorStatuses[$row['id']]=$saved['status'] ?? $row['status'];}
+    $historyWrite=$pdo->prepare('INSERT INTO order_status_history(order_id,previous_status,new_status,changed_by) VALUES(?,?,?,?)');
+    foreach($state['orders'] as &$order){
+        // Capture actual transitions in the same transaction as all order writes.
+        // A missing row may be a legacy import, so never fabricate initial history.
+        $prior=$priorStatuses[$order['id']] ?? null;
+        if($prior!==null && $prior!==$order['status']){
+            $historyWrite->execute([$order['id'],$prior,$order['status'],$_SESSION['user_id'] ?? null]);
+            $order['statusHistory'][]=['previousStatus'=>$prior,'status'=>$order['status'],'at'=>date(DATE_ATOM),'note'=>null];
+        }
         $groupId=$order['groupId'] ?? $order['id'];$groupWrite->execute([$groupId,$order['customer'] ?? '',$order['phone'] ?? '',$order['district'] ?? '',$order['address'] ?? '']);
         $deliveredAt=!empty($order['deliveredAt'])?date('Y-m-d H:i:s',strtotime((string)$order['deliveredAt'])):null;
         $orderWrite->execute([$order['id'],$groupId,$order['entrepreneurId'],$order['amount'],$order['status'],$deliveredAt,storage_json($order)]);
         $pdo->prepare('DELETE FROM shop_order_items WHERE order_id=?')->execute([$order['id']]);
         foreach($order['items'] ?? [] as $item)$orderItem->execute([$order['id'],$products[(string)($item['id'] ?? $item['productId'])] ?? (string)($item['id'] ?? $item['productId']),$item['qty'],$item['price']]);
     }
+    unset($order);
     $settlementWrite=$pdo->prepare('INSERT INTO credit_settlement_requests(id,entrepreneur_member_id,amount,reference,status,record_json) VALUES(?,?,?,?,?,?) ON DUPLICATE KEY UPDATE status=VALUES(status),record_json=VALUES(record_json)');
     foreach($state['settlements'] ?? [] as $record)$settlementWrite->execute([$record['id'],$record['entrepreneurId'],$record['amount'],$record['reference'],$record['status'],storage_json($record)]);
     $pdo->exec('DELETE FROM credit_tiers');

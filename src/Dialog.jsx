@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
+const dialogStack = []
 let openDialogs = 0
 let originalOverflow = ''
 
@@ -9,6 +10,7 @@ export function PortalOverlay({ children, className, onClose, label = 'Details' 
   const closeRef = useRef(onClose)
   closeRef.current = onClose
   useEffect(() => {
+    dialogStack.push(container.current)
     const previousFocus = document.activeElement
     if (openDialogs++ === 0) {
       originalOverflow = document.body.style.overflow
@@ -16,6 +18,7 @@ export function PortalOverlay({ children, className, onClose, label = 'Details' 
     }
     const controls = () => [...container.current.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]')].filter(element => element.getClientRects().length)
     const keyboard = event => {
+      if(dialogStack.at(-1)!==container.current)return
       if (event.key === 'Escape') { event.preventDefault(); closeRef.current?.(); return }
       if (event.key !== 'Tab') return
       const elements = controls(), first = elements[0], last = elements.at(-1)
@@ -25,7 +28,9 @@ export function PortalOverlay({ children, className, onClose, label = 'Details' 
     }
     ;(controls()[0] || container.current).focus()
     document.addEventListener('keydown', keyboard)
+    const dialogElement=container.current
     return () => {
+      const index=dialogStack.indexOf(dialogElement);if(index>=0)dialogStack.splice(index,1)
       if (--openDialogs === 0) document.body.style.overflow = originalOverflow
       document.removeEventListener('keydown', keyboard)
       if (previousFocus?.isConnected) previousFocus.focus()
